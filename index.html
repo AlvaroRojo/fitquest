@@ -22,6 +22,9 @@
   .slot b{display:block;font-size:1.6em}
   .item{padding:6px 0;border-bottom:1px solid #2a3047}
   select{background:#0c0d13;color:#eee;border:1px solid #3a4366;border-radius:6px;padding:5px;margin-bottom:6px}
+  .navigation{display:flex;gap:6px;margin-bottom:10px}
+  .navigation button{flex:1;margin:0;padding:10px 4px}
+  .navigation button[aria-pressed="true"]{background:#586ba3;outline:2px solid #9ad}
 </style>
 </head>
 <body>
@@ -33,6 +36,14 @@
   <small id="xptxt"></small>
 </div>
 
+<nav class="navigation" aria-label="Secciones del juego">
+  <button type="button" data-section="adventure" aria-controls="adventure" aria-pressed="true">Misiones y monstruos</button>
+  <button type="button" data-section="character" aria-controls="character" aria-pressed="false">Personaje</button>
+  <button type="button" data-section="store" aria-controls="store" aria-pressed="false">Tienda</button>
+</nav>
+
+<main>
+<section id="adventure" aria-label="Misiones y monstruos">
 <div class="card">
   <h2>Monstruo</h2>
   <div class="big" id="mIcon"></div>
@@ -46,21 +57,26 @@
   <div id="missions"></div>
   <button id="rest">😴 Día de descanso (1 por semana, mantiene racha)</button>
 </div>
+<div class="card"><h2>Registro</h2><div id="log"></div></div>
+<button id="reset">Reiniciar partida</button>
+</section>
 
+<section id="character" aria-label="Personaje" hidden>
 <div class="card">
   <h2>Personaje</h2>
   <div id="eq" class="grid"></div>
   <p><small id="bonuses"></small></p>
 </div>
+</section>
 
+<section id="store" aria-label="Tienda" hidden>
 <div class="card">
   <h2>Tienda</h2>
   <select id="filter"></select>
   <div id="shop"></div>
 </div>
-
-<div class="card"><h2>Registro</h2><div id="log"></div></div>
-<button id="reset">Reiniciar partida</button>
+</section>
+</main>
 
 <script>
 const EXERCISES = [
@@ -183,6 +199,16 @@ function add(ex,amount){
 function save(){localStorage.setItem(KEY,JSON.stringify(S))}
 
 const $=id=>document.getElementById(id);
+const navigationButtons=document.querySelectorAll('.navigation button');
+for(const button of navigationButtons){
+  button.addEventListener('click',()=>{
+    for(const option of navigationButtons){
+      const selected=option===button;
+      option.setAttribute('aria-pressed',String(selected));
+      $(option.dataset.section).hidden=!selected;
+    }
+  });
+}
 function render(){
   rollDay();
   $('lvl').textContent=`Nivel ${S.level}`;
