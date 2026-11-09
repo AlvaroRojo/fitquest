@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FitQuest</title>
+<style>
+  body{font-family:system-ui,sans-serif;background:#14161f;color:#eee;max-width:640px;margin:0 auto;padding:12px}
+  h1{margin:.2em 0} h2{font-size:1.05em;margin:.8em 0 .4em;color:#9ad}
+  .card{background:#1f2331;border-radius:10px;padding:12px;margin-bottom:10px}
+  .bar{background:#0c0d13;border-radius:6px;height:14px;overflow:hidden}
+  .bar>div{height:100%;transition:width .3s}
+  .xp>div{background:#4c8}.hp>div{background:#d54}.mis>div{background:#58f}
+  button{background:#3a4366;color:#fff;border:0;border-radius:6px;padding:6px 10px;margin:2px;cursor:pointer}
+  button:hover{background:#4a5586} button:disabled{opacity:.4;cursor:default}
+  .row{display:flex;justify-content:space-between;align-items:center;gap:8px}
+  .big{font-size:3em;text-align:center}
+  #log{font-size:.85em;color:#aab;max-height:120px;overflow:auto}
+  .ok{color:#6d8}
+  .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+  .slot{background:#0c0d13;border:1px dashed #3a4366;border-radius:8px;padding:6px;text-align:center;font-size:.8em;min-height:58px;margin:0}
+  .slot b{display:block;font-size:1.6em}
+  .item{padding:6px 0;border-bottom:1px solid #2a3047}
+  select{background:#0c0d13;color:#eee;border:1px solid #3a4366;border-radius:6px;padding:5px;margin-bottom:6px}
+</style>
+</head>
+<body>
+<h1>⚔️ FitQuest</h1>
+
+<div class="card">
+  <div class="row"><b id="lvl"></b><span id="coins"></span><span id="streak"></span></div>
+  <div class="bar xp"><div id="xpbar"></div></div>
+  <small id="xptxt"></small>
+</div>
+
+<div class="card">
+  <h2>Monstruo</h2>
+  <div class="big" id="mIcon"></div>
+  <div class="row"><b id="mName"></b><span id="mHp"></span></div>
+  <div class="bar hp"><div id="hpbar"></div></div>
+  <p><small>Tu ejercicio real es el daño. El combate avanza solo cuando entrenas.</small></p>
+</div>
+
+<div class="card">
+  <h2>Misiones activas <small id="cnt"></small></h2>
+  <div id="missions"></div>
+  <button id="rest">😴 Día de descanso (1 por semana, mantiene racha)</button>
+</div>
+
+<div class="card">
+  <h2>Personaje</h2>
+  <div id="eq" class="grid"></div>
+  <p><small id="bonuses"></small></p>
+</div>
+
+<div class="card">
+  <h2>Tienda</h2>
+  <select id="filter"></select>
+  <div id="shop"></div>
+</div>
+
+<div class="card"><h2>Registro</h2><div id="log"></div></div>
+<button id="reset">Reiniciar partida</button>
+
+<script>
+const EXERCISES = [
+  {id:'squat', name:'Sentadillas', unit:'reps', base:20, step:[5,10], value:1},
+  {id:'push',  name:'Flexiones',   unit:'reps', base:10, step:[1,5],  value:2},
+  {id:'plank', name:'Plancha',     unit:'seg',  base:30, step:[10,30], value:0.3},
+  {id:'abs',   name:'Abdominales', unit:'reps', base:15, step:[5,10], value:1},
+  {id:'jack',  name:'Jumping jacks', unit:'reps', base:30, step:[10,20], value:0.5},
+  {id:'lunge', name:'Zancadas',    unit:'reps', base:16, step:[4,8],  value:1},
+  {id:'burpee',name:'Burpees',     unit:'reps', base:8,  step:[2,4],  value:3},
+  {id:'climb', name:'Mountain climbers', unit:'reps', base:30, step:[10,20], value:0.5},
+  {id:'bridge',name:'Puente de glúteos', unit:'reps', base:15, step:[5,10], value:1},
+  {id:'wall',  name:'Sentadilla isométrica', unit:'seg', base:30, step:[10,30], value:0.3},
+];
+const SLOTS = 3, MAX_DAILY = 6;   // misiones activas a la vez y completables por día
+const byId = id => EXERCISES.find(e=>e.id===id);
+function randomMission(exclude){
+  const pool = EXERCISES.filter(e=>!exclude.includes(e.id));
+  return pool[Math.floor(Math.random()*pool.length)].id;
+}
+function pickMissions(){
+  const a=[]; while(a.length<SLOTS) a.push(randomMission(a)); return a;
+}
+const MONSTERS = ['🐀 Rata gigante','🦇 Murciélago','🐺 Lobo','👹 Orco','🧟 Zombi','🐉 Dragón menor','👻 Espectro','🦖 Titán'];
+const OVERTRAIN = 1.5;      // por encima de 150% del objetivo, el valor cae al 25%
+const KEY = 'fitquest-save';
+
+const today = () => { const d=new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; };
+const daysBetween = (a,b) => Math.round((new Date(b)-new Date(a))/864e5);
+const xpNeeded = l => Math.round(100*Math.pow(1.25,l-1));
+const monsterHp = n => Math.round(50*Math.pow(1.2,n));
+
+const EQ_SLOTS=[
+  {k:'helmet',g:'helmet'},{k:'necklace',g:'necklace'},{k:'earring1',g:'earring',n:1},
+  {k:'earring2',g:'earring',n:2},{k:'ring1',g:'ring',n:1},{k:'ring2',g:'ring',n:2},
+  {k:'sword',g:'sword'},{k:'chest',g:'chest'},{k:'shield',g:'shield'},
+  {k:'arms',g:'arms'},{k:'pants',g:'pants'},{k:'boots',g:'boots'}];
+// stat: dmg = daño, xp = experiencia, coin = monedas; w = peso de potencia/precio
+const GROUPS={
+  sword:{label:'Espada',icon:'🗡️',stat:'dmg',w:1.5,names:['Espada de madera','Espada de hierro','Espada de acero','Espada legendaria']},
+  shield:{label:'Escudo',icon:'🛡️',stat:'xp',w:1,names:['Escudo de madera','Escudo de hierro','Escudo de acero','Escudo legendario']},
+  helmet:{label:'Casco',icon:'⛑️',stat:'xp',w:1,names:['Gorro de cuero','Casco de hierro','Yelmo de acero','Corona legendaria']},
+  chest:{label:'Pecho',icon:'🥋',stat:'xp',w:1,names:['Chaleco de cuero','Cota de malla','Peto de acero','Armadura legendaria']},
+  arms:{label:'Brazo',icon:'🧤',stat:'dmg',w:1,names:['Muñequeras de cuero','Guanteletes de hierro','Brazales de acero','Brazales legendarios']},
+  pants:{label:'Pantalones',icon:'👖',stat:'coin',w:1,names:['Pantalones de lino','Grebas de hierro','Grebas de acero','Grebas legendarias']},
+  boots:{label:'Botas',icon:'🥾',stat:'coin',w:1,names:['Botas de cuero','Botas de hierro','Botas de acero','Botas legendarias']},
+  necklace:{label:'Collar',icon:'📿',stat:'coin',w:1,names:['Collar de cuentas','Collar de plata','Collar de oro','Amuleto legendario']},
+  ring:{label:'Anillo',icon:'💍',stat:'dmg',w:.8,names:[['Anillo de cobre','Anillo de bronce'],['Anillo de plata','Anillo de jade'],['Anillo de oro','Anillo de rubí'],['Anillo de zafiro','Anillo legendario']]},
+  earring:{label:'Pendiente',icon:'🧿',stat:'xp',w:.8,names:[['Pendiente de cobre','Pendiente de bronce'],['Pendiente de plata','Pendiente de jade'],['Pendiente de oro','Pendiente de rubí'],['Pendiente de zafiro','Pendiente legendario']]},
+};
+const TIER_PCT=[3,6,10,15], TIER_COST=[40,120,350,900], TIER_LVL=[1,5,10,15];
+const STAT_TXT={dmg:'daño',xp:'XP',coin:'monedas'};
+const ITEMS=[];
+for(const [g,d] of Object.entries(GROUPS)) for(let t=0;t<4;t++){
+  const names=Array.isArray(d.names[t])?d.names[t]:[d.names[t]];
+  names.forEach((name,v)=>ITEMS.push({id:`${g}_${t}_${v}`,g,name,stat:d.stat,
+    pct:Math.round(TIER_PCT[t]*d.w),cost:Math.round(TIER_COST[t]*d.w),lvl:TIER_LVL[t]}));
+}
+const ITEM=Object.fromEntries(ITEMS.map(i=>[i.id,i]));
+const bonus=stat=>{let t=0;for(const id of Object.values(S.eq)){const it=ITEM[id];if(it&&it.stat===stat)t+=it.pct}return 1+t/100};
+const target = (ex,l) => Math.max(ex.base, Math.round(ex.base*Math.min(2,1+0.05*(l-1))/ex.step[0])*ex.step[0]);
+
+const fresh = () => ({level:1,xp:0,coins:0,owned:[],eq:{},streak:0,kills:0,
+  day:today(),done:{},bonus:{},lastActive:null,lastRest:null,monsterHp:monsterHp(0),log:[],active:pickMissions(),completedToday:0});
+let S = JSON.parse(localStorage.getItem(KEY)||'null') || fresh();
+if(!S.active){S.active=pickMissions();S.completedToday=0}
+if(!S.owned){S.owned=[];S.eq={}}
+if(S.weapon){for(let w=0;w<S.weapon;w++)S.coins+=Math.round(50*Math.pow(1.5,w));delete S.weapon}
+
+function log(t){S.log.unshift(t);S.log=S.log.slice(0,40)}
+function rollDay(){
+  const t=today(); if(S.day===t) return;
+  // la racha sobrevive si ayer hubo actividad o descanso
+  const last=Math.max(S.lastActive?+new Date(S.lastActive):0,S.lastRest?+new Date(S.lastRest):0);
+  if(!last || (new Date(t)-last)/864e5>1) S.streak=0;
+  S.day=t;S.done={};S.bonus={};S.completedToday=0;
+}
+const streakMult = () => 1+Math.min(0.3,S.streak*0.02);
+
+function gain(xp){
+  S.xp+=xp;
+  while(S.xp>=xpNeeded(S.level)){S.xp-=xpNeeded(S.level);S.level++;log(`⭐ ¡Nivel ${S.level}! Los objetivos suben un poco.`)}
+}
+function hit(dmg){
+  S.monsterHp-=dmg;
+  while(S.monsterHp<=0){
+    const reward=Math.round((10+S.kills*2)*bonus('coin'));
+    S.coins+=reward;gain(Math.round((20+S.kills*3)*bonus('xp')));S.kills++;
+    log(`💀 Derrotaste a ${MONSTERS[(S.kills-1)%MONSTERS.length]} (+${reward} 🪙)`);
+    S.monsterHp+=monsterHp(S.kills);
+  }
+}
+function add(ex,amount){
+  rollDay();
+  const tgt=target(ex,S.level), before=S.done[ex.id]||0, after=before+amount;
+  S.done[ex.id]=after;
+  const full=Math.max(0,Math.min(after,tgt*OVERTRAIN)-before), extra=amount-full;
+  const units=full+extra*0.25;
+  const mult=streakMult();
+  gain(Math.round(units*ex.value*mult*bonus('xp')));
+  hit(units*ex.value*bonus('dmg')*mult);
+  if(!S.bonus[ex.id] && after>=tgt){
+    S.bonus[ex.id]=1;gain(Math.round(30*mult*bonus('xp')));S.coins+=Math.round(10*bonus('coin'));
+    log(`✅ Misión completada: ${ex.name} (+bonus)`);
+    S.completedToday++;
+    if(S.completedToday<MAX_DAILY){
+      const next=randomMission(S.active);
+      S.active[S.active.indexOf(ex.id)]=next;
+      delete S.done[ex.id];delete S.bonus[ex.id];
+      log(`🎲 Nueva misión: ${byId(next).name}`);
+    } else log('🛑 Límite diario de misiones alcanzado. ¡Descansa y vuelve mañana!');
+    if(S.lastActive!==today()){
+      S.streak=S.streak+1;
+      S.lastActive=today();
+    }
+  }
+  if(extra>0) log(`⚠️ ${ex.name}: sobreentrenar rinde menos. Descansa y mantén la constancia.`);
+  save();render();
+}
+function save(){localStorage.setItem(KEY,JSON.stringify(S))}
+
+const $=id=>document.getElementById(id);
+function render(){
+  rollDay();
+  $('lvl').textContent=`Nivel ${S.level}`;
+  $('coins').textContent=`🪙 ${S.coins}`;
+  $('streak').textContent=`🔥 Racha ${S.streak} (x${streakMult().toFixed(2)})`;
+  $('xpbar').style.width=100*S.xp/xpNeeded(S.level)+'%';
+  $('xptxt').textContent=`XP ${S.xp}/${xpNeeded(S.level)}`;
+  const mn=MONSTERS[S.kills%MONSTERS.length].split(' ');
+  $('mIcon').textContent=mn[0];$('mName').textContent=mn.slice(1).join(' ');
+  const max=monsterHp(S.kills);
+  $('mHp').textContent=`${Math.max(0,Math.ceil(S.monsterHp))}/${max} HP`;
+  $('hpbar').style.width=Math.min(100,100*S.monsterHp/max)+'%';
+  $('missions').innerHTML='';
+  for(const ex of S.active.map(byId)){
+    const tgt=target(ex,S.level),d=S.done[ex.id]||0;
+    const el=document.createElement('div');el.style.marginBottom='8px';
+    el.innerHTML=`<div class="row"><span class="${d>=tgt?'ok':''}">${d>=tgt?'✅':'🎯'} ${ex.name}</span><span>${d}/${tgt} ${ex.unit}</span></div>
+      <div class="bar mis"><div style="width:${Math.min(100,100*d/tgt)}%"></div></div>`;
+    for(const s of ex.step){const b=document.createElement('button');b.textContent=`+${s}`;b.onclick=()=>add(ex,s);el.appendChild(b)}
+    $('missions').appendChild(el);
+  }
+  $('cnt').textContent=`(${S.completedToday}/${MAX_DAILY} hoy)`;
+  $('rest').disabled=!!S.lastRest&&daysBetween(S.lastRest,today())<7;
+  renderChar();renderShop();
+  $('log').innerHTML=S.log.map(l=>`<div>${l}</div>`).join('');
+}
+function renderChar(){
+  $('eq').innerHTML='';
+  for(const sl of EQ_SLOTS){
+    const g=GROUPS[sl.g],it=ITEM[S.eq[sl.k]];
+    const b=document.createElement('button');b.className='slot';
+    b.innerHTML=`<b>${g.icon}</b>${it?`${it.name}<br><span class="ok">+${it.pct}% ${STAT_TXT[it.stat]}</span>`:`${g.label}${sl.n?' '+sl.n:''}<br>vacío`}`;
+    b.title=it?'Pulsa para desequipar':'Equipa un objeto desde la tienda';
+    b.onclick=()=>{if(it){delete S.eq[sl.k];save();render()}};
+    $('eq').appendChild(b);
+  }
+  const f=k=>Math.round((bonus(k)-1)*100);
+  $('bonuses').textContent=`Bonos: daño +${f('dmg')}% · XP +${f('xp')}% · monedas +${f('coin')}%`;
+}
+function equip(it){
+  const slots=EQ_SLOTS.filter(x=>x.g===it.g);
+  if(slots.some(x=>S.eq[x.k]===it.id)) return;
+  const sl=slots.find(x=>!S.eq[x.k])||slots[0];
+  S.eq[sl.k]=it.id;log(`🎽 Equipado: ${it.name}`);save();render();
+}
+function renderShop(){
+  const sel=$('filter');
+  if(!sel.options.length){
+    sel.innerHTML='<option value="all">Todo</option>'+Object.entries(GROUPS).map(([g,d])=>`<option value="${g}">${d.icon} ${d.label}</option>`).join('');
+    sel.onchange=renderShop;
+  }
+  const box=$('shop');box.innerHTML='';
+  for(const it of ITEMS.filter(i=>sel.value==='all'||i.g===sel.value)){
+    const owned=S.owned.includes(it.id),worn=Object.values(S.eq).includes(it.id);
+    const row=document.createElement('div');row.className='item row';
+    row.innerHTML=`<span>${GROUPS[it.g].icon} <b>${it.name}</b><br><small>+${it.pct}% ${STAT_TXT[it.stat]} · nivel ${it.lvl}</small></span>`;
+    const b=document.createElement('button');
+    if(worn){b.textContent='Equipado';b.disabled=true}
+    else if(owned){b.textContent='Equipar';b.onclick=()=>equip(it)}
+    else if(S.level<it.lvl){b.textContent=`Nivel ${it.lvl}`;b.disabled=true}
+    else{b.textContent=`Comprar ${it.cost} 🪙`;b.disabled=S.coins<it.cost;
+      b.onclick=()=>{if(S.coins>=it.cost){S.coins-=it.cost;S.owned.push(it.id);log(`🛒 Comprado: ${it.name}`);equip(it)}}}
+    row.appendChild(b);box.appendChild(row);
+  }
+}
+$('rest').onclick=()=>{S.lastRest=today();log('😴 Día de descanso: racha protegida');save();render()};
+let resetTimer;
+$('reset').onclick=()=>{
+  const b=$('reset');
+  if(b.dataset.armed){clearTimeout(resetTimer);delete b.dataset.armed;b.textContent='Reiniciar partida';
+    localStorage.removeItem(KEY);S=fresh();save();render();return}
+  b.dataset.armed=1;b.textContent='¿Seguro? Pulsa otra vez para borrar';
+  resetTimer=setTimeout(()=>{delete b.dataset.armed;b.textContent='Reiniciar partida'},4000);
+};
+render();
+</script>
+</body>
+</html>
