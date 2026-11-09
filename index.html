@@ -24,7 +24,8 @@
   select{background:#0c0d13;color:#eee;border:1px solid #3a4366;border-radius:6px;padding:5px;margin-bottom:6px}
   .navigation{display:flex;gap:6px;margin-bottom:10px}
   .navigation button{flex:1;margin:0;padding:10px 4px}
-  .navigation button[aria-pressed="true"]{background:#586ba3;outline:2px solid #9ad}
+  .navigation button[aria-selected="true"]{background:#586ba3;outline:2px solid #9ad}
+  [hidden]{display:none !important}
 </style>
 </head>
 <body>
@@ -36,14 +37,14 @@
   <small id="xptxt"></small>
 </div>
 
-<nav class="navigation" aria-label="Secciones del juego">
-  <button type="button" data-section="adventure" aria-controls="adventure" aria-pressed="true">Misiones y monstruos</button>
-  <button type="button" data-section="character" aria-controls="character" aria-pressed="false">Personaje</button>
-  <button type="button" data-section="store" aria-controls="store" aria-pressed="false">Tienda</button>
-</nav>
+<div class="navigation" role="tablist" aria-label="Secciones del juego">
+  <button type="button" role="tab" id="tab-adventure" data-section="adventure" aria-controls="adventure" aria-selected="true">Misiones y monstruos</button>
+  <button type="button" role="tab" id="tab-character" data-section="character" aria-controls="character" aria-selected="false" tabindex="-1">Personaje</button>
+  <button type="button" role="tab" id="tab-store" data-section="store" aria-controls="store" aria-selected="false" tabindex="-1">Tienda</button>
+</div>
 
 <main>
-<section id="adventure" aria-label="Misiones y monstruos">
+<section id="adventure" role="tabpanel" aria-labelledby="tab-adventure">
 <div class="card">
   <h2>Monstruo</h2>
   <div class="big" id="mIcon"></div>
@@ -61,7 +62,7 @@
 <button id="reset">Reiniciar partida</button>
 </section>
 
-<section id="character" aria-label="Personaje" hidden>
+<section id="character" role="tabpanel" aria-labelledby="tab-character" hidden>
 <div class="card">
   <h2>Personaje</h2>
   <div id="eq" class="grid"></div>
@@ -69,7 +70,7 @@
 </div>
 </section>
 
-<section id="store" aria-label="Tienda" hidden>
+<section id="store" role="tabpanel" aria-labelledby="tab-store" hidden>
 <div class="card">
   <h2>Tienda</h2>
   <select id="filter"></select>
@@ -199,14 +200,28 @@ function add(ex,amount){
 function save(){localStorage.setItem(KEY,JSON.stringify(S))}
 
 const $=id=>document.getElementById(id);
-const navigationButtons=document.querySelectorAll('.navigation button');
+const navigationButtons=Array.from(document.querySelectorAll('.navigation [role="tab"]'));
+function selectSection(button){
+  for(const option of navigationButtons){
+    const selected=option===button;
+    option.setAttribute('aria-selected',String(selected));
+    option.tabIndex=selected?0:-1;
+    $(option.dataset.section).hidden=!selected;
+  }
+}
 for(const button of navigationButtons){
-  button.addEventListener('click',()=>{
-    for(const option of navigationButtons){
-      const selected=option===button;
-      option.setAttribute('aria-pressed',String(selected));
-      $(option.dataset.section).hidden=!selected;
-    }
+  button.addEventListener('click',()=>selectSection(button));
+  button.addEventListener('keydown',event=>{
+    const index=navigationButtons.indexOf(button);
+    let next;
+    if(event.key==='ArrowRight') next=(index+1)%navigationButtons.length;
+    else if(event.key==='ArrowLeft') next=(index+navigationButtons.length-1)%navigationButtons.length;
+    else if(event.key==='Home') next=0;
+    else if(event.key==='End') next=navigationButtons.length-1;
+    else return;
+    event.preventDefault();
+    selectSection(navigationButtons[next]);
+    navigationButtons[next].focus();
   });
 }
 function render(){
