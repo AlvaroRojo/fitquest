@@ -133,6 +133,55 @@ test('stat breakdown matches gameplay bonuses from training, equipment and achie
   })()`),true);
 });
 
+test('daily stock respects level, remains stable through reload and records sold offers', () => {
+  const g=game();
+  assert.equal(g.run(`(() => {
+    S=fresh(); S.level=5; S.coins=10000;
+    if(!ensureShopStock() || S.shopStock.offers.length!==8 ||
+      new Set(S.shopStock.offers).size!==8 || S.shopStock.offers.some(id=>ITEM[id].lvl>5) ||
+      S.shopStock.offers.filter(id=>ITEM[id].tier===1).length<6)return false;
+    const offers=JSON.stringify(S.shopStock.offers);
+    S.level=15; if(ensureShopStock() || JSON.stringify(S.shopStock.offers)!==offers)return false;
+    const id=S.shopStock.offers[0];
+    if(!buyDailyItem(id) || buyDailyItem(id) || !S.shopStock.sold.includes(id))return false;
+    S.owned=S.owned.filter(item=>item!==id);
+    if(buyDailyItem(id))return false;
+    save(); return true;
+  })()`),true);
+  const old=g.saved(), reloaded=game(old);
+  assert.equal(reloaded.run('ensureShopStock()'),false);
+  assert.deepEqual(reloaded.saved().shopStock,old.shopStock);
+  assert.equal(reloaded.run("ensureShopStock('2099-01-02')"),true);
+  assert.equal(reloaded.run('S.shopStock.level'),15);
+  assert.equal(reloaded.run('S.shopStock.sold.length'),0);
+});
+
+test('weekly forge permits one purchase per local calendar week and affects only equipped stats', () => {
+  const g=game();
+  assert.equal(g.run(`(() => {
+    const RealDate=Date; let clock=RealDate.UTC(2026,0,4,12);
+    Date=class extends RealDate {
+      constructor(...args){if(args.length) super(...args);else super(clock)}
+      static now(){return clock}
+    };
+    S=fresh(); S.coins=149;
+    if(buyForgeUpgrade('toString') || buyForgeUpgrade('dmg'))return false;
+    S.coins=1000;
+    if(!buyForgeUpgrade('dmg') || S.coins!==850 || buyForgeUpgrade('xp'))return false;
+    if(statBreakdown('dmg').forge!==0)return false;
+    S.owned=['sword_0_0'];placeItem('sword_0_0','sword');
+    if(statBreakdown('dmg').forge!==1 || Math.abs(bonus('dmg')-1.06)>1e-8)return false;
+    clock+=86400000;
+    if(!buyForgeUpgrade('dmg') || S.coins!==600 || S.forgeRanks.dmg!==2)return false;
+    delete S.eq.sword;
+    if(statBreakdown('dmg').forge!==0)return false;
+    save(); return true;
+  })()`),true);
+  const restored=game(g.saved());
+  assert.equal(restored.run('S.forgeRanks.dmg'),2);
+  assert.equal(restored.run('S.forgeLastWeek'),'2026-01-05');
+});
+
 test('global statistics use saved counters and all defeated monsters', () => {
   const g=game();
   assert.equal(g.run(`(() => {

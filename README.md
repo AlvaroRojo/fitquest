@@ -53,7 +53,21 @@ eliminarla.
   bioma acorde, y los jefes cuentan con llamas animadas. Las animaciones
   respetan la preferencia del sistema de reducir movimiento. Estos encuentros
   son independientes de la arena.
-- **Personaje y tienda:** compra equipo con monedas del juego y equípalo. Los
+- **Armería:** cada día local, al abrir el juego o volver a él, se generan
+  ocho ofertas según el nivel actual; la selección permanece igual hasta
+  medianoche incluso si subes de nivel o recargas. Se priorizan objetos no
+  poseídos y de la rareza más alta disponible; pueden aparecer objetos ya
+  poseídos cuando no quedan suficientes. Una oferta comprada no se puede
+  volver a comprar ese día, incluso si desmantelas el objeto. Los filtros
+  afectan solo a las ofertas diarias.
+  La **forja permanente** permite comprar una mejora total cada semana natural
+  (de lunes a domingo, hora local): Filo eterno, Sabiduría arcana o Prosperidad
+  dorada. Cada rango añade un punto porcentual al bono de daño, XP o monedas
+  del equipo, respectivamente, solo mientras lleves al menos un objeto de esa
+  estadística. El coste es 150 + 100 monedas por rango actual de esa mejora.
+  Los rangos se conservan al cambiar o desmantelar objetos y se suman a los
+  demás bonos. El equipo y la forja usan monedas del juego, no dinero real.
+- **Personaje y equipo:** compra equipo con monedas del juego y equípalo. Los
   objetos comprados y los obtenidos en sobres comparten inventario. En la
   pestaña de personaje pulsa Equipar para colocarlo automáticamente en un hueco
   compatible. Se usa el primer hueco libre o, si están ocupados, se sustituye
@@ -69,12 +83,13 @@ eliminarla.
   a su estadística. El coste es 5 + 3 por nivel de mejora actual + 2 por
   índice de rareza (común 0 a legendario 3). Desmantelar elimina el objeto y
   sus mejoras; aún no hay fabricación.
-  Hay 128 objetos en cuatro rarezas, con filtros por tipo y rareza.
+  Hay 128 objetos en cuatro rarezas; los sobres ofrecen otra forma de
+  conseguirlos.
 - **Entrenamiento del héroe:** en la pestaña Personaje puedes comprar rangos
   sin límite de Poder, Sabiduría y Fortuna con monedas del juego. Cada rango
   añade un 1 % a daño, XP o monedas, respectivamente. El siguiente rango
   cuesta 100 + 50 monedas por rango actual. Estos bonos se suman a los del
-  equipo y logros y se aplican también a la arena y las mazmorras. El panel
+  equipo, forja y logros y se aplican también a la arena y las mazmorras. El panel
   de estadísticas muestra el total y el aporte de cada una de estas fuentes.
   Bajo el entrenamiento se muestran las misiones, los monstruos derrotados
   (incluidos los de misión, arena y mazmorras), los días de actividad,
