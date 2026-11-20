@@ -136,6 +136,29 @@ test('character inventory marks equipped items and keeps compact filterable layo
   assert.match(script, /b\.className=it\?'slot is-equipped':'slot'/);
 });
 
+test('equipped inventory items sort first without changing the saved order', () => {
+  const g=game();
+  assert.equal(g.run(`(() => {
+    S=fresh(); S.owned=['shield_0_0','sword_0_0','helmet_0_0','ring_0_0'];
+    S.eq={sword:'sword_0_0',helmet:'helmet_0_0'};
+    return JSON.stringify(inventoryEquippedFirst(S.owned))===JSON.stringify(['sword_0_0','helmet_0_0','shield_0_0','ring_0_0']) &&
+      S.owned[0]==='shield_0_0' &&
+      inventoryEquippedFirst(['shield_0_0','helmet_0_0'])[0]==='helmet_0_0';
+  })()`),true);
+});
+
+test('hero appearance tiers follow total damage power and can decrease', () => {
+  const g=game();
+  assert.equal(g.run(`(() => {
+    S=fresh(); if(heroPowerTier()!==0)return false;
+    S.attributes.dmg=19; if(heroPowerTier()!==0)return false;
+    S.achievements=['kill1']; if(heroPowerTier()!==1)return false;
+    S.attributes.dmg=58; if(heroPowerTier()!==2)return false;
+    S.attributes.dmg=118; if(heroPowerTier()!==3)return false;
+    S.attributes.dmg=0; return heroPowerTier()===0;
+  })()`),true);
+});
+
 test('training improves autobattle and dungeon damage without changing mission targets', () => {
   const g=game();
   assert.equal(g.run(`(() => {

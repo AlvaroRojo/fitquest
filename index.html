@@ -48,9 +48,10 @@
   .creature>g:first-child{transform-origin:70px 75px;animation:creature-breathe 2.6s ease-in-out infinite}
   .creature .eyes{animation:glow 2s ease-in-out infinite}
   .creature .jaw{transform-origin:70px 96px;animation:snarl 2.8s ease-in-out infinite}
-  .hero-layout{display:grid;grid-template-columns:170px 1fr;gap:14px;align-items:center}
-  .hero-stage{min-height:220px;display:grid;place-items:center;border:1px solid #6d5994;border-radius:12px;background:radial-gradient(ellipse at center,#7655ac77,#0a1024 72%)}
-  .hero-art{width:150px;max-width:100%;filter:drop-shadow(0 0 12px #9a7cff88);animation:float 3s ease-in-out infinite}
+  .hero-layout{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.35fr) minmax(0,1fr);grid-template-areas:"earring1 helmet earring2" "arms hero chest" "sword hero shield" "ring1 hero pants" "necklace boots ring2";gap:6px;align-items:stretch}
+  .hero-stage{grid-area:hero;min-width:0;min-height:260px;display:grid;place-items:center;border:1px solid #6d5994;border-radius:12px;background:radial-gradient(ellipse at center,#7655ac77,#0a1024 72%)}
+  .hero-art{width:min(100%,200px);max-height:100%;filter:drop-shadow(0 0 12px #9a7cff88);animation:float 3s ease-in-out infinite}
+  .hero-layout .slot{min-width:0;overflow-wrap:anywhere;line-height:1.2}
   .slot.selected-target{border:2px solid #77f7df;box-shadow:0 0 12px #67ddc488}
   .inventory-item{border:1px solid #464d76;border-radius:10px;padding:10px;margin:8px 0;background:#11182dcc}
   .inventory-item[draggable="true"]{cursor:grab}
@@ -205,6 +206,9 @@
   #character .hero-stage::before{content:"";position:absolute;width:85%;aspect-ratio:1;border:1px solid #f1ce9a88;border-radius:50%;box-shadow:0 0 18px #dca87c88,inset 0 0 18px #dca87c55;animation:encounter-rune 25s linear infinite}
   #character .hero-stage svg{position:relative;z-index:1}
   #character .hero-art{filter:drop-shadow(0 0 14px #f4bf9caa)}
+  #character .hero-stage[data-power="1"]{box-shadow:inset 0 0 35px #ae78c455,0 0 20px #b37eb077}
+  #character .hero-stage[data-power="2"]{border-color:#f0c579;box-shadow:inset 0 0 40px #d8924f66,0 0 25px #e2a35e77}
+  #character .hero-stage[data-power="3"]{border-color:#9df6ef;box-shadow:inset 0 0 40px #4bd7d766,0 0 30px #67e5ee88}
   #character .slot{border-style:solid;border-color:#806855;box-shadow:inset 0 1px #fff1}
   #character .slot.is-equipped{border-color:#d6ad66;background:linear-gradient(145deg,#594232,#292335);box-shadow:inset 0 0 12px #d6a95722}
   #character .slot.selected-target{border:2px solid #77f7df;box-shadow:0 0 12px #67ddc488}
@@ -261,7 +265,7 @@
     .mission-icon{width:36px;height:36px;font-size:1.1rem}
     .mission-title strong{min-height:5.2em}
   }
-  @media(max-width:480px){body{padding:10px}.card{padding:15px}.row{flex-wrap:wrap}.hero-layout{grid-template-columns:1fr}.hero-stage{min-height:170px}.hero-art{height:160px}.encounter-stage{min-height:245px}}
+  @media(max-width:480px){body{padding:10px}.card{padding:15px}.row{flex-wrap:wrap}.hero-layout .slot{font-size:.72rem;padding:4px 2px}.hero-stage{min-height:210px}.encounter-stage{min-height:245px}}
   [hidden]{display:none !important}
 </style>
 </head>
@@ -335,8 +339,7 @@
 <section id="character" role="tabpanel" aria-labelledby="tab-character" hidden>
 <div class="card hero-card">
   <h2>🛡️ Personaje</h2>
-  <p>Arrastra un objeto del inventario a su hueco o selecciónalo y pulsa el hueco. Pulsa un hueco equipado sin selección para vaciarlo.</p>
-  <div class="hero-layout"><div class="hero-stage" id="hero"></div><div id="eq" class="grid"></div></div>
+  <div id="eq" class="hero-layout"><div class="hero-stage" id="hero"></div></div>
   <div id="bonuses" class="character-stats" aria-label="Estadísticas totales del personaje"></div>
 </div>
 <div class="card training-card">
@@ -495,10 +498,11 @@ function nextEncounter(kills){
 }
 
 const EQ_SLOTS=[
-  {k:'helmet',g:'helmet'},{k:'necklace',g:'necklace'},{k:'earring1',g:'earring',n:1},
-  {k:'earring2',g:'earring',n:2},{k:'ring1',g:'ring',n:1},{k:'ring2',g:'ring',n:2},
-  {k:'sword',g:'sword'},{k:'chest',g:'chest'},{k:'shield',g:'shield'},
-  {k:'arms',g:'arms'},{k:'pants',g:'pants'},{k:'boots',g:'boots'}];
+  {k:'earring1',g:'earring',n:1},{k:'helmet',g:'helmet'},{k:'earring2',g:'earring',n:2},
+  {k:'arms',g:'arms'},{k:'chest',g:'chest'},
+  {k:'sword',g:'sword'},{k:'shield',g:'shield'},
+  {k:'ring1',g:'ring',n:1},{k:'pants',g:'pants'},
+  {k:'necklace',g:'necklace'},{k:'boots',g:'boots'},{k:'ring2',g:'ring',n:2}];
 // stat: dmg = daño, xp = experiencia, coin = monedas; w = peso de potencia/precio
 const GROUPS={
   sword:{label:'Espada',icon:'🗡️',stat:'dmg',w:1.5,names:['Espada de madera','Espada de hierro','Espada de acero','Espada legendaria']},
@@ -576,6 +580,11 @@ const statBreakdown=stat=>{
   return {attributes,equipment,achievements,total:attributes+equipment+achievements};
 };
 const bonus=stat=>1+statBreakdown(stat).total/100;
+const heroPowerTier=()=>{const power=statBreakdown('dmg').total;return power>=120?3:power>=60?2:power>=20?1:0};
+const inventoryEquippedFirst=ids=>{
+  const equipped=new Set(Object.values(S.eq));
+  return [...ids.filter(id=>equipped.has(id)),...ids.filter(id=>!equipped.has(id))];
+};
 const target = (ex,l) => Math.max(ex.base, Math.round(ex.base*Math.min(2,1+0.05*(l-1))/ex.step[0])*ex.step[0]);
 const BATTLE_INTERVAL=10000, OFFLINE_LIMIT=8*60*60*1000, PACK_COST=100;
 const DUNGEONS=[
@@ -941,8 +950,10 @@ function encounterBiome(encounter){
 }
 function heroArt(){
   const equipped=key=>Boolean(S.eq[key]);
+  const tier=heroPowerTier();
   return `<svg class="hero-art" viewBox="0 0 150 220" role="img" aria-label="Héroe y su equipo">
     <ellipse cx="75" cy="208" rx="50" ry="8" fill="#14102b" opacity=".8"/>
+    ${tier>=1?`<path d="M50 72 Q19 83 21 180 L46 167 75 188 104 167 129 180 Q131 83 100 72Z" fill="${tier>=3?'#285c70':tier>=2?'#83502f':'#593b70'}" stroke="${tier>=3?'#a1f9f0':tier>=2?'#ffd17f':'#d7b1ee'}" stroke-width="2"/>`:''}
     <path d="M53 125 L49 185 L65 185 L75 139 L85 185 L101 185 L97 125Z" fill="${equipped('pants')?'#8c78b4':'#3e3a58'}" stroke="#cfb7eb" stroke-width="2"/>
     <path d="M46 183 L67 183 L67 200 L40 200Z M83 183 L104 183 L110 200 L83 200Z" fill="${equipped('boots')?'#d1a86f':'#34293e'}" stroke="#bca5d9" stroke-width="2"/>
     <path d="M48 72 L30 122 L43 128 L58 96 M102 72 L120 122 L107 128 L92 96" fill="${equipped('arms')?'#bfa3dd':'#716786'}" stroke="#cfb7eb" stroke-width="2"/>
@@ -951,6 +962,8 @@ function heroArt(){
     <circle cx="75" cy="42" r="25" fill="#cda7a4" stroke="#efd6d5" stroke-width="2"/>
     <path d="M49 42 Q46 10 75 13 Q104 10 101 42 L91 36 L59 36Z" fill="${equipped('helmet')?'#aab3d2':'#4e3559'}" stroke="#cdb7e5" stroke-width="2"/>
     <path d="M62 44 L69 46 M81 46 L88 44" stroke="#24132e" stroke-width="3"/>
+    ${tier>=2?'<path d="M39 69 L24 58 34 85 48 90 M111 69 L126 58 116 85 102 90" fill="#c3925a" stroke="#ffe0a2" stroke-width="2"/><path d="M75 98 L82 108 75 118 68 108Z" fill="#ffe1a3"/>':''}
+    ${tier>=3?'<path d="M34 59 L15 39 22 75 39 81 M116 59 L135 39 128 75 111 81" fill="#62d9df" stroke="#d7fffa" stroke-width="2"/><path d="M53 22 L49 8 62 15 75 3 88 15 101 8 97 22" fill="#efc775" stroke="#fff1bb" stroke-width="2"/>':''}
     ${equipped('necklace')?'<circle cx="75" cy="83" r="5" fill="#68f0e2"/>':''}
     ${equipped('earring1')?'<circle cx="51" cy="54" r="3" fill="#ffe38c"/>':''}
     ${equipped('earring2')?'<circle cx="99" cy="54" r="3" fill="#ffe38c"/>':''}
@@ -1092,11 +1105,14 @@ function renderAttributes(){
   }
 }
 function renderChar(){
+  const hero=$('hero');
+  hero.dataset.power=heroPowerTier();
   $('hero').innerHTML=heroArt();
-  $('eq').innerHTML='';
+  $('eq').replaceChildren(hero);
   for(const sl of EQ_SLOTS){
     const g=GROUPS[sl.g],it=ITEM[S.eq[sl.k]];
     const b=document.createElement('button');b.className=it?'slot is-equipped':'slot';
+    b.style.gridArea=sl.k;
     b.innerHTML=`<b>${g.icon}</b>${it?`${it.name}${upgradeLevel(it.id)?` +${upgradeLevel(it.id)}`:''}<br><span class="ok">+${itemPercent(it)}% ${STAT_TXT[it.stat]}</span>`:`${g.label}${sl.n?' '+sl.n:''}<br>vacío`}`;
     if(selectedItem && ITEM[selectedItem]?.g===sl.g) b.classList.add('selected-target');
     b.title=selectedItem?'Pulsa para colocar el objeto seleccionado':it?'Pulsa para desequipar':'Selecciona un objeto del inventario';
@@ -1118,14 +1134,13 @@ function renderChar(){
     return `<div class="character-stat"><strong>${definition.icon} ${definition.name} · +${b.total}% ${STAT_TXT[stat]}</strong><small>Atributo +${b.attributes}% · Equipo +${b.equipment}% · Logros +${b.achievements}%</small></div>`;
   }).join('');
   $('materials').textContent=`🔩 Fragmentos: ${S.materials}`;
-  $('inventory-status').textContent=selectedItem?`Seleccionado: ${ITEM[selectedItem].name}. Elige un hueco resaltado.`:
-    dismantleConfirm?`Confirma para desmantelar ${ITEM[dismantleConfirm].name} y perder sus mejoras.`:'';
+  $('inventory-status').textContent=selectedItem?`Seleccionado: ${ITEM[selectedItem].name}. Elige un hueco resaltado.`:'';
   const inventory=$('inventory');inventory.innerHTML='';
   const type=$('inventory-type').value, equipped=$('inventory-equipped').value;
-  const matches=S.owned.filter(id=>{
+  const matches=inventoryEquippedFirst(S.owned.filter(id=>{
     const item=ITEM[id],worn=Object.values(S.eq).includes(id);
     return item && (type==='all'||item.g===type) && (equipped==='all'||(equipped==='equipped'?worn:!worn));
-  });
+  }));
   const pages=Math.max(1,Math.ceil(matches.length/INVENTORY_PAGE_SIZE));
   inventoryPage=Math.min(inventoryPage,pages-1);
   $('inventory-pagination').hidden=pages===1;

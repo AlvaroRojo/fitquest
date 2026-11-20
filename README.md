@@ -57,7 +57,10 @@ eliminarla.
   objetos comprados y los obtenidos en sobres comparten inventario. En la
   pestaña de personaje arrastra un objeto a un hueco compatible, o selecciónalo
   y pulsa el hueco; también funciona con teclado y en móvil. Pulsa un hueco
-  equipado sin selección para vaciarlo. Desmantela objetos no equipados con
+  equipado sin selección para vaciarlo. El aspecto del héroe evoluciona al
+  alcanzar +20 %, +60 % y +120 % de bonificación total de daño; puede volver
+  a una apariencia anterior si se reduce ese bono. Los objetos equipados se
+  muestran primero en el inventario. Desmantela objetos no equipados con
   dos pulsaciones: dan 2, 5, 12 o 25 fragmentos según su rareza. El inventario
   se puede filtrar por tipo y estado y muestra hasta 12 objetos por página.
   Puedes usar fragmentos para mejorar un objeto sin un máximo de nivel; cada mejora añade un 1 %
