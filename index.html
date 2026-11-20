@@ -243,11 +243,12 @@
   .armory-section{margin-top:16px;padding:16px;border:1px solid #806346;border-radius:14px;background:linear-gradient(135deg,#342d36,#171c2b)}
   .armory-section h3{margin:0;color:#ffe0a2;font:700 1.1rem Georgia,serif}
   .armory-section p{color:#cbb59b;margin:6px 0 12px}
-  .armory-filters{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px}
-  .armory-filters label{display:grid;gap:4px;color:#e3c9a1;font-size:.8rem}
-  .armory-filters select{margin:0;min-width:145px;padding:8px;border-color:#957650;color:#fff0d4}
-  #shop,.forge-options{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:10px}
-  #shop .shop-offer,.forge-option{display:flex;flex-direction:column;gap:8px;min-width:0;padding:12px;border:1px solid #806346;border-radius:10px;background:linear-gradient(135deg,#433633,#1d2130)}
+  #shop{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,210px),1fr));gap:10px}
+  .forge-options{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,210px),1fr));gap:10px}
+  #shop .shop-offer,.forge-option{display:flex;flex-direction:column;gap:8px;min-width:0;padding:14px;border:1px solid #806346;border-radius:12px;background:linear-gradient(145deg,#493931,#1d2130);box-shadow:inset 0 1px #fff2,0 5px 14px #0003}
+  #shop .shop-offer[data-tier="1"]{border-color:#6f9c79}
+  #shop .shop-offer[data-tier="2"]{border-color:#69a5cf;box-shadow:inset 0 1px #fff2,0 0 12px #449dd133}
+  #shop .shop-offer[data-tier="3"]{border-color:#e4ba65;box-shadow:inset 0 1px #fff3,0 0 16px #e2a84044}
   .shop-offer strong,.forge-option strong{color:#ffe0a2;overflow-wrap:anywhere}
   .shop-offer small,.forge-option small{color:#cbb59b}
   .shop-offer button,.forge-option button{margin:0;margin-top:auto}
@@ -413,19 +414,15 @@
 <section id="store" role="tabpanel" aria-labelledby="tab-store" hidden>
 <div class="card armory-card">
   <div class="armory-header"><h2>⚒️ Armería arcana</h2><span class="armory-badge">✨ Equipo para tu aventura</span></div>
-  <p class="armory-intro">Descubre mercancía diaria y fortalece tu equipo en la forja.</p>
+  <p class="armory-intro">Descubre tesoros diarios y fortalece tu equipo en la forja.</p>
   <section class="armory-section" aria-labelledby="daily-title">
-    <div class="armory-header"><h3 id="daily-title">🛒 Mercancía del día</h3><span class="armory-badge" id="shop-date"></span></div>
-    <p>Ocho ofertas según tu nivel al generarlas. Se renuevan a medianoche.</p>
-    <div class="armory-filters">
-      <label for="filter">Tipo <select id="filter"></select></label>
-      <label for="tier-filter">Rareza <select id="tier-filter"><option value="all">Todas</option><option value="0">Común</option><option value="1">Poco común</option><option value="2">Raro</option><option value="3">Legendario</option></select></label>
-    </div>
+    <div class="armory-header"><h3 id="daily-title">🛒 Objetos del día</h3><span class="armory-badge" id="shop-date"></span></div>
+    <p>Diez tesoros aleatorios adaptados a tu nivel; se renuevan a medianoche.</p>
     <div id="shop"></div>
   </section>
   <section class="armory-section" aria-labelledby="forge-title">
     <div class="armory-header"><h3 id="forge-title">🔥 Forja permanente</h3><span class="armory-badge" id="forge-week"></span></div>
-    <p>Elige una mejora por semana. Cada rango añade +1 % al bono de esa estadística cuando llevas equipo que la mejora.</p>
+    <p>Hasta 10 mejoras por semana, con coste creciente. Cada rango añade +1 % al bono correspondiente mientras llevas equipo compatible.</p>
     <div class="forge-options" id="forge-options"></div>
   </section>
   <p id="shop-status" role="status" aria-live="polite"></p>
@@ -593,9 +590,10 @@ for(const [g,d] of Object.entries(GROUPS)) for(let t=0;t<4;t++){
   }));
 }
 const ITEM=Object.fromEntries(ITEMS.map(i=>[i.id,i]));
-const SHOP_SIZE=8;
+const SHOP_SIZE=10, FORGE_WEEKLY_LIMIT=10;
+const SHOP_WEIGHTS=[60,25,12,3];
 const FORGE={dmg:{name:'Filo eterno',icon:'⚔️'},xp:{name:'Sabiduría arcana',icon:'📘'},coin:{name:'Prosperidad dorada',icon:'🪙'}};
-const forgeCost=rank=>150+100*rank;
+const forgeCost=()=>150+100*Object.keys(FORGE).reduce((sum,stat)=>sum+(S.forgeRanks[stat]||0),0);
 function weekStart(day){
   const [year,month,date]=day.split('-').map(Number);
   const monday=new Date(Date.UTC(year,month-1,date));
@@ -681,7 +679,7 @@ const fresh = () => ({level:1,xp:0,coins:0,owned:[],eq:{},streak:0,kills:0,
   targets:{},totalMissions:0,packsOpened:0,achievements:[],missionKills:0,autoKills:0,autoMonsterHp:monsterHp(0),battleUpdated:Date.now(),
   keys:0,keyPity:0,unlockedDungeons:['crypt'],dungeonRun:null,lastDungeonDay:null,dungeonClears:0,materials:0,activeDays:0,lastActivityDay:null,
   weeklyRewards:0,balanceVersion:1,unlimitedMissionsVersion:1,upgrades:{},attributes:{dmg:0,xp:0,coin:0},encounter:nextEncounter(0),
-  missionDifficultyVersion:1,legacyMissions:{},shopStock:null,forgeRanks:{dmg:0,xp:0,coin:0},forgeLastWeek:null});
+  missionDifficultyVersion:1,legacyMissions:{},shopStock:null,forgeRanks:{dmg:0,xp:0,coin:0},forgeLastWeek:null,forgeWeek:null,forgeWeekPurchases:0});
 let S;
 try{S=JSON.parse(localStorage.getItem(KEY)||'null') || fresh()}
 catch(error){alert('No se puede leer la partida guardada. No se ha borrado; revisa los datos del navegador.');throw error}
@@ -707,6 +705,8 @@ S.attributes ??= {dmg:0,xp:0,coin:0};
 S.shopStock ??= null;
 S.forgeRanks ??= {dmg:0,xp:0,coin:0};
 S.forgeLastWeek ??= null;
+S.forgeWeek ??= S.forgeLastWeek;
+S.forgeWeekPurchases ??= S.forgeLastWeek ? 1 : 0;
 let legacyTicks=0;
 if(S.missionKills==null){
   if(S.autoBattle===true && Number.isFinite(S.battleUpdated)){
@@ -749,21 +749,22 @@ while(S.active.length<SLOTS) S.active.push(randomMission([...S.active,...migrate
 
 function log(t){S.log.unshift(t);S.log=S.log.slice(0,40)}
 function ensureShopStock(day=today()){
-  if(S.shopStock && S.shopStock.day===day) return false;
-  const eligible=ITEMS.filter(item=>item.lvl<=S.level);
-  const topTier=Math.max(...eligible.map(item=>item.tier));
-  const shuffle=items=>{
-    const result=[...items];
-    for(let i=result.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[result[i],result[j]]=[result[j],result[i]]}
-    return result;
-  };
-  const unowned=eligible.filter(item=>!S.owned.includes(item.id));
-  const available=[...shuffle(unowned.filter(item=>item.tier===topTier)).slice(0,6)];
-  const used=new Set(available.map(item=>item.id));
-  const rest=shuffle(unowned.filter(item=>!used.has(item.id)));
-  const owned=shuffle(eligible.filter(item=>S.owned.includes(item.id)));
-  const offers=[...available,...rest,...owned].slice(0,SHOP_SIZE).map(item=>item.id);
-  S.shopStock={day,level:S.level,offers,sold:[]};
+  const sameDay=S.shopStock && S.shopStock.day===day;
+  if(sameDay && S.shopStock.offers.length>=SHOP_SIZE) return false;
+  if(!sameDay) S.shopStock={day,level:S.level,offers:[],sold:[]};
+  const eligible=ITEMS.filter(item=>item.lvl<=S.shopStock.level);
+  while(S.shopStock.offers.length<SHOP_SIZE){
+    const remaining=eligible.filter(item=>!S.shopStock.offers.includes(item.id));
+    if(!remaining.length) break;
+    const tiers=SHOP_WEIGHTS.map((weight,tier)=>remaining.some(item=>item.tier===tier)?weight:0);
+    const total=tiers.reduce((sum,weight)=>sum+weight,0);
+    let roll=Math.random()*total,tier=0;
+    for(;tier<tiers.length-1;tier++){if(roll<tiers[tier]) break;roll-=tiers[tier]}
+    const pool=remaining.filter(item=>item.tier===tier);
+    const unowned=pool.filter(item=>!S.owned.includes(item.id));
+    const choices=unowned.length?unowned:pool;
+    S.shopStock.offers.push(choices[Math.floor(Math.random()*choices.length)].id);
+  }
   return true;
 }
 function buyDailyItem(id){
@@ -776,10 +777,11 @@ function buyDailyItem(id){
   return true;
 }
 function buyForgeUpgrade(stat){
-  if(!Object.hasOwn(FORGE,stat) || S.forgeLastWeek===weekStart(today())) return false;
-  const rank=S.forgeRanks[stat]||0,cost=forgeCost(rank);
+  const week=weekStart(today()),used=S.forgeWeek===week?S.forgeWeekPurchases:0;
+  if(!Object.hasOwn(FORGE,stat) || used>=FORGE_WEEKLY_LIMIT) return false;
+  const rank=S.forgeRanks[stat]||0,cost=forgeCost();
   if(S.coins<cost) return false;
-  S.coins-=cost;S.forgeRanks[stat]=rank+1;S.forgeLastWeek=weekStart(today());
+  S.coins-=cost;S.forgeRanks[stat]=rank+1;S.forgeWeek=week;S.forgeWeekPurchases=used+1;S.forgeLastWeek=week;
   log(`🔥 Forja: ${FORGE[stat].name} mejorado a ${rank+1}`);
   return true;
 }
@@ -1308,20 +1310,15 @@ function equip(it){
 }
 function renderShop(){
   if(ensureShopStock()) save();
-  const sel=$('filter');
-  if(!sel.options.length){
-    sel.innerHTML='<option value="all">Todo</option>'+Object.entries(GROUPS).map(([g,d])=>`<option value="${g}">${d.icon} ${d.label}</option>`).join('');
-    sel.onchange=renderShop;
-    $('tier-filter').onchange=renderShop;
-  }
   $('shop-date').textContent=`📅 ${S.shopStock.day} · nivel ${S.shopStock.level}`;
   const box=$('shop');box.innerHTML='';
-  const offers=S.shopStock.offers.map(id=>ITEM[id]).filter(it=>it && (sel.value==='all'||it.g===sel.value)&&($('tier-filter').value==='all'||String(it.tier)===$('tier-filter').value));
-  if(!offers.length) box.textContent='No hay ofertas con estos filtros hoy.';
-  for(const it of offers){
+  for(const id of S.shopStock.offers){
+    const it=ITEM[id];
+    if(!it){const row=document.createElement('div');row.className='shop-offer';row.textContent=`Oferta desconocida: ${id}`;box.appendChild(row);continue}
     const owned=S.owned.includes(it.id),worn=Object.values(S.eq).includes(it.id);
     const sold=S.shopStock.sold.includes(it.id);
     const row=document.createElement('div');row.className='shop-offer';
+    row.dataset.tier=it.tier;
     row.innerHTML=`<strong>${GROUPS[it.g].icon} ${it.name}${upgradeLevel(it.id)?` +${upgradeLevel(it.id)}`:''}</strong><small>${TIER_ICONS[it.tier]} ${TIER_NAMES[it.tier]} · +${itemPercent(it)}% ${STAT_TXT[it.stat]} · nivel ${it.lvl}</small>`;
     const b=document.createElement('button');
     if(worn){b.textContent='Equipado';b.disabled=true}
@@ -1332,17 +1329,17 @@ function renderShop(){
       b.onclick=()=>{settleBattle();const bought=buyDailyItem(it.id);if(bought){equip(it)}else{save();render();$('shop-status').textContent='No se puede comprar esta oferta.'}}}
     row.appendChild(b);box.appendChild(row);
   }
-  const used=S.forgeLastWeek===weekStart(today());
-  $('forge-week').textContent=used?'✓ Mejora semanal adquirida':'📅 Disponible hasta el lunes';
+  const used=S.forgeWeek===weekStart(today())?S.forgeWeekPurchases:0;
+  $('forge-week').textContent=`🔥 ${used}/${FORGE_WEEKLY_LIMIT} mejoras esta semana`;
   const forge=$('forge-options');forge.innerHTML='';
   for(const [stat,option] of Object.entries(FORGE)){
-    const rank=S.forgeRanks[stat]||0,cost=forgeCost(rank);
+    const rank=S.forgeRanks[stat]||0,cost=forgeCost();
     const row=document.createElement('div');row.className='forge-option';
     row.innerHTML=`<strong>${option.icon} ${option.name} · rango ${rank}</strong><small>+${rank}% ${STAT_TXT[stat]} con equipo compatible · siguiente: +${rank+1}%</small>`;
     const button=document.createElement('button');button.type='button';
-    button.textContent=used?'Adquirida esta semana':`Mejorar · ${cost} 🪙`;
+    button.textContent=used>=FORGE_WEEKLY_LIMIT?'Límite semanal alcanzado':`Mejorar · ${cost} 🪙`;
     button.setAttribute('aria-label',`${button.textContent}: ${option.name}`);
-    button.disabled=used || S.coins<cost;
+    button.disabled=used>=FORGE_WEEKLY_LIMIT || S.coins<cost;
     button.onclick=()=>{
       settleBattle();const bought=buyForgeUpgrade(stat);save();render();
       $('shop-status').textContent=bought?`${option.name} mejorado permanentemente a rango ${rank+1}.`:'No se puede comprar esta mejora.';

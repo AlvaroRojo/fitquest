@@ -54,17 +54,22 @@ eliminarla.
   respetan la preferencia del sistema de reducir movimiento. Estos encuentros
   son independientes de la arena.
 - **Armería:** cada día local, al abrir el juego o volver a él, se generan
-  ocho ofertas según el nivel actual; la selección permanece igual hasta
-  medianoche incluso si subes de nivel o recargas. Se priorizan objetos no
-  poseídos y de la rareza más alta disponible; pueden aparecer objetos ya
-  poseídos cuando no quedan suficientes. Una oferta comprada no se puede
-  volver a comprar ese día, incluso si desmantelas el objeto. Los filtros
-  afectan solo a las ofertas diarias.
-  La **forja permanente** permite comprar una mejora total cada semana natural
+  diez ofertas únicas según el nivel actual; la selección permanece igual hasta
+  medianoche incluso si subes de nivel o recargas. La rareza se sortea para
+  cada objeto con pesos 60/25/12/3 (común/poco común/raro/legendario);
+  se excluyen las rarezas aún no desbloqueadas y se redistribuyen sus pesos.
+  Cuando se agotan los objetos de una rareza también se excluye esa rareza.
+  Dentro de la rareza sorteada se priorizan objetos no poseídos. Una oferta
+  comprada no se puede volver a comprar ese día, incluso si desmantelas el objeto.
+  Al actualizar una partida, las ocho ofertas existentes se conservan y se
+  añaden dos más del nivel con el que se generaron.
+  La **forja permanente** permite comprar hasta diez mejoras en total cada semana natural
   (de lunes a domingo, hora local): Filo eterno, Sabiduría arcana o Prosperidad
   dorada. Cada rango añade un punto porcentual al bono de daño, XP o monedas
   del equipo, respectivamente, solo mientras lleves al menos un objeto de esa
-  estadística. El coste es 150 + 100 monedas por rango actual de esa mejora.
+  estadística. El coste aumenta en 100 monedas tras cada compra, empezando en
+  150; se calcula con la suma de todos los rangos de la forja y no se reinicia
+  cada semana. Una compra hecha antes de actualizar cuenta para esa semana.
   Los rangos se conservan al cambiar o desmantelar objetos y se suman a los
   demás bonos. El equipo y la forja usan monedas del juego, no dinero real.
 - **Personaje y equipo:** compra equipo con monedas del juego y equípalo. Los

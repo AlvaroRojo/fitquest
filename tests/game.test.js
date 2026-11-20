@@ -137,9 +137,8 @@ test('daily stock respects level, remains stable through reload and records sold
   const g=game();
   assert.equal(g.run(`(() => {
     S=fresh(); S.level=5; S.coins=10000;
-    if(!ensureShopStock() || S.shopStock.offers.length!==8 ||
-      new Set(S.shopStock.offers).size!==8 || S.shopStock.offers.some(id=>ITEM[id].lvl>5) ||
-      S.shopStock.offers.filter(id=>ITEM[id].tier===1).length<6)return false;
+    if(!ensureShopStock() || S.shopStock.offers.length!==10 ||
+      new Set(S.shopStock.offers).size!==10 || S.shopStock.offers.some(id=>ITEM[id].lvl>5))return false;
     const offers=JSON.stringify(S.shopStock.offers);
     S.level=15; if(ensureShopStock() || JSON.stringify(S.shopStock.offers)!==offers)return false;
     const id=S.shopStock.offers[0];
@@ -156,7 +155,21 @@ test('daily stock respects level, remains stable through reload and records sold
   assert.equal(reloaded.run('S.shopStock.sold.length'),0);
 });
 
-test('weekly forge permits one purchase per local calendar week and affects only equipped stats', () => {
+test('daily shop uses weighted rarities among eligible tiers', () => {
+  const g=game();
+  const counts=Array.from(g.run(`(() => {
+    let seed=1234567; Math.random=()=>{seed=(1664525*seed+1013904223)>>>0;return seed/4294967296};
+    S=fresh(); S.level=15; const counts=[0,0,0,0];
+    for(let i=0;i<2000;i++){S.shopStock=null;ensureShopStock();for(const id of S.shopStock.offers)counts[ITEM[id].tier]++}
+    return counts;
+  })()`));
+  assert.equal(counts.reduce((a,b)=>a+b,0),20000);
+  for(const [count,weight] of counts.map((count,i)=>[count,[.60,.25,.12,.03][i]])) {
+    assert.ok(Math.abs(count/20000-weight)<.02, `Unexpected counts: ${counts}`);
+  }
+});
+
+test('weekly forge permits ten increasingly costly purchases and applies to equipped stats', () => {
   const g=game();
   assert.equal(g.run(`(() => {
     const RealDate=Date; let clock=RealDate.UTC(2026,0,4,12);
@@ -166,13 +179,16 @@ test('weekly forge permits one purchase per local calendar week and affects only
     };
     S=fresh(); S.coins=149;
     if(buyForgeUpgrade('toString') || buyForgeUpgrade('dmg'))return false;
-    S.coins=1000;
-    if(!buyForgeUpgrade('dmg') || S.coins!==850 || buyForgeUpgrade('xp'))return false;
+    S.coins=10000;
+    if(!buyForgeUpgrade('dmg') || S.coins!==9850 || forgeCost()!==250)return false;
     if(statBreakdown('dmg').forge!==0)return false;
     S.owned=['sword_0_0'];placeItem('sword_0_0','sword');
     if(statBreakdown('dmg').forge!==1 || Math.abs(bonus('dmg')-1.06)>1e-8)return false;
+    for(let i=1;i<10;i++) if(!buyForgeUpgrade('xp'))return false;
+    const remaining=S.coins;
+    if(buyForgeUpgrade('coin') || S.coins!==remaining || S.forgeWeekPurchases!==10 || forgeCost()!==1150)return false;
     clock+=86400000;
-    if(!buyForgeUpgrade('dmg') || S.coins!==600 || S.forgeRanks.dmg!==2)return false;
+    if(!buyForgeUpgrade('dmg') || S.coins!==remaining-1150 || S.forgeRanks.dmg!==2 || S.forgeWeekPurchases!==1)return false;
     delete S.eq.sword;
     if(statBreakdown('dmg').forge!==0)return false;
     save(); return true;
@@ -180,6 +196,21 @@ test('weekly forge permits one purchase per local calendar week and affects only
   const restored=game(g.saved());
   assert.equal(restored.run('S.forgeRanks.dmg'),2);
   assert.equal(restored.run('S.forgeLastWeek'),'2026-01-05');
+  assert.equal(restored.run('S.forgeWeekPurchases'),1);
+});
+
+test('migration preserves today’s offers and prior weekly purchase', () => {
+  const first=game();
+  first.run(`S=fresh(); S.level=5; S.shopStock={day:today(),level:1,offers:ITEMS.filter(i=>i.lvl===1).slice(0,8).map(i=>i.id),sold:[]};
+    S.shopStock.sold.push(S.shopStock.offers[0]); S.forgeLastWeek=weekStart(today()); S.forgeRanks.dmg=1;
+    delete S.forgeWeek; delete S.forgeWeekPurchases; save()`);
+  const old=first.saved(),g=game(old);
+  assert.equal(g.run('S.forgeWeekPurchases'),1);
+  assert.equal(g.run('ensureShopStock()'),true);
+  assert.deepEqual(Array.from(g.run('S.shopStock.offers.slice(0,8)')),old.shopStock.offers);
+  assert.deepEqual(Array.from(g.run('S.shopStock.sold')),old.shopStock.sold);
+  assert.equal(g.run('S.shopStock.offers.length'),10);
+  assert.equal(g.run('S.shopStock.offers.every(id=>ITEM[id].lvl===1)'),true);
 });
 
 test('global statistics use saved counters and all defeated monsters', () => {
