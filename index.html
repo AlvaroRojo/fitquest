@@ -21,7 +21,6 @@
   button:focus-visible,select:focus-visible{outline:2px solid #8ce2ff;outline-offset:2px}
   .row{display:flex;justify-content:space-between;align-items:center;gap:8px}
   .big{font-size:4em;text-align:center}
-  #log{font-size:.85em;color:#aab;max-height:120px;overflow:auto}
   .ok{color:#6d8}
   .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
   .slot{background:#0c0d13;border:1px dashed #3a4366;border-radius:8px;padding:6px;text-align:center;font-size:.8em;min-height:58px;margin:0}
@@ -37,7 +36,6 @@
   .reward{color:#97e6ba}
   .pack-result{min-height:1.5em;color:#f9d784;font-weight:bold}
   .mission{padding:12px;margin:10px 0;border:1px solid #53518a;border-radius:10px;background:#11182dcc}
-  .mission-actions{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
   .complete{background:linear-gradient(135deg,#066d71,#288d87);border-color:#65dccc}
   .battle-icon{font-size:4em;text-align:center;margin:10px 0}
   .arena{position:relative;overflow:hidden;text-align:center;padding:20px;border-radius:12px;border:1px solid #7054a0;background:radial-gradient(ellipse at center,#7e47bd66,#0b1027 70%)}
@@ -122,9 +120,14 @@
   .encounter-info{color:#d8c6a9;font-size:.85rem}
   .quest-board{grid-template-columns:repeat(auto-fit,minmax(min(100%,230px),1fr));align-items:stretch}
   .quest-board .mission{display:flex;flex-direction:column;gap:6px;min-width:0}
-  .quest-board .mission>.row{align-items:flex-start;flex-wrap:wrap}
-  .quest-board .mission-actions{margin-top:auto}
+  .mission-title{display:flex;align-items:flex-start;gap:9px}
+  .mission-icon{display:grid;place-items:center;flex:none;width:38px;height:38px;border:1px solid #8a6c58;border-radius:10px;background:#1a1c2a;font-size:1.2rem}
+  .mission-title strong{line-height:1.3}
+  .mission-target{color:#e9cfaa;font-size:.85rem}
+  .quest-board .complete{align-self:stretch;margin:8px 0 0;margin-top:auto;min-height:44px}
   .quest-board .quest-rewards{margin:0}
+  .mission-status:not(:empty){margin:12px 0 0;color:#a5f8df;font-size:.9rem}
+  .mission-status:empty{display:none}
   .quest-help{margin-top:14px;color:#c6bdd1;font-size:.85rem}
   .quest-help summary{display:inline-block;cursor:pointer;color:#ecd3a2;font-weight:600}
   .quest-help summary:focus-visible{outline:2px solid #8ce2ff;outline-offset:3px}
@@ -140,6 +143,7 @@
     #adventure:not([hidden]),#character:not([hidden]){display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px;align-items:start}
     #adventure:not([hidden]){grid-template-columns:minmax(0,2fr) minmax(0,3fr)}
     #adventure>.card,#character>.card{margin-bottom:0}
+    #journey{grid-column:1/-1}
     #adventure>button{justify-self:start}
     #character>.card:last-child{grid-column:1/-1}
     #shop,#inventory,#achievement-list,#dungeon-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:10px}
@@ -189,6 +193,7 @@
   <h2>📜 Tablón de encargos <small id="cnt"></small></h2>
   <p>Elige una misión, realiza el ejercicio a tu ritmo y marca «Completado».</p>
   <div id="missions" class="quest-board"></div>
+  <p id="mission-status" class="mission-status" role="status" aria-live="polite"></p>
   <details class="quest-help">
     <summary>ⓘ Reglas y bienestar</summary>
     <p>El daño incluye los bonos del personaje y la racha. La estimación no incluye el botín ni logros nuevos.</p>
@@ -200,7 +205,6 @@
   <h2>🗺️ Travesía del héroe</h2>
   <div id="weekly-progress"></div>
 </div>
-<div class="card"><h2>Registro</h2><div id="log"></div></div>
 <button id="reset">Reiniciar partida</button>
 </section>
 
@@ -839,7 +843,6 @@ function render(liveOnly=false){
   $('battle-hp').textContent=`${Math.max(0,Math.ceil(S.autoMonsterHp))}/${autoMax} HP`;
   $('battle-bar').style.width=Math.min(100,100*S.autoMonsterHp/autoMax)+'%';
   $('battle-status').textContent=`Siempre activa · ${Math.round(2*bonus('dmg')*100)/100} de daño cada 10 segundos · ${S.autoKills} victorias`;
-  $('log').innerHTML=S.log.map(l=>`<div>${l}</div>`).join('');
   $('open-pack').disabled=S.coins<PACK_COST;
   if(liveOnly && !dayChanged) return;
   $('missions').innerHTML='';
@@ -847,36 +850,36 @@ function render(liveOnly=false){
     const tgt=missionTarget(ex),d=S.done[ex.id]||0;
     const preview=missionEstimate(ex);
     const el=document.createElement('div');el.className='mission';
-    el.innerHTML=`<div class="row"><strong>${EXERCISE_ICONS[ex.id]} ${ex.name}</strong><span>Objetivo: ${tgt} ${ex.unit}</span></div>
+    el.innerHTML=`<div class="mission-title"><span class="mission-icon" aria-hidden="true">${EXERCISE_ICONS[ex.id]}</span><div><strong>${ex.name}</strong><div class="mission-target">Objetivo: ${tgt} ${ex.unit}</div></div></div>
       ${d>0?`<p><small>Progreso anterior: ${d}/${tgt} ${ex.unit}. Completa lo que falta y confirma.</small></p><div class="bar mis"><div style="width:${Math.min(100,100*d/tgt)}%"></div></div>`:''}
       <div class="quest-rewards"><span>⚔️ ${Math.round(preview.damage*10)/10} daño</span><span>✨ ~${preview.xp} XP</span><span>🪙 ${preview.coins} monedas</span></div>`;
-    const actions=document.createElement('div');actions.className='mission-actions';
     const complete=document.createElement('button');
     complete.type='button';complete.className='complete';complete.textContent='✓ Completado';
     complete.setAttribute('aria-label',`Completar misión de ${ex.name}`);
     complete.disabled=!!S.bonus[ex.id];
-    complete.onclick=()=>{completeMission(ex);animateHit('mIcon')};
-    actions.appendChild(complete);
-    const skip=document.createElement('button');
-    skip.textContent='Cambiar misión';
-    skip.setAttribute('aria-label',`Cambiar misión de ${ex.name}; perderás el progreso de esta misión`);
-    skip.onclick=()=>{
-      settleBattle();rollDay();
-      if(!S.active.includes(ex.id)){save();render();return}
-      const next=randomMission(S.active);
-      S.active[S.active.indexOf(ex.id)]=next;
-      delete S.done[ex.id];delete S.bonus[ex.id];delete S.targets[ex.id];
-      log(`🎲 Misión cambiada: ${byId(next).name}`);
-      save();render();
+    complete.onclick=()=>{
+      const index=S.active.indexOf(ex.id),before=S.totalMissions,focused=document.activeElement===complete;
+      const previous={kills:S.missionKills,level:S.level,keys:S.keys,achievements:S.achievements.length,chapters:S.weeklyRewards};
+      completeMission(ex);
+      if(S.totalMissions>before){
+        const updates=[`✅ ${ex.name} completada`,`Nueva misión: ${byId(S.active[index]).name}`];
+        if(S.missionKills>previous.kills) updates.push(`⚔️ ${S.missionKills-previous.kills} enemigos derrotados`);
+        if(S.level>previous.level) updates.push(`⭐ Nivel ${S.level}`);
+        if(S.keys>previous.keys) updates.push(`🔑 +${S.keys-previous.keys} llave`);
+        if(S.achievements.length>previous.achievements) updates.push(`🏆 ${S.achievements.length-previous.achievements} logros nuevos`);
+        if(S.weeklyRewards>previous.chapters) updates.push(`🗺️ Travesía: capítulo ${S.weeklyRewards}`);
+        $('mission-status').textContent=updates.join(' · ');
+        animateHit('mIcon');
+        if(focused) $('missions').children[index].querySelector('button').focus();
+      }
     };
-    actions.appendChild(skip);el.appendChild(actions);
+    el.appendChild(complete);
     $('missions').appendChild(el);
   }
   $('cnt').textContent=`(${S.completedToday} hoy · sin límite)`;
   $('weekly-progress').innerHTML=journeyMarkup();
   renderChar();renderAttributes();renderShop();renderAchievements();renderDungeons();
   $('open-pack').disabled=S.coins<PACK_COST;
-  $('log').innerHTML=S.log.map(l=>`<div>${l}</div>`).join('');
 }
 function renderAttributes(){
   const box=$('attributes');box.innerHTML='';
@@ -1047,7 +1050,7 @@ let resetTimer;
 $('reset').onclick=()=>{
   const b=$('reset');
   if(b.dataset.armed){clearTimeout(resetTimer);delete b.dataset.armed;b.textContent='Reiniciar partida';
-    S=fresh();selectedItem=null;dismantleConfirm=null;$('pack-result').textContent='';save();render();return}
+    S=fresh();selectedItem=null;dismantleConfirm=null;$('pack-result').textContent='';$('mission-status').textContent='';save();render();return}
   b.dataset.armed=1;b.textContent='¿Seguro? Pulsa otra vez para borrar';
   resetTimer=setTimeout(()=>{delete b.dataset.armed;b.textContent='Reiniciar partida'},4000);
 };

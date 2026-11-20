@@ -149,6 +149,12 @@ test('mission board keeps guidance collapsed and removes weekly rest control', (
   assert.doesNotMatch(html, /id="rest"|\$\('rest'\)/);
 });
 
+test('mission board omits manual changes and the visible activity log', () => {
+  assert.doesNotMatch(html, /id="log"|<h2>Registro<\/h2>|\$\('log'\)|Cambiar misión/);
+  assert.match(html, /id="mission-status"[^>]*role="status"/);
+  assert.match(script, /const next=randomMission\(S\.active\)/);
+});
+
 test('previously recorded rest still protects streak during migration', () => {
   const g=game();
   assert.equal(g.run(`(() => {

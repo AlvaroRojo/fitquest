@@ -11,8 +11,8 @@ eliminarla.
 - **Navegación:** utiliza el menú superior para cambiar de sección. También
   puedes usar las flechas, Inicio y Fin del teclado entre las pestañas.
 - **Misiones y monstruos:** pulsa **Completado** solo después de realizar el
-  objetivo indicado. Hay tres misiones activas, puedes cambiar cualquiera perdiendo su progreso,
-  y se pueden completar sin límite al día. Hay 20 tipos de ejercicios y el
+  objetivo indicado. Hay tres misiones activas; al completar una aparece otra
+  aleatoria. Se pueden completar sin límite al día. Hay 20 tipos de ejercicios y el
   objetivo se fija al comenzar
   cada misión; descansar y adaptar el ejercicio siempre es más importante
   que una recompensa. Los objetivos no son recomendaciones médicas. Si una
