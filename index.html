@@ -80,6 +80,20 @@
   .attributes{display:grid;gap:8px}
   .attribute{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;padding:9px 12px;border:1px solid #795f45;border-radius:9px;background:#1d1b2b}
   .attribute small{display:block}
+  .character-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin-top:12px}
+  .character-stat{padding:10px;border:1px solid #78604f;border-radius:10px;background:#171c28}
+  .character-stat strong,.character-stat small{display:block}
+  .character-stat strong{color:#ffe0a2}
+  .inventory-toolbar,.inventory-pagination{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .inventory-toolbar label{display:flex;align-items:center;gap:6px}
+  .inventory-toolbar select{margin:0}
+  .inventory-pagination{justify-content:center;margin-top:12px}
+  .inventory-pagination span{color:#e9cfaa}
+  #inventory{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,230px),1fr));gap:10px}
+  .inventory-item{min-width:0;margin:0;overflow-wrap:anywhere}
+  .inventory-item small{display:block;margin:4px 0}
+  .inventory-item .item-actions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px}
+  .inventory-item .item-actions button{margin:0;padding:7px 3px;font-size:.78rem;overflow-wrap:anywhere}
   @keyframes float{50%{transform:translateY(-8px)}}
   @keyframes portal{50%{transform:scale(1.1);opacity:.55}}
   @keyframes pulse{50%{opacity:.45}}
@@ -297,7 +311,7 @@
   <h2>Personaje</h2>
   <p>Arrastra un objeto del inventario a su hueco o selecciónalo y pulsa el hueco. Pulsa un hueco equipado sin selección para vaciarlo.</p>
   <div class="hero-layout"><div class="hero-stage" id="hero"></div><div id="eq" class="grid"></div></div>
-  <p><small id="bonuses"></small></p>
+  <div id="bonuses" class="character-stats" aria-label="Estadísticas totales del personaje"></div>
 </div>
 <div class="card">
   <h2>📖 Entrenamiento del héroe</h2>
@@ -308,9 +322,18 @@
 <div class="card">
   <h2>🎒 Inventario y desmantelamiento</h2>
   <p id="materials"></p>
-  <p><small>Usa fragmentos para mejorar objetos hasta +5; cada mejora añade un 1 % a su estadística. Al desmantelar un objeto también se pierde su mejora. Los objetos equipados deben desequiparse antes de romperlos.</small></p>
+  <p><small>Cada mejora añade un 1 % a la estadística del objeto. Al desmantelarlo se pierden sus mejoras; desequípalo primero.</small></p>
+  <div class="inventory-toolbar">
+    <label for="inventory-type">Tipo <select id="inventory-type"><option value="all">Todos</option></select></label>
+    <label for="inventory-equipped">Estado <select id="inventory-equipped"><option value="all">Todos</option><option value="equipped">Equipados</option><option value="available">Sin equipar</option></select></label>
+  </div>
   <p id="inventory-status" role="status" aria-live="polite"></p>
   <div id="inventory"></div>
+  <div class="inventory-pagination" id="inventory-pagination">
+    <button id="inventory-prev" type="button">← Anterior</button>
+    <span id="inventory-page" aria-live="polite"></span>
+    <button id="inventory-next" type="button">Siguiente →</button>
+  </div>
 </div>
 </section>
 
@@ -472,7 +495,6 @@ const ATTRIBUTES={
   xp:{name:'Sabiduría',icon:'📘',description:'Aumenta la experiencia obtenida.'},
   coin:{name:'Fortuna',icon:'🪙',description:'Aumenta las monedas de misiones y enemigos.'}
 };
-const ATTRIBUTE_LIMIT=20;
 const attributeCost=rank=>100+50*rank;
 const ITEMS=[];
 for(const [g,d] of Object.entries(GROUPS)) for(let t=0;t<4;t++){
@@ -520,12 +542,14 @@ const ACHIEVEMENTS=[
     stat:['xp','coin','dmg'][i%3],pct:1,goal:count,value:s=>s.packsOpened
   }))
 ];
-const bonus=stat=>{
-  let t=S.attributes[stat]||0;
-  for(const id of Object.values(S.eq)){const it=ITEM[id];if(it&&it.stat===stat)t+=itemPercent(it)}
-  for(const a of ACHIEVEMENTS) if(S.achievements.includes(a.id)&&a.stat===stat)t+=a.pct;
-  return 1+t/100;
+const statBreakdown=stat=>{
+  const attributes=S.attributes[stat]||0;
+  let equipment=0,achievements=0;
+  for(const id of Object.values(S.eq)){const it=ITEM[id];if(it&&it.stat===stat)equipment+=itemPercent(it)}
+  for(const a of ACHIEVEMENTS) if(S.achievements.includes(a.id)&&a.stat===stat)achievements+=a.pct;
+  return {attributes,equipment,achievements,total:attributes+equipment+achievements};
 };
+const bonus=stat=>1+statBreakdown(stat).total/100;
 const target = (ex,l) => Math.max(ex.base, Math.round(ex.base*Math.min(2,1+0.05*(l-1))/ex.step[0])*ex.step[0]);
 const BATTLE_INTERVAL=10000, OFFLINE_LIMIT=8*60*60*1000, PACK_COST=100;
 const DUNGEONS=[
@@ -747,7 +771,7 @@ function dismantle(id){
 }
 function upgradeItem(id){
   const item=ITEM[id];
-  if(!item || !S.owned.includes(id) || upgradeLevel(id)>=5) return false;
+  if(!item || !S.owned.includes(id)) return false;
   const cost=upgradeCost(item);
   if(S.materials<cost) return false;
   S.materials-=cost;S.upgrades[id]=upgradeLevel(id)+1;
@@ -764,7 +788,7 @@ function placeItem(id,slotKey){
 function trainAttribute(stat){
   if(!Object.hasOwn(ATTRIBUTES,stat)) return false;
   const rank=S.attributes[stat]||0;
-  if(rank>=ATTRIBUTE_LIMIT || S.coins<attributeCost(rank)) return false;
+  if(S.coins<attributeCost(rank)) return false;
   S.coins-=attributeCost(rank);
   S.attributes[stat]=rank+1;
   log(`📖 ${ATTRIBUTES[stat].name} mejorado a ${rank+1}`);
@@ -818,7 +842,8 @@ if(legacyTicks){
 }
 
 const $=id=>document.getElementById(id);
-let selectedItem=null, dismantleConfirm=null;
+let selectedItem=null, dismantleConfirm=null, inventoryPage=0;
+const INVENTORY_PAGE_SIZE=12;
 function monsterArt(index){
   const colors=['#746b9b','#805c85','#77656f','#8a5270','#696d83','#704e9f','#526f82','#85556c'];
   const color=colors[index%colors.length],wide=index%2===0;
@@ -1026,10 +1051,10 @@ function renderAttributes(){
     const rank=S.attributes[stat]||0;
     const row=document.createElement('div');row.className='attribute';
     const details=document.createElement('div');
-    details.innerHTML=`<strong>${definition.icon} ${definition.name} · ${rank}/${ATTRIBUTE_LIMIT}</strong><small>+${rank}% ${STAT_TXT[stat]} · ${definition.description}</small>`;
+    details.innerHTML=`<strong>${definition.icon} ${definition.name} · nivel ${rank}</strong><small>+${rank}% ${STAT_TXT[stat]} · ${definition.description}</small>`;
     const button=document.createElement('button');button.type='button';
-    button.textContent=rank>=ATTRIBUTE_LIMIT?'Nivel máximo':`Mejorar · ${attributeCost(rank)} 🪙`;
-    button.disabled=rank>=ATTRIBUTE_LIMIT || S.coins<attributeCost(rank);
+    button.textContent=`Mejorar · ${attributeCost(rank)} 🪙`;
+    button.disabled=S.coins<attributeCost(rank);
     button.setAttribute('aria-label',`${button.textContent} ${definition.name}`);
     button.onclick=()=>{
       settleBattle();
@@ -1062,13 +1087,27 @@ function renderChar(){
     b.ondrop=event=>{event.preventDefault();put(event.dataTransfer.getData('application/x-fitquest-item'))};
     $('eq').appendChild(b);
   }
-  const f=k=>Math.round((bonus(k)-1)*100);
-  $('bonuses').textContent=`Bonos: daño +${f('dmg')}% · XP +${f('xp')}% · monedas +${f('coin')}%`;
+  $('bonuses').innerHTML=Object.entries(ATTRIBUTES).map(([stat,definition])=>{
+    const b=statBreakdown(stat);
+    return `<div class="character-stat"><strong>${definition.icon} ${definition.name} · +${b.total}% ${STAT_TXT[stat]}</strong><small>Atributo +${b.attributes}% · Equipo +${b.equipment}% · Logros +${b.achievements}%</small></div>`;
+  }).join('');
   $('materials').textContent=`🔩 Fragmentos: ${S.materials}`;
-  $('inventory-status').textContent=selectedItem?`Seleccionado: ${ITEM[selectedItem].name}. Elige un hueco resaltado.`:'';
+  $('inventory-status').textContent=selectedItem?`Seleccionado: ${ITEM[selectedItem].name}. Elige un hueco resaltado.`:
+    dismantleConfirm?`Confirma para desmantelar ${ITEM[dismantleConfirm].name} y perder sus mejoras.`:'';
   const inventory=$('inventory');inventory.innerHTML='';
-  if(!S.owned.length){inventory.textContent='Todavía no tienes objetos. Consigue uno en la tienda o en los sobres.';return}
-  for(const id of S.owned){
+  const type=$('inventory-type').value, equipped=$('inventory-equipped').value;
+  const matches=S.owned.filter(id=>{
+    const item=ITEM[id],worn=Object.values(S.eq).includes(id);
+    return item && (type==='all'||item.g===type) && (equipped==='all'||(equipped==='equipped'?worn:!worn));
+  });
+  const pages=Math.max(1,Math.ceil(matches.length/INVENTORY_PAGE_SIZE));
+  inventoryPage=Math.min(inventoryPage,pages-1);
+  $('inventory-pagination').hidden=pages===1;
+  $('inventory-page').textContent=`Página ${inventoryPage+1} de ${pages} · ${matches.length} objetos`;
+  $('inventory-prev').disabled=inventoryPage===0;
+  $('inventory-next').disabled=inventoryPage===pages-1;
+  if(!matches.length){inventory.textContent=S.owned.length?'No hay objetos con estos filtros.':'Todavía no tienes objetos. Consigue uno en la tienda o en los sobres.';return}
+  for(const id of matches.slice(inventoryPage*INVENTORY_PAGE_SIZE,(inventoryPage+1)*INVENTORY_PAGE_SIZE)){
     const item=ITEM[id];if(!item) continue;
     const worn=Object.values(S.eq).includes(id);
     const row=document.createElement('div');row.className='inventory-item';
@@ -1077,14 +1116,20 @@ function renderChar(){
     row.ondragend=()=>render();
     row.innerHTML=`<strong>${GROUPS[item.g].icon} ${item.name}${upgradeLevel(id)?` +${upgradeLevel(id)}`:''}</strong> <small>· ${TIER_ICONS[item.tier]} ${TIER_NAMES[item.tier]} · +${itemPercent(item)}% ${STAT_TXT[item.stat]}${worn?' · equipado':''}</small>`;
     const actions=document.createElement('div');actions.className='item-actions';
-    const select=document.createElement('button');select.textContent=selectedItem===id?'Cancelar selección':'Seleccionar para equipar';select.disabled=worn;
+    const select=document.createElement('button');select.textContent=worn?'Equipado':selectedItem===id?'Cancelar':'Equipar';select.disabled=worn;
     select.onclick=()=>{selectedItem=selectedItem===id?null:id;dismantleConfirm=null;render()};
+    select.setAttribute('aria-label',`${selectedItem===id?'Cancelar selección de':'Seleccionar para equipar'} ${item.name}`);
+    select.title=worn?'Objeto equipado':'Seleccionar para equipar';
     const upgrade=document.createElement('button');
-    upgrade.textContent=upgradeLevel(id)>=5?'✨ Mejora máxima':`✨ Mejorar (${upgradeCost(item)} 🔩)`;
-    upgrade.disabled=upgradeLevel(id)>=5 || S.materials<upgradeCost(item);
+    upgrade.textContent=`✨ ${upgradeCost(item)} 🔩`;
+    upgrade.disabled=S.materials<upgradeCost(item);
+    upgrade.setAttribute('aria-label',`Mejorar ${item.name} por ${upgradeCost(item)} fragmentos`);
+    upgrade.title='Mejorar objeto';
     upgrade.onclick=()=>{settleBattle();if(upgradeItem(id)){dismantleConfirm=null;save();render()}else{$('inventory-status').textContent='No se puede mejorar este objeto.';save()}};
     const destroy=document.createElement('button');destroy.className='danger';
-    destroy.textContent=dismantleConfirm===id?'Confirmar: perder objeto y mejoras':`Desmantelar (+${[2,5,12,25][item.tier]})`;
+    destroy.textContent=dismantleConfirm===id?'Confirmar':`🔨 +${[2,5,12,25][item.tier]}`;
+    destroy.setAttribute('aria-label',dismantleConfirm===id?`Confirmar desmantelar ${item.name} y perder sus mejoras`:`Desmantelar ${item.name} por ${[2,5,12,25][item.tier]} fragmentos`);
+    destroy.title=dismantleConfirm===id?'Confirmar: perder objeto y mejoras':'Desmantelar objeto';
     destroy.disabled=worn;
     destroy.onclick=()=>{
       if(dismantleConfirm!==id){dismantleConfirm=id;selectedItem=null;render();return}
@@ -1186,10 +1231,19 @@ $('open-pack').onclick=()=>{
   unlockAchievements();save();render();
 };
 let resetTimer;
+for(const [id,group] of Object.entries(GROUPS)){
+  const option=document.createElement('option');option.value=id;option.textContent=group.label;
+  $('inventory-type').appendChild(option);
+}
+for(const id of ['inventory-type','inventory-equipped']){
+  $(id).addEventListener('change',()=>{inventoryPage=0;selectedItem=null;dismantleConfirm=null;renderChar()});
+}
+$('inventory-prev').onclick=()=>{inventoryPage--;dismantleConfirm=null;renderChar()};
+$('inventory-next').onclick=()=>{inventoryPage++;dismantleConfirm=null;renderChar()};
 $('reset').onclick=()=>{
   const b=$('reset');
   if(b.dataset.armed){clearTimeout(resetTimer);delete b.dataset.armed;b.textContent='Reiniciar partida';
-    S=fresh();selectedItem=null;dismantleConfirm=null;$('pack-result').textContent='';$('mission-status').textContent='';save();render();return}
+    S=fresh();selectedItem=null;dismantleConfirm=null;inventoryPage=0;$('inventory-type').value='all';$('inventory-equipped').value='all';$('pack-result').textContent='';$('mission-status').textContent='';save();render();return}
   b.dataset.armed=1;b.textContent='¿Seguro? Pulsa otra vez para borrar';
   resetTimer=setTimeout(()=>{delete b.dataset.armed;b.textContent='Reiniciar partida'},4000);
 };

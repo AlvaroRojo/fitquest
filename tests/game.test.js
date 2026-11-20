@@ -97,7 +97,7 @@ test('migrates existing saves without changing equipment or progress', () => {
   assert.ok(saved.achievements.includes('level5'));
 });
 
-test('attribute training validates type, cost and cap and preserves stats on reload', () => {
+test('attribute training validates type and cost and continues past the old cap', () => {
   const g=game();
   assert.equal(g.run(`(() => {
     S=fresh(); S.coins=99;
@@ -107,13 +107,25 @@ test('attribute training validates type, cost and cap and preserves stats on rel
     S.coins=100000;
     for(let i=1;i<20;i++) if(!trainAttribute('dmg'))return false;
     const remaining=S.coins;
-    if(trainAttribute('dmg') || S.coins!==remaining || S.attributes.dmg!==20) return false;
+    if(!trainAttribute('dmg') || S.coins!==remaining-1100 || S.attributes.dmg!==21) return false;
     save(); return true;
   })()`),true);
   const saved=g.saved();
   const reloaded=game(saved);
-  assert.equal(reloaded.run('S.attributes.dmg'),20);
-  assert.equal(reloaded.run("bonus('dmg')"),1.2);
+  assert.equal(reloaded.run('S.attributes.dmg'),21);
+  assert.equal(reloaded.run("bonus('dmg')"),1.21);
+});
+
+test('stat breakdown matches gameplay bonuses from training, equipment and achievements', () => {
+  const g=game();
+  assert.equal(g.run(`(() => {
+    S=fresh(); S.attributes.dmg=21; S.owned=['sword_0_0']; S.upgrades.sword_0_0=6;
+    placeItem('sword_0_0','sword'); S.achievements=['kill1'];
+    const b=statBreakdown('dmg');
+    return b.attributes===21 && b.equipment===itemPercent(ITEM.sword_0_0) &&
+      b.achievements===2 && b.total===b.attributes+b.equipment+b.achievements &&
+      bonus('dmg')===1+b.total/100;
+  })()`),true);
 });
 
 test('training improves autobattle and dungeon damage without changing mission targets', () => {
@@ -504,18 +516,23 @@ test('equipment placement validates slots and dismantling only consumes unequipp
   })()`), true);
 });
 
-test('upgrades consume fragments, apply to equipped stats, cap at five and are lost on dismantle', () => {
+test('upgrades continue past five, consume fragments and are lost on dismantle', () => {
   const g=game();
   assert.equal(g.run(`(() => {
     S=fresh(); S.owned=['sword_0_0']; S.materials=100;
     if(!placeItem('sword_0_0','sword')) return false;
     const before=bonus('dmg');
     for(let i=0;i<5;i++) if(!upgradeItem('sword_0_0')) return false;
-    if(S.materials!==45 || upgradeItem('sword_0_0') || Math.abs(bonus('dmg')-before-.05)>1e-8) return false;
+    if(S.materials!==45 || !upgradeItem('sword_0_0') || S.materials!==25 ||
+      Math.abs(bonus('dmg')-before-.06)>1e-8) return false;
+    save();
     if(dismantle('sword_0_0')) return false;
     delete S.eq.sword;
-    return dismantle('sword_0_0') && S.upgrades.sword_0_0===undefined && S.materials===47;
+    return dismantle('sword_0_0') && S.upgrades.sword_0_0===undefined && S.materials===27;
   })()`),true);
+  const reloaded=game(g.saved());
+  assert.equal(reloaded.run("upgradeLevel('sword_0_0')"),6);
+  assert.ok(Math.abs(reloaded.run("bonus('dmg')")-1.11)<1e-8);
 });
 
 test('new dungeon and material state survives reloading', () => {

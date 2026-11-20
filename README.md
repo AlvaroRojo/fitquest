@@ -58,17 +58,19 @@ eliminarla.
   pestaña de personaje arrastra un objeto a un hueco compatible, o selecciónalo
   y pulsa el hueco; también funciona con teclado y en móvil. Pulsa un hueco
   equipado sin selección para vaciarlo. Desmantela objetos no equipados con
-  dos pulsaciones: dan 2, 5, 12 o 25 fragmentos según su rareza. Puedes
-  usar fragmentos para mejorar un objeto hasta +5; cada mejora añade un 1 %
+  dos pulsaciones: dan 2, 5, 12 o 25 fragmentos según su rareza. El inventario
+  se puede filtrar por tipo y estado y muestra hasta 12 objetos por página.
+  Puedes usar fragmentos para mejorar un objeto sin un máximo de nivel; cada mejora añade un 1 %
   a su estadística. El coste es 5 + 3 por nivel de mejora actual + 2 por
   índice de rareza (común 0 a legendario 3). Desmantelar elimina el objeto y
   sus mejoras; aún no hay fabricación.
   Hay 128 objetos en cuatro rarezas, con filtros por tipo y rareza.
-- **Entrenamiento del héroe:** en la pestaña Personaje puedes comprar hasta
-  20 rangos de Poder, Sabiduría y Fortuna con monedas del juego. Cada rango
+- **Entrenamiento del héroe:** en la pestaña Personaje puedes comprar rangos
+  sin límite de Poder, Sabiduría y Fortuna con monedas del juego. Cada rango
   añade un 1 % a daño, XP o monedas, respectivamente. El siguiente rango
   cuesta 100 + 50 monedas por rango actual. Estos bonos se suman a los del
-  equipo y logros y se aplican también a la arena y las mazmorras.
+  equipo y logros y se aplican también a la arena y las mazmorras. El panel
+  de estadísticas muestra el total y el aporte de cada una de estas fuentes.
 - **Logros:** desbloquean mejoras permanentes al alcanzar sus objetivos. Las
   misiones se cuentan desde esta versión; los niveles y monstruos derrotados
   de partidas antiguas sí se reconocen.
