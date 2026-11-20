@@ -125,6 +125,10 @@
   .quest-board .mission>.row{align-items:flex-start;flex-wrap:wrap}
   .quest-board .mission-actions{margin-top:auto}
   .quest-board .quest-rewards{margin:0}
+  .quest-help{margin-top:14px;color:#c6bdd1;font-size:.85rem}
+  .quest-help summary{display:inline-block;cursor:pointer;color:#ecd3a2;font-weight:600}
+  .quest-help summary:focus-visible{outline:2px solid #8ce2ff;outline-offset:3px}
+  .quest-help p{margin:8px 0}
   .hero-stage{background:radial-gradient(ellipse at center,#a9749266,#14192c 72%);border-color:#9e7794}
   .slot{border-color:#806a67;background:linear-gradient(145deg,#292536,#141b2a)}
   .week-card{background:linear-gradient(120deg,#1d4544,#29243b);border-color:#599a8e}
@@ -185,10 +189,12 @@
   <h2>📜 Tablón de encargos <small id="cnt"></small></h2>
   <p>Elige una misión, realiza el ejercicio a tu ritmo y marca «Completado».</p>
   <div id="missions" class="quest-board"></div>
-  <p><small>El daño mostrado incluye los bonos de equipo, atributos, logros y racha. Las estimaciones no incluyen botín de monstruos ni logros nuevos.</small></p>
-  <p><small>Recompensa completa en las primeras 6 misiones del día. Desde la séptima, la XP, el daño y las monedas de misión bajan al 25 %. La primera misión diaria puede dar una llave; puedes seguir completando misiones sin límite.</small></p>
-  <p class="notice"><small>No hay límite de misiones, pero hacer más ejercicio no es necesario para conseguir los hitos de actividad. Adapta cada ejercicio a tu capacidad, descansa cuando lo necesites y detente si sientes dolor. No es asesoramiento médico.</small></p>
-  <button id="rest">😴 Día de descanso (1 por semana, mantiene racha)</button>
+  <details class="quest-help">
+    <summary>ⓘ Reglas y bienestar</summary>
+    <p>El daño incluye los bonos del personaje y la racha. La estimación no incluye el botín ni logros nuevos.</p>
+    <p>Las primeras 6 misiones del día dan recompensa completa; desde la séptima, daño, XP y monedas de misión bajan al 25 %. La primera puede dar una llave.</p>
+    <p>Adapta el ejercicio a tu capacidad, descansa cuando lo necesites y detente si sientes dolor. No es asesoramiento médico.</p>
+  </details>
 </div>
 <div class="card" id="journey">
   <h2>🗺️ Travesía del héroe</h2>
@@ -328,7 +334,6 @@ const ENCOUNTER_TYPES = {
 const KEY = 'fitquest-save';
 
 const today = () => { const d=new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; };
-const daysBetween = (a,b) => Math.round((new Date(b)-new Date(a))/864e5);
 const xpNeeded = l => Math.round(100+20*(l-1)+6*(l-1)*(l-1));
 const monsterHp = n => Math.round(50+12*n+2*n*n);
 const missionMonsterHp = n => Math.round(50+4*Math.sqrt(n));
@@ -869,7 +874,6 @@ function render(liveOnly=false){
   }
   $('cnt').textContent=`(${S.completedToday} hoy · sin límite)`;
   $('weekly-progress').innerHTML=journeyMarkup();
-  $('rest').disabled=!!S.lastRest&&daysBetween(S.lastRest,today())<7;
   renderChar();renderAttributes();renderShop();renderAchievements();renderDungeons();
   $('open-pack').disabled=S.coins<PACK_COST;
   $('log').innerHTML=S.log.map(l=>`<div>${l}</div>`).join('');
@@ -1038,11 +1042,6 @@ $('open-pack').onclick=()=>{
   $('pack-result').textContent=message;
   log(`🎁 ${message}`);
   unlockAchievements();save();render();
-};
-$('rest').onclick=()=>{
-  settleBattle();rollDay();
-  if(S.lastRest&&daysBetween(S.lastRest,today())<7){save();render();return}
-  S.lastRest=today();log('😴 Día de descanso: racha protegida');save();render();
 };
 let resetTimer;
 $('reset').onclick=()=>{

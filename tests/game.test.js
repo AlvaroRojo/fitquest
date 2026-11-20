@@ -142,6 +142,25 @@ test('mission estimate includes partial progress and reduced rewards', () => {
   })()`),true);
 });
 
+test('mission board keeps guidance collapsed and removes weekly rest control', () => {
+  const board = html.match(/<h2>📜 Tablón de encargos[\s\S]*?<\/div>\s*<div class="card" id="journey">/)[0];
+  assert.match(board, /<details class="quest-help">/);
+  assert.match(board, /<summary>ⓘ Reglas y bienestar<\/summary>/);
+  assert.doesNotMatch(html, /id="rest"|\$\('rest'\)/);
+});
+
+test('previously recorded rest still protects streak during migration', () => {
+  const g=game();
+  assert.equal(g.run(`(() => {
+    S=fresh(); const now=new Date();
+    const yesterday=new Date(now.getFullYear(),now.getMonth(),now.getDate()-1);
+    const twoDaysAgo=new Date(now.getFullYear(),now.getMonth(),now.getDate()-2);
+    const date=d=>\`\${d.getFullYear()}-\${String(d.getMonth()+1).padStart(2,'0')}-\${String(d.getDate()).padStart(2,'0')}\`;
+    S.day=date(yesterday); S.lastRest=date(yesterday); S.lastActive=date(twoDaysAgo); S.streak=3;
+    rollDay(); return S.streak===3;
+  })()`),true);
+});
+
 test('mission damage preview and actual damage include all character modifiers', () => {
   const g=game();
   assert.equal(g.run(`(() => {
