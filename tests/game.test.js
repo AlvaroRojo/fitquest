@@ -142,6 +142,59 @@ test('mission estimate includes partial progress and reduced rewards', () => {
   })()`),true);
 });
 
+test('six mission slots have distinct targets and matching preview and rewards', () => {
+  const g=game();
+  assert.equal(g.run(`(() => {
+    const results=[];
+    for(const index of [0,2,4]){
+      S=fresh(); S.active=['push','plank','abs','jack','lunge','burpee'];
+      S.active[index]='squat'; S.battleUpdated=Date.now(); S.monsterHp=500;
+      const ex=byId('squat'), difficulty=missionDifficulty(ex), goal=missionTarget(ex), preview=missionEstimate(ex);
+      completeMission(ex);
+      if(Math.abs(S.monsterHp-(500-preview.damage))>1e-8 || S.coins!==preview.coins || S.xp!==preview.xp)return false;
+      if(missionDifficulty(byId(S.active[index]))!==difficulty || S.active.length!==6)return false;
+      results.push([difficulty,goal,preview.damage,preview.xp,preview.coins]);
+    }
+    return JSON.stringify(results)===JSON.stringify([
+      ['easy',20,20,50,10],['normal',25,25,63,13],['hard',30,30,75,15]
+    ]);
+  })()`),true);
+});
+
+test('old missions are retained and six unique slots survive reload', () => {
+  const first=game();
+  first.run(`S=fresh(); S.active=['squat','push','plank']; S.done.squat=5;
+    S.targets.squat=20; S.coins=21; delete S.missionDifficultyVersion; delete S.legacyMissions; save()`);
+  const migrated=game(first.saved());
+  assert.deepEqual(Array.from(migrated.run('S.active.slice(0,3)')),['squat','push','plank']);
+  assert.equal(migrated.run('S.active.length'),6);
+  assert.equal(migrated.run('new Set(S.active).size'),6);
+  assert.equal(migrated.run("missionDifficulty(byId('plank'))"),'legacy');
+  assert.equal(migrated.run("missionTarget(byId('squat'))"),20);
+  assert.equal(migrated.run('S.done.squat'),5);
+  assert.equal(migrated.run('S.coins'),21);
+  migrated.run('save()');
+  const reloaded=game(migrated.saved());
+  assert.deepEqual(reloaded.saved().active,migrated.saved().active);
+  assert.equal(reloaded.run("missionDifficulty(byId('plank'))"),'legacy');
+  reloaded.run("S.battleUpdated=Date.now(); completeMission(byId('plank'))");
+  assert.equal(reloaded.run('S.active.length'),6);
+  assert.equal(reloaded.run('missionDifficulty(byId(S.active[2]))'),'normal');
+});
+
+test('active mission targets and partial progress persist across day changes', () => {
+  const g=game();
+  assert.equal(g.run(`(() => {
+    S=fresh(); const ex=byId(S.active[4]), original=missionTarget(ex);
+    S.done[ex.id]=1; S.level=30; S.day='2000-01-01'; S.completedToday=6;
+    rollDay(); save();
+    return S.completedToday===0 && S.done[ex.id]===1 && missionTarget(ex)===original;
+  })()`),true);
+  const restored=game(g.saved());
+  assert.equal(restored.run('S.done[S.active[4]]'),1);
+  assert.equal(restored.run('S.targets[S.active[4]]'),g.run('S.targets[S.active[4]]'));
+});
+
 test('mission board keeps guidance collapsed and removes weekly rest control', () => {
   const board = html.match(/<h2>📜 Tablón de encargos[\s\S]*?<\/div>\s*<div class="card" id="journey">/)[0];
   assert.match(board, /<details class="quest-help">/);
@@ -277,7 +330,7 @@ test('missions remain unlimited and targets do not change mid-mission', () => {
     S.done[ex.id]=original-1; completeMission(ex);
     const first=S.totalMissions;
     completeMission(byId(S.active[1]));
-    return S.completedToday===7 && S.totalMissions===first+1 && S.active.length===3;
+    return S.completedToday===7 && S.totalMissions===first+1 && S.active.length===6;
   })()`), true);
 });
 

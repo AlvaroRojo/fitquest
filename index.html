@@ -124,6 +124,10 @@
   .mission-icon{display:grid;place-items:center;flex:none;width:38px;height:38px;border:1px solid #8a6c58;border-radius:10px;background:#1a1c2a;font-size:1.2rem}
   .mission-title strong{line-height:1.3}
   .mission-target{color:#e9cfaa;font-size:.85rem}
+  .mission-difficulty{display:inline-block;align-self:flex-start;border:1px solid #6c9382;border-radius:999px;padding:2px 8px;color:#b5edcb;font-size:.72rem;font-weight:700}
+  .mission-difficulty[data-difficulty="normal"]{color:#ffe0a2;border-color:#b9935b}
+  .mission-difficulty[data-difficulty="hard"]{color:#ffc5cc;border-color:#c87987}
+  .mission-difficulty[data-difficulty="legacy"]{color:#d5cdec;border-color:#9286ab}
   .quest-board .complete{align-self:stretch;margin:8px 0 0;margin-top:auto;min-height:44px}
   .quest-board .quest-rewards{margin:0}
   .mission-status:not(:empty){margin:12px 0 0;color:#a5f8df;font-size:.9rem}
@@ -196,6 +200,7 @@
   <p id="mission-status" class="mission-status" role="status" aria-live="polite"></p>
   <details class="quest-help">
     <summary>ⓘ Reglas y bienestar</summary>
+    <p>Hay dos encargos de cada nivel. Para un mismo ejercicio, intermedia e intensa piden un 25 % y un 50 % más que suave, con un bono mayor. Son categorías de juego: el esfuerzo real varía según el ejercicio y la persona.</p>
     <p>El daño incluye los bonos del personaje y la racha. La estimación no incluye el botín ni logros nuevos.</p>
     <p>Las primeras 6 misiones del día dan recompensa completa; desde la séptima, daño, XP y monedas de misión bajan al 25 %. La primera puede dar una llave.</p>
     <p>Adapta el ejercicio a tu capacidad, descansa cuando lo necesites y detente si sientes dolor. No es asesoramiento médico.</p>
@@ -307,7 +312,13 @@ const EXERCISES = [
   {id:'knee', name:'Elevación de rodillas suave', unit:'reps', base:20, step:[5,10], value:0.5},
   {id:'armcircle', name:'Círculos de brazos', unit:'seg', base:30, step:[10,15], value:0.25},
 ];
-const SLOTS = 3;
+const SLOTS = 6;
+const DIFFICULTIES = {
+  easy:{label:'Suave',target:1,reward:1},
+  normal:{label:'Intermedia',target:1.25,reward:1.25},
+  hard:{label:'Intensa',target:1.5,reward:1.5},
+  legacy:{label:'Misión anterior',target:1,reward:1}
+};
 const byId = id => EXERCISES.find(e=>e.id===id);
 const EXERCISE_ICONS={squat:'🏋️',push:'💪',plank:'🧘',abs:'🔥',jack:'⚡',lunge:'🦵',burpee:'🌪️',climb:'⛰️',bridge:'🌉',wall:'🛡️',march:'🚶',calf:'👣',chair:'🪑',wallpush:'🧱',bird:'🐦',deadbug:'🪲',sideleg:'🦵',step:'👟',knee:'🌀',armcircle:'🔄'};
 function randomMission(exclude){
@@ -460,7 +471,8 @@ const fresh = () => ({level:1,xp:0,coins:0,owned:[],eq:{},streak:0,kills:0,
   day:today(),done:{},bonus:{},lastActive:null,lastRest:null,monsterHp:monsterHp(0),log:[],active:pickMissions(),completedToday:0,
   targets:{},totalMissions:0,packsOpened:0,achievements:[],missionKills:0,autoKills:0,autoMonsterHp:monsterHp(0),battleUpdated:Date.now(),
   keys:0,keyPity:0,unlockedDungeons:['crypt'],dungeonRun:null,lastDungeonDay:null,dungeonClears:0,materials:0,activeDays:0,lastActivityDay:null,
-  weeklyRewards:0,balanceVersion:1,unlimitedMissionsVersion:1,upgrades:{},attributes:{dmg:0,xp:0,coin:0},encounter:nextEncounter(0)});
+  weeklyRewards:0,balanceVersion:1,unlimitedMissionsVersion:1,upgrades:{},attributes:{dmg:0,xp:0,coin:0},encounter:nextEncounter(0),
+  missionDifficultyVersion:1,legacyMissions:{}});
 let S;
 try{S=JSON.parse(localStorage.getItem(KEY)||'null') || fresh()}
 catch(error){alert('No se puede leer la partida guardada. No se ha borrado; revisa los datos del navegador.');throw error}
@@ -514,6 +526,12 @@ if(!S.unlimitedMissionsVersion){
   }
   S.unlimitedMissionsVersion=1;
 }
+if(!S.missionDifficultyVersion){
+  S.legacyMissions=Object.fromEntries(S.active.map(id=>[id,true]));
+  S.missionDifficultyVersion=1;
+}
+S.legacyMissions ??= {};
+while(S.active.length<SLOTS) S.active.push(randomMission(S.active));
 
 function log(t){S.log.unshift(t);S.log=S.log.slice(0,40)}
 function claimJourneyRewards(){
@@ -533,8 +551,13 @@ function unlockAchievements(){
     }
   }
 }
+function missionDifficulty(ex){
+  if(S.legacyMissions[ex.id]) return 'legacy';
+  const index=S.active.indexOf(ex.id);
+  return index<2?'easy':index<4?'normal':'hard';
+}
 function missionTarget(ex){
-  if(!S.targets[ex.id]) S.targets[ex.id]=target(ex,S.level);
+  if(!S.targets[ex.id]) S.targets[ex.id]=Math.ceil(target(ex,S.level)*DIFFICULTIES[missionDifficulty(ex)].target);
   return S.targets[ex.id];
 }
 function rollDay(){
@@ -542,7 +565,7 @@ function rollDay(){
   // la racha sobrevive si ayer hubo actividad o descanso
   const last=Math.max(S.lastActive?+new Date(S.lastActive):0,S.lastRest?+new Date(S.lastRest):0);
   if(!last || (new Date(t)-last)/864e5>1) S.streak=0;
-  S.day=t;S.done={};S.bonus={};S.targets={};S.completedToday=0;
+  S.day=t;S.bonus={};S.completedToday=0;
   return true;
 }
 const streakMult = () => 1+Math.min(0.3,S.streak*0.02);
@@ -670,10 +693,11 @@ function missionEstimate(ex){
   const units=Math.max(0,missionTarget(ex)-(S.done[ex.id]||0));
   const scale=S.completedToday<FULL_REWARD_MISSIONS?1:0.25;
   const mult=streakMult()*scale;
+  const reward=DIFFICULTIES[missionDifficulty(ex)].reward;
   return {
     damage:units*ex.value*bonus('dmg')*mult,
-    xp:Math.round(units*ex.value*mult*bonus('xp'))+Math.round(30*mult*bonus('xp')),
-    coins:Math.round(10*bonus('coin')*scale)
+    xp:Math.round(units*ex.value*mult*bonus('xp'))+Math.round(30*mult*bonus('xp')*reward),
+    coins:Math.round(10*bonus('coin')*scale*reward)
   };
 }
 function completeMission(ex){
@@ -682,11 +706,12 @@ function completeMission(ex){
   if(!S.active.includes(ex.id) || S.bonus[ex.id]){save();render();return}
   const tgt=missionTarget(ex), before=S.done[ex.id]||0;
   const units=Math.max(0,tgt-before);
+  const reward=DIFFICULTIES[missionDifficulty(ex)].reward;
   S.done[ex.id]=tgt;
   const mult=streakMult()*(S.completedToday<FULL_REWARD_MISSIONS?1:0.25);
   gain(Math.round(units*ex.value*mult*bonus('xp')));
   hit(units*ex.value*bonus('dmg')*mult);
-  S.bonus[ex.id]=1;gain(Math.round(30*mult*bonus('xp')));S.coins+=Math.round(10*bonus('coin')*(S.completedToday<FULL_REWARD_MISSIONS?1:0.25));
+  S.bonus[ex.id]=1;gain(Math.round(30*mult*bonus('xp')*reward));S.coins+=Math.round(10*bonus('coin')*(S.completedToday<FULL_REWARD_MISSIONS?1:0.25)*reward);
   log(`✅ Misión completada: ${ex.name} (+bonus)`);
   S.completedToday++;
   S.totalMissions++;
@@ -696,7 +721,7 @@ function completeMission(ex){
   unlockAchievements();
   const next=randomMission(S.active);
   S.active[S.active.indexOf(ex.id)]=next;
-  delete S.done[ex.id];delete S.bonus[ex.id];delete S.targets[ex.id];
+  delete S.done[ex.id];delete S.bonus[ex.id];delete S.targets[ex.id];delete S.legacyMissions[ex.id];
   log(`🎲 Nueva misión: ${byId(next).name}`);
   if(S.lastActive!==today()){
     S.streak=S.streak+1;
@@ -848,9 +873,11 @@ function render(liveOnly=false){
   $('missions').innerHTML='';
   for(const ex of S.active.map(byId)){
     const tgt=missionTarget(ex),d=S.done[ex.id]||0;
+    const difficulty=missionDifficulty(ex);
     const preview=missionEstimate(ex);
     const el=document.createElement('div');el.className='mission';
-    el.innerHTML=`<div class="mission-title"><span class="mission-icon" aria-hidden="true">${EXERCISE_ICONS[ex.id]}</span><div><strong>${ex.name}</strong><div class="mission-target">Objetivo: ${tgt} ${ex.unit}</div></div></div>
+    el.innerHTML=`<span class="mission-difficulty" data-difficulty="${difficulty}">${DIFFICULTIES[difficulty].label}</span>
+      <div class="mission-title"><span class="mission-icon" aria-hidden="true">${EXERCISE_ICONS[ex.id]}</span><div><strong>${ex.name}</strong><div class="mission-target">Objetivo: ${tgt} ${ex.unit}</div></div></div>
       ${d>0?`<p><small>Progreso anterior: ${d}/${tgt} ${ex.unit}. Completa lo que falta y confirma.</small></p><div class="bar mis"><div style="width:${Math.min(100,100*d/tgt)}%"></div></div>`:''}
       <div class="quest-rewards"><span>⚔️ ${Math.round(preview.damage*10)/10} daño</span><span>✨ ~${preview.xp} XP</span><span>🪙 ${preview.coins} monedas</span></div>`;
     const complete=document.createElement('button');

@@ -11,8 +11,15 @@ eliminarla.
 - **Navegación:** utiliza el menú superior para cambiar de sección. También
   puedes usar las flechas, Inicio y Fin del teclado entre las pestañas.
 - **Misiones y monstruos:** pulsa **Completado** solo después de realizar el
-  objetivo indicado. Hay tres misiones activas; al completar una aparece otra
-  aleatoria. Se pueden completar sin límite al día. Hay 20 tipos de ejercicios y el
+  objetivo indicado. Hay seis misiones activas: dos suaves, dos intermedias y
+  dos intensas. Al completar una aparece otra aleatoria del mismo nivel.
+  Frente al mismo ejercicio suave, las intermedias piden un 25 % más y las
+  intensas un 50 % más (redondeado hacia arriba); el bono fijo de XP y las
+  monedas de misión aumentan en la misma proporción, además de la XP y el
+  daño derivados del objetivo. Son categorías de juego, no una valoración
+  médica: ejercicios distintos pueden tener dificultades reales diferentes.
+  Las misiones antiguas mantienen sus condiciones hasta completarse.
+  Se pueden completar sin límite al día. Hay 20 tipos de ejercicios y el
   objetivo se fija al comenzar
   cada misión; descansar y adaptar el ejercicio siempre es más importante
   que una recompensa. Los objetivos no son recomendaciones médicas. Si una
