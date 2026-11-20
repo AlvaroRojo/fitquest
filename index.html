@@ -361,6 +361,11 @@
   <div class="row"><b id="lvl"></b><span id="coins"></span><span id="streak"></span></div>
   <div class="bar xp"><div id="xpbar"></div></div>
   <small id="xptxt"></small>
+  <div class="torment-selector">
+    <label for="torment-select">🔥 Tormento global</label>
+    <select id="torment-select" aria-describedby="torment-info"></select>
+    <small id="torment-info"></small>
+  </div>
 </div>
 
 <div class="game-layout">
@@ -489,7 +494,7 @@
 <section id="achievements" role="tabpanel" aria-labelledby="tab-achievements" hidden>
 <div class="card">
   <h2>🏆 Sala de trofeos</h2>
-  <p>Más de 40 retos de misiones, caza, botín, mazmorras y travesía. Se desbloquean automáticamente; sus mejoras son permanentes.</p>
+  <p>Retos de misiones, caza, botín, mazmorras y travesía. Sus mejoras son permanentes. Las monedas y fragmentos indicados son valores base, multiplicados por el tormento al desbloquearlos.</p>
   <div id="achievement-list"></div>
 </div>
 </section>
@@ -497,7 +502,7 @@
 <section id="packs" role="tabpanel" aria-labelledby="tab-packs" hidden>
 <div class="card">
   <h2>🎁 Sobres de botín</h2>
-  <p>Elige un sobre: los más caros mejoran tus probabilidades y se desbloquean al subir de nivel. Solo aparecen rarezas disponibles para tu nivel. Las monedas son del juego, nunca dinero real.</p>
+  <p>Elige un sobre: los más caros y el tormento mejoran tus probabilidades. Solo aparecen rarezas disponibles para tu nivel. Las monedas son del juego, nunca dinero real.</p>
   <p>Todos los objetos de una rareza tienen la misma probabilidad. Los duplicados devuelven el 25 % del precio del sobre.</p>
   <div id="pack-list" class="pack-list"></div>
   <div id="pack-stage" class="pack-stage" aria-hidden="true"><span class="pack-emblem">🎁</span></div>
@@ -540,11 +545,6 @@
 <section id="dungeons" role="tabpanel" aria-labelledby="tab-dungeons" hidden>
 <div class="card expedition-hub">
   <div class="expedition-heading"><div><h2>🏰 Portal de desafíos</h2><p>Elige tu próxima aventura.</p></div><span class="key-gem" aria-hidden="true">🗝️</span></div>
-  <div class="torment-selector">
-    <label for="torment-select">🔥 Dificultad</label>
-    <select id="torment-select" aria-describedby="torment-info"></select>
-    <small id="torment-info"></small>
-  </div>
   <div class="expedition-nav" aria-label="Desafíos disponibles">
     <button type="button" data-dungeon-view="classic" aria-pressed="true" aria-controls="dungeon-classic">🗝️ Expediciones</button>
     <button type="button" data-dungeon-view="tower" aria-pressed="false" aria-controls="dungeon-tower">🗼 Torre de 100 plantas</button>
@@ -636,8 +636,8 @@ const today = () => { const d=new Date(); return `${d.getFullYear()}-${String(d.
 const xpNeeded = l => Math.round(100+20*(l-1)+6*(l-1)*(l-1));
 const monsterHp = n => Math.round(50+12*n+2*n*n);
 const missionMonsterHp = n => Math.round(50+4*Math.sqrt(n));
-function nextEncounter(kills){
-  if(kills===0) return {kind:'normal',species:0,maxHp:missionMonsterHp(0),legacy:true};
+function nextEncounter(kills,torment=0){
+  if(kills===0) return {kind:'normal',species:0,maxHp:Math.round(missionMonsterHp(0)*TORMENTS[torment].hp),legacy:true,torment};
   let kind;
   if(kills%10===0) kind='boss';
   else if(kills%5===0) kind='elite';
@@ -647,7 +647,7 @@ function nextEncounter(kills){
   }
   const species=Math.floor(Math.random()*MISSION_MONSTERS.length);
   const hp=kind==='lucky'?1:MISSION_MONSTERS[species].hp;
-  return {kind,species,maxHp:Math.max(1,Math.round(missionMonsterHp(kills)*hp*ENCOUNTER_TYPES[kind].hp))};
+  return {kind,species,maxHp:Math.max(1,Math.round(missionMonsterHp(kills)*hp*ENCOUNTER_TYPES[kind].hp*TORMENTS[torment].hp)),torment};
 }
 
 const EQ_SLOTS=[
@@ -838,15 +838,16 @@ const PACKS=[
   {id:'gold',name:'Sobre dorado',icon:'🥇',level:15,cost:800,weights:[5,15,35,30,10,4,1]},
   {id:'arcane',name:'Sobre arcano',icon:'🔮',level:30,cost:1800,weights:[1,4,10,30,30,20,5]}
 ];
-function packOdds(pack,level){
-  const eligible=pack.weights.map((weight,tier)=>level>=TIER_LVL[tier]?weight:0);
+const rarityWeight=(weight,tier,torment)=>weight*Math.pow(1+0.15*torment,tier);
+function packOdds(pack,level,torment=0){
+  const eligible=pack.weights.map((weight,tier)=>level>=TIER_LVL[tier]?rarityWeight(weight,tier,torment):0);
   const total=eligible.reduce((sum,weight)=>sum+weight,0);
   return eligible.map(weight=>weight/total);
 }
 function openPack(id){
   const pack=PACKS.find(option=>option.id===id);
   if(!pack||S.level<pack.level||S.coins<pack.cost) return null;
-  const odds=packOdds(pack,S.level);
+  const odds=packOdds(pack,S.level,S.torment);
   let roll=Math.random(),tier=0;
   for(let i=0;i<odds.length;i++){
     if(odds[i]>0) tier=i;
@@ -905,10 +906,21 @@ const TORMENTS=[
   {name:'Tormento I',level:10,hp:1.75,reward:1.4},
   {name:'Tormento II',level:20,hp:2.5,reward:1.8},
   {name:'Tormento III',level:30,hp:4,reward:2.5},
-  {name:'Tormento IV',level:40,hp:6,reward:3.5}
+  {name:'Tormento IV',level:40,hp:6,reward:3.5},
+  {name:'Tormento V',level:50,hp:8,reward:4.5},
+  {name:'Tormento VI',level:60,hp:11,reward:5.5},
+  {name:'Tormento VII',level:70,hp:15,reward:7},
+  {name:'Tormento VIII',level:80,hp:21,reward:9},
+  {name:'Tormento IX',level:90,hp:30,reward:11.5},
+  {name:'Tormento X',level:100,hp:42,reward:14.5},
+  {name:'Tormento XI',level:110,hp:60,reward:18},
+  {name:'Tormento XII',level:120,hp:85,reward:22.5}
 ];
-function selectTorment(index){
+const autoMaxHp=(kills,torment)=>Math.round(monsterHp(kills)*TORMENTS[torment].hp);
+function selectTorment(index,now=Date.now()){
   if(!Number.isInteger(index)||!TORMENTS[index]||S.level<TORMENTS[index].level) return false;
+  for(const id of S.active) missionTarget(byId(id));
+  settleBattle(now);
   S.torment=index;
   return true;
 }
@@ -920,7 +932,7 @@ const FULL_REWARD_MISSIONS=6, WEEKLY_DAYS=3, JOURNEY_CHAPTERS=52;
 
 const fresh = () => ({level:1,xp:0,coins:0,owned:[],eq:{},streak:0,kills:0,
   day:today(),done:{},bonus:{},lastActive:null,lastRest:null,monsterHp:monsterHp(0),log:[],active:pickMissions(),completedToday:0,
-  targets:{},totalMissions:0,packsOpened:0,achievements:[],missionKills:0,autoKills:0,autoMonsterHp:monsterHp(0),battleUpdated:Date.now(),
+  targets:{},missionTorments:{},totalMissions:0,packsOpened:0,achievements:[],missionKills:0,autoKills:0,autoMonsterHp:monsterHp(0),autoTorment:0,battleUpdated:Date.now(),
   keys:0,keyPity:0,unlockedDungeons:['crypt'],dungeonRun:null,lastDungeonDay:null,dungeonClears:0,materials:0,activeDays:0,lastActivityDay:null,
   weeklyRewards:0,balanceVersion:1,unlimitedMissionsVersion:1,upgrades:{},attributes:{dmg:0,xp:0,coin:0},encounter:nextEncounter(0),
   missionDifficultyVersion:1,legacyMissions:{},shopStock:null,forgeRanks:{dmg:0,xp:0,coin:0},forgeLastWeek:null,forgeWeek:null,forgeWeekPurchases:0,
@@ -935,6 +947,8 @@ if(!S.active){S.active=pickMissions();S.completedToday=0}
 if(!S.owned){S.owned=[];S.eq={}}
 if(S.weapon){for(let w=0;w<S.weapon;w++)S.coins+=Math.round(50*Math.pow(1.5,w));delete S.weapon}
 S.targets ??= {};
+if(!S.missionTorments) S.missionTorments=Object.fromEntries(S.active.map(id=>[id,0]));
+S.autoTorment ??= 0;
 S.totalMissions ??= 0;
 S.packsOpened ??= 0;
 S.achievements ??= [];
@@ -984,6 +998,7 @@ if(!S.balanceVersion){
   S.balanceVersion=1;
 }
 S.encounter ??= {kind:'normal',species:S.missionKills%MONSTERS.length,maxHp:missionMonsterHp(S.missionKills),legacy:true};
+S.encounter.torment ??= 0;
 const migratedCompletedMissions=[];
 if(!S.unlimitedMissionsVersion){
   for(const id of [...S.active]){
@@ -1006,12 +1021,13 @@ function log(t){S.log.unshift(t);S.log=S.log.slice(0,40)}
 function ensureShopStock(day=today()){
   const sameDay=S.shopStock && S.shopStock.day===day;
   if(sameDay && S.shopStock.offers.length>=SHOP_SIZE) return false;
-  if(!sameDay) S.shopStock={day,level:S.level,offers:[],sold:[]};
+  if(!sameDay) S.shopStock={day,level:S.level,torment:S.torment,offers:[],sold:[]};
+  S.shopStock.torment ??= 0;
   const eligible=ITEMS.filter(item=>item.lvl<=S.shopStock.level);
   while(S.shopStock.offers.length<SHOP_SIZE){
     const remaining=eligible.filter(item=>!S.shopStock.offers.includes(item.id));
     if(!remaining.length) break;
-    const tiers=SHOP_WEIGHTS.map((weight,tier)=>remaining.some(item=>item.tier===tier)?weight:0);
+    const tiers=SHOP_WEIGHTS.map((weight,tier)=>remaining.some(item=>item.tier===tier)?rarityWeight(weight,tier,S.shopStock.torment):0);
     const total=tiers.reduce((sum,weight)=>sum+weight,0);
     let roll=Math.random()*total,tier=0;
     for(;tier<tiers.length-1;tier++){if(roll<tiers[tier]) break;roll-=tiers[tier]}
@@ -1040,35 +1056,35 @@ function buyForgeUpgrade(stat){
   log(`🔥 Forja: ${FORGE[stat].name} mejorado a ${rank+1}`);
   return true;
 }
-function claimJourneyRewards(){
+function claimJourneyRewards(torment=S.torment){
   const reached=Math.min(JOURNEY_CHAPTERS,Math.floor(S.activeDays/WEEKLY_DAYS));
   while(S.weeklyRewards<reached){
     const chapter=++S.weeklyRewards;
-    const coins=35+3*chapter,materials=3+Math.min(chapter,20);
+    const coins=Math.round((35+3*chapter)*TORMENTS[torment].reward),materials=Math.round((3+Math.min(chapter,20))*TORMENTS[torment].reward);
     S.coins+=coins;S.materials+=materials;
     log(`🌟 Travesía ${chapter}/${JOURNEY_CHAPTERS}: +${coins} monedas y +${materials} fragmentos`);
   }
 }
-function unlockAchievements(){
+function unlockAchievements(torment=S.torment){
   for(const a of ACHIEVEMENTS){
     if(!S.achievements.includes(a.id)&&a.value(S)>=a.goal){
       S.achievements.push(a.id);
       const reward=a.reward||{};
-      if(reward.coins) S.coins+=reward.coins;
-      if(reward.materials) S.materials+=reward.materials;
+      if(reward.coins) S.coins+=Math.round(reward.coins*TORMENTS[torment].reward);
+      if(reward.materials) S.materials+=Math.round(reward.materials*TORMENTS[torment].reward);
       if(reward.keys) S.keys+=reward.keys;
       if(reward.item&&ITEM[reward.item]){
         if(S.owned.includes(reward.item)) S.materials+=TIER_FRAGMENTS[ITEM[reward.item].tier];
         else S.owned.push(reward.item);
       }
-      log(`🏆 Logro: ${a.name} · ${achievementRewardText(a)}`);
+      log(`🏆 Logro: ${a.name} · ${achievementRewardText(a,torment)}`);
     }
   }
 }
-function achievementRewardText(a){
+function achievementRewardText(a,torment=0){
   const reward=a.reward||{},parts=[`+${a.pct}% ${STAT_TXT[a.stat]}`];
-  if(reward.coins) parts.push(`+${reward.coins} 🪙`);
-  if(reward.materials) parts.push(`+${reward.materials} 🔩`);
+  if(reward.coins) parts.push(`+${Math.round(reward.coins*TORMENTS[torment].reward)} 🪙`);
+  if(reward.materials) parts.push(`+${Math.round(reward.materials*TORMENTS[torment].reward)} 🔩`);
   if(reward.keys) parts.push(`+${reward.keys} 🔑`);
   if(reward.item&&ITEM[reward.item]) parts.push(`🎁 ${ITEM[reward.item].name} (si ya lo tienes: ${TIER_FRAGMENTS[ITEM[reward.item].tier]} 🔩)`);
   return parts.join(' · ');
@@ -1079,7 +1095,8 @@ function missionDifficulty(ex){
   return index<2?'easy':index<4?'normal':'hard';
 }
 function missionTarget(ex){
-  if(!S.targets[ex.id]) S.targets[ex.id]=Math.ceil(target(ex,S.level)*DIFFICULTIES[missionDifficulty(ex)].target);
+  S.missionTorments[ex.id] ??= S.torment;
+  if(!S.targets[ex.id]) S.targets[ex.id]=Math.ceil(target(ex,S.level)*DIFFICULTIES[missionDifficulty(ex)].target*(1+0.05*S.missionTorments[ex.id]));
   return S.targets[ex.id];
 }
 function rollDay(){
@@ -1104,16 +1121,20 @@ function hit(dmg,arena='mission'){
   while(S[hp]<=0){
     const encounter=automatic?null:S.encounter;
     const type=encounter?ENCOUNTER_TYPES[encounter.kind]:ENCOUNTER_TYPES.normal;
+    const torment=automatic?S.autoTorment:(encounter.torment??0);
+    const difficulty=TORMENTS[torment];
     const loot=automatic?battleLoot():1;
-    const reward=Math.round((10+S[kills]*2)*bonus('coin')*type.coins*loot);
-    S.coins+=reward;gain(Math.round((20+S[kills]*3)*bonus('xp')*type.xp*loot));
-    S.materials+=type.materials;
+    const reward=Math.round((10+S[kills]*2)*bonus('coin')*type.coins*loot*difficulty.reward);
+    const materials=Math.round(type.materials*difficulty.reward);
+    S.coins+=reward;gain(Math.round((20+S[kills]*3)*bonus('xp')*type.xp*loot*difficulty.reward));
+    S.materials+=materials;
     const monster=automatic?MISSION_MONSTERS[autoEncounter(S.autoKills).species].name:encounter.legacy?MONSTERS[S[kills]%MONSTERS.length]:encounter.kind==='lucky'?'🍀 Goblin de la suerte':MISSION_MONSTERS[encounter.species].name;
     S[kills]++;S.kills++;
-    log(`💀 ${automatic?'Arena':'Misión'}: derrotaste a ${monster} (+${reward} 🪙${type.materials?`, +${type.materials} 🔩`:''})`);
-    if(!automatic) S.encounter=nextEncounter(S.missionKills);
-    S[hp]+=automatic?monsterHp(S.autoKills):S.encounter.maxHp;
-    unlockAchievements();
+    log(`💀 ${automatic?'Arena':'Misión'}: derrotaste a ${monster} (+${reward} 🪙${materials?`, +${materials} 🔩`:''})`);
+    if(automatic) S.autoTorment=S.torment;
+    else S.encounter=nextEncounter(S.missionKills,S.torment);
+    S[hp]+=automatic?autoMaxHp(S.autoKills,S.autoTorment):S.encounter.maxHp;
+    unlockAchievements(torment);
   }
 }
 function settleBattle(now=Date.now()){
@@ -1125,7 +1146,7 @@ function settleBattle(now=Date.now()){
     const killsBefore=S.autoKills,coinsBefore=S.coins;
     for(let i=0;i<ticks;i++) hit(battleDamage(),'auto');
     S.battleUpdated=elapsed>OFFLINE_LIMIT?now:now-(capped%interval);
-    unlockAchievements();
+    unlockAchievements(S.autoTorment);
     if(elapsed>=60000){
       log(`⌛ Autobatalla: ${Math.floor(capped/60000)} min, ${S.autoKills-killsBefore} monstruos, +${S.coins-coinsBefore} monedas${elapsed>OFFLINE_LIMIT?' (límite de 8 h)':''}.`);
     }
@@ -1189,7 +1210,7 @@ function attackDungeon(){
       S.materials+=fragments;S.dungeonClears++;S.dungeonRun=null;
       log(`🏆 ${dungeon.name} completada: +${fragments} fragmentos`);
     }else run.hp=dungeonMaxHp(dungeon,run.stage,run.torment);
-    unlockAchievements();
+    unlockAchievements(run.torment);
   }
   return true;
 }
@@ -1197,7 +1218,7 @@ function attackTower(day=today()){
   const tower=S.tower;
   if(tower.floor>TOWER_FLOORS || tower.keys<1 || tower.lastAttack===day) return false;
   if(tower.torment===null){tower.torment=S.torment;tower.hp=Math.round(towerMaxHp(tower.floor)*TORMENTS[tower.torment].hp)}
-  const difficulty=TORMENTS[tower.torment];
+  const torment=tower.torment,difficulty=TORMENTS[torment];
   tower.keys--;tower.lastAttack=day;tower.hp-=24*bonus('dmg');
   if(tower.hp<=0){
     const floor=tower.floor,coins=Math.round((20+floor*5)*bonus('coin')*difficulty.reward);
@@ -1205,7 +1226,7 @@ function attackTower(day=today()){
     S.coins+=coins;gain(xp);S.materials+=materials;S.kills++;
     tower.floor++;tower.hp=tower.floor<=TOWER_FLOORS?towerMaxHp(tower.floor):0;tower.torment=null;
     log(`🗼 Planta ${floor} superada: +${coins} monedas, +${xp} XP y +${materials} fragmentos`);
-    unlockAchievements();
+    unlockAchievements(torment);
   }
   return true;
 }
@@ -1213,7 +1234,7 @@ function attackWeeklyBoss(day=today()){
   const progress=S.weeklyBoss,boss=WEEKLY_BOSSES[progress.index],week=weekStart(day);
   if(!boss || progress.lastAttackWeek===week) return false;
   if(progress.torment===null){progress.torment=S.torment;progress.hp=Math.round(boss.hp*TORMENTS[progress.torment].hp)}
-  const difficulty=TORMENTS[progress.torment];
+  const torment=progress.torment,difficulty=TORMENTS[torment];
   progress.lastAttackWeek=week;progress.hp-=40*bonus('dmg');
   if(progress.hp<=0){
     const rank=progress.index+1,coins=Math.round((150+rank*100)*bonus('coin')*difficulty.reward);
@@ -1221,7 +1242,7 @@ function attackWeeklyBoss(day=today()){
     S.coins+=coins;gain(xp);S.materials+=materials;S.kills++;
     progress.index++;progress.hp=WEEKLY_BOSSES[progress.index]?.hp||0;progress.torment=null;
     log(`👑 ${boss.name} derrotado: +${coins} monedas, +${xp} XP y +${materials} fragmentos`);
-    unlockAchievements();
+    unlockAchievements(torment);
   }
   return true;
 }
@@ -1272,10 +1293,11 @@ function missionEstimate(ex){
   const scale=S.completedToday<FULL_REWARD_MISSIONS?1:0.25;
   const mult=streakMult()*scale;
   const reward=DIFFICULTIES[missionDifficulty(ex)].reward;
+  const tormentReward=TORMENTS[S.missionTorments[ex.id]].reward;
   return {
     damage:units*ex.value*bonus('dmg')*mult*reward,
-    xp:Math.round(units*ex.value*mult*bonus('xp')*reward)+Math.round(30*mult*bonus('xp')*reward),
-    coins:Math.round(10*bonus('coin')*scale*reward)
+    xp:Math.round(units*ex.value*mult*bonus('xp')*reward*tormentReward)+Math.round(30*mult*bonus('xp')*reward*tormentReward),
+    coins:Math.round(10*bonus('coin')*scale*reward*tormentReward)
   };
 }
 function completeMission(ex){
@@ -1283,13 +1305,14 @@ function completeMission(ex){
   rollDay();
   if(!S.active.includes(ex.id) || S.bonus[ex.id]){save();render();return}
   const tgt=missionTarget(ex), before=S.done[ex.id]||0;
+  const torment=S.missionTorments[ex.id],tormentReward=TORMENTS[torment].reward;
   const units=Math.max(0,tgt-before);
   const reward=DIFFICULTIES[missionDifficulty(ex)].reward;
   S.done[ex.id]=tgt;
   const mult=streakMult()*(S.completedToday<FULL_REWARD_MISSIONS?1:0.25);
-  gain(Math.round(units*ex.value*mult*bonus('xp')*reward));
+  gain(Math.round(units*ex.value*mult*bonus('xp')*reward*tormentReward));
   hit(units*ex.value*bonus('dmg')*mult*reward);
-  S.bonus[ex.id]=1;gain(Math.round(30*mult*bonus('xp')*reward));S.coins+=Math.round(10*bonus('coin')*(S.completedToday<FULL_REWARD_MISSIONS?1:0.25)*reward);
+  S.bonus[ex.id]=1;gain(Math.round(30*mult*bonus('xp')*reward*tormentReward));S.coins+=Math.round(10*bonus('coin')*(S.completedToday<FULL_REWARD_MISSIONS?1:0.25)*reward*tormentReward);
   log(`✅ Misión completada: ${ex.name} (+bonus)`);
   S.completedToday++;
   S.totalMissions++;
@@ -1298,17 +1321,18 @@ function completeMission(ex){
     if(S.tower.floor<=TOWER_FLOORS){S.tower.keys++;log('🔷 ¡Has encontrado una llave de la torre!')}
   }
   if(S.lastActivityDay!==today()){S.activeDays++;S.lastActivityDay=today()}
-  claimJourneyRewards();
-  unlockAchievements();
+  claimJourneyRewards(torment);
+  unlockAchievements(torment);
   const next=randomMission(S.active);
   S.active[S.active.indexOf(ex.id)]=next;
-  delete S.done[ex.id];delete S.bonus[ex.id];delete S.targets[ex.id];delete S.legacyMissions[ex.id];
+  delete S.done[ex.id];delete S.bonus[ex.id];delete S.targets[ex.id];delete S.legacyMissions[ex.id];delete S.missionTorments[ex.id];
+  missionTarget(byId(next));
   log(`🎲 Nueva misión: ${byId(next).name}`);
   if(S.lastActive!==today()){
     S.streak=S.streak+1;
     S.lastActive=today();
   }
-  unlockAchievements();
+  unlockAchievements(torment);
   save();render();
 }
 function save(){localStorage.setItem(KEY,JSON.stringify(S))}
@@ -1437,7 +1461,7 @@ function journeyMarkup(){
   const percent=100*progress/WEEKLY_DAYS;
   const next=completed+1;
   const reward=completed===JOURNEY_CHAPTERS?'¡Has completado toda la travesía!':
-    `Próximo capítulo: +${35+3*next} monedas y +${3+Math.min(next,20)} fragmentos`;
+    `Próximo capítulo: +${35+3*next} monedas y +${3+Math.min(next,20)} fragmentos base, antes de tormento`;
   return `<div class="week-card"><div class="journey-summary"><div class="chapter">🌌 Crónicas del héroe · ${completed}/${JOURNEY_CHAPTERS}</div>
     <p>${completed===JOURNEY_CHAPTERS?'Puedes seguir jugando a tu ritmo.':`${progress}/${WEEKLY_DAYS} días de actividad para avanzar`}</p>
     <p class="reward">${reward}</p><small>Los días de actividad no tienen que ser consecutivos; descansar no borra el progreso.</small></div>
@@ -1473,18 +1497,18 @@ function render(liveOnly=false){
   $('mIcon').innerHTML=missionMonsterArt(encounter);$('mName').textContent=mn;
   $('mission-encounter').dataset.kind=encounter.kind;
   $('mission-encounter').dataset.biome=encounterBiome(encounter);
-  $('encounter-tag').textContent=type.label;$('encounter-tag').dataset.kind=encounter.kind;
+  $('encounter-tag').textContent=`${type.label} · ${TORMENTS[encounter.torment].name}`;$('encounter-tag').dataset.kind=encounter.kind;
   $('encounter-info').textContent=encounter.kind==='normal'?'Derrota al enemigo para obtener monedas y experiencia.':`Recompensa: x${type.coins} monedas · x${type.xp} XP${type.materials?` · ${type.materials} fragmentos`:''}.`;
   const max=encounter.maxHp;
   $('mHp').textContent=`${Math.max(0,Math.ceil(S.monsterHp))}/${max} HP`;
   $('hpbar').style.width=Math.min(100,100*S.monsterHp/max)+'%';
   const autoMonster=autoEncounter(S.autoKills);
-  const autoMax=monsterHp(S.autoKills);
+  const autoMax=autoMaxHp(S.autoKills,S.autoTorment);
   const battleIcon=$('battle-icon'),artKey=`${autoMonster.species}-${autoMonster.kind}`;
   if(battleIcon.dataset.art!==artKey){battleIcon.innerHTML=missionMonsterArt(autoMonster);battleIcon.dataset.art=artKey}
   $('battle-encounter').dataset.kind=autoMonster.kind;
   $('battle-encounter').dataset.biome=encounterBiome(autoMonster);
-  $('battle-tag').textContent=`Enemigo ${S.autoKills+1}`;
+  $('battle-tag').textContent=`Enemigo ${S.autoKills+1} · ${TORMENTS[S.autoTorment].name}`;
   $('battle-name').textContent=MISSION_MONSTERS[autoMonster.species].name;
   $('battle-hp').textContent=`${Math.max(0,Math.ceil(S.autoMonsterHp))}/${autoMax} HP`;
   $('battle-bar').style.width=Math.min(100,100*S.autoMonsterHp/autoMax)+'%';
@@ -1498,7 +1522,7 @@ function render(liveOnly=false){
     const difficulty=missionDifficulty(ex);
     const preview=missionEstimate(ex);
     const el=document.createElement('div');el.className='mission';
-    el.innerHTML=`<span class="mission-difficulty" data-difficulty="${difficulty}">${DIFFICULTIES[difficulty].label}</span>
+    el.innerHTML=`<span class="mission-difficulty" data-difficulty="${difficulty}">${DIFFICULTIES[difficulty].label} · ${TORMENTS[S.missionTorments[ex.id]].name}</span>
       <div class="mission-title"><span class="mission-icon" aria-hidden="true">${EXERCISE_ICONS[ex.id]}</span><div><strong>${ex.name}</strong><div class="mission-target">Objetivo: ${tgt} ${ex.unit}</div></div></div>
       ${d>0?`<p><small>Progreso anterior: ${d}/${tgt} ${ex.unit}. Completa lo que falta y confirma.</small></p><div class="bar mis"><div style="width:${Math.min(100,100*d/tgt)}%"></div></div>`:''}
       <div class="quest-rewards"><span aria-label="${Math.round(preview.damage*10)/10} de daño estimado" title="Daño estimado">⚔️ <span class="reward-value">${Math.round(preview.damage*10)/10}</span></span><span aria-label="${preview.xp} XP estimada" title="XP estimada">✨ <span class="reward-value">${preview.xp}</span> XP</span><span aria-label="${preview.coins} monedas estimadas" title="Oro estimado">🪙 <span class="reward-value">${preview.coins}</span> G</span></div>`;
@@ -1535,18 +1559,18 @@ function renderTorment(){
   TORMENTS.forEach((torment,index)=>{
     const option=document.createElement('option');
     option.value=index;option.disabled=S.level<torment.level;
-    option.textContent=`${torment.name} · nivel ${torment.level} · vida ×${torment.hp} · botín ×${torment.reward}`;
+    option.textContent=`${torment.name} · nivel ${torment.level} · vida ×${torment.hp} · botín ×${torment.reward} · misiones +${index*5}%`;
     select.appendChild(option);
   });
   select.value=String(S.torment);
-  $('torment-info').textContent='Se fija al iniciar una expedición o al atacar por primera vez una planta o boss. Los cambios se aplican al siguiente desafío.';
+  $('torment-info').textContent='Los cambios se aplican a nuevas misiones y enemigos; los encuentros actuales conservan su tormento. Los sobres mejoran sus probabilidades. Adapta siempre el ejercicio a tu capacidad.';
 }
 $('torment-select').addEventListener('change',event=>{
   if(!selectTorment(Number(event.target.value))){
-    renderTorment();$('expedition-status').textContent='Ese tormento todavía no está disponible.';return;
+    renderTorment();$('torment-info').textContent='Ese tormento todavía no está disponible.';return;
   }
   save();render();
-  $('expedition-status').textContent=`Dificultad seleccionada: ${TORMENTS[S.torment].name}.`;
+  $('torment-info').textContent=`${TORMENTS[S.torment].name} seleccionado. Los encuentros y misiones en curso mantienen su tormento. Adapta siempre el ejercicio a tu capacidad.`;
 });
 function renderBattleUpgrades(){
   const box=$('battle-upgrades');box.replaceChildren();
@@ -1575,7 +1599,7 @@ function renderPacks(){
   const focused=document.activeElement?.dataset.pack;
   box.replaceChildren();
   for(const pack of PACKS){
-    const locked=S.level<pack.level,odds=packOdds(pack,S.level);
+    const locked=S.level<pack.level,odds=packOdds(pack,S.level,S.torment);
     const card=document.createElement('div');card.className='pack-offer';
     const probabilities=odds.map((chance,tier)=>`<span>${TIER_ICONS[tier]} ${TIER_NAMES[tier]}: ${(chance*100).toFixed(2)} %${S.level<TIER_LVL[tier]?` (nivel ${TIER_LVL[tier]})`:''}</span>`).join('');
     card.innerHTML=`<strong>${pack.icon} ${pack.name}</strong><small>Desbloqueo: nivel ${pack.level} · ${pack.cost} monedas</small><div class="pack-odds" aria-label="Probabilidades actuales">${probabilities}</div>`;
@@ -1706,7 +1730,7 @@ function equip(it){
 function renderShop(){
   if(ensureShopStock()) save();
   $('shop-status').textContent='';
-  $('shop-date').textContent=`📅 ${S.shopStock.day} · nivel ${S.shopStock.level}`;
+  $('shop-date').textContent=`📅 ${S.shopStock.day} · nivel ${S.shopStock.level} · ${TORMENTS[S.shopStock.torment??0].name}`;
   const box=$('shop');box.innerHTML='';
   for(const id of S.shopStock.offers){
     const it=ITEM[id];
@@ -1918,8 +1942,9 @@ setInterval(()=>{
     if(!$('store').hidden && (S.coins!==previousCoins || S.level!==previousLevel)) renderShop();
     if(!$('character').hidden && S.coins!==previousCoins) renderAttributes();
     if(!$('achievements').hidden && S.achievements.length!==previousAchievements) renderAchievements();
+    if(S.level!==previousLevel) renderTorment();
     if(!$('dungeons').hidden && (S.level!==previousLevel || S.achievements.length!==previousAchievements)){
-      renderTorment();renderTower();renderWeeklyBoss();renderLevelDungeons();
+      renderTower();renderWeeklyBoss();renderLevelDungeons();
     }
     if(!$('battle').hidden && S.coins!==previousCoins) renderBattleUpgrades();
     if(!$('battle').hidden) animateHit('battle-icon');

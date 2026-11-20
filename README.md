@@ -28,6 +28,9 @@ eliminarla.
   que una recompensa. Los objetivos no son recomendaciones médicas. Si una
   partida anterior tenía progreso parcial, termina la parte restante antes
   de confirmar; únicamente se recompensará la parte que faltaba.
+  El tormento de cada nueva misión añade un 5 % al objetivo por rango y
+  multiplica su XP y monedas; se fija junto al objetivo hasta completarla.
+  Adapta siempre el ejercicio a tu capacidad, independientemente del objetivo.
   El tablón muestra una estimación del daño, XP y oro (G) de cada encargo.
   El daño incluye los bonos de equipo, atributos, logros y racha; la
   estimación no incluye el botín de monstruos ni los logros nuevos.
@@ -56,8 +59,9 @@ eliminarla.
 - **Tienda:** cada día local, al abrir el juego o volver a él, se generan
   diez ofertas únicas según el nivel actual; la selección permanece igual hasta
   medianoche incluso si subes de nivel o recargas. La rareza se sortea para
-  cada objeto con pesos 60/25/12/3/1/0,4/0,1
-  (común/poco común/raro/legendario/mítico/ancestral/divino);
+  cada objeto con pesos base 60/25/12/3/1/0,4/0,1
+  (común/poco común/raro/legendario/mítico/ancestral/divino), modificados
+  por el tormento al generar las ofertas;
   se excluyen las rarezas aún no desbloqueadas y se redistribuyen sus pesos.
   Cuando se agotan los objetos de una rareza también se excluye esa rareza.
   Dentro de la rareza sorteada se priorizan objetos no poseídos. Una oferta
@@ -111,7 +115,8 @@ eliminarla.
   1, 5, 10, 15, 20, 30 y 40; solo pueden salir objetos disponibles al nivel
   actual. Cada sobre tiene distintos pesos y los más caros favorecen las
   rarezas altas. Los pesos de rarezas bloqueadas se excluyen y los restantes
-  se normalizan; las probabilidades actuales se muestran antes de comprar.
+  se normalizan; el tormento favorece las rarezas altas y las probabilidades
+  actuales se muestran antes de comprar.
   Cada objeto de una rareza tiene igual probabilidad. Un duplicado devuelve
   el 25 % del precio. La compra se guarda inmediatamente, antes de mostrar la
   animación, que respeta la preferencia del sistema de reducir movimiento.
@@ -127,7 +132,8 @@ eliminarla.
   mejoras anteriores; al cambiar la velocidad se conserva la fracción del
   ataque en curso. Al volver se aplican como máximo ocho horas desde la última
   actualización; el resto se pierde. La arena tiene sus propios monstruos y
-  victorias, independientes de las misiones. Las partidas anteriores
+  victorias, independientes de las misiones. Sus enemigos también reciben
+  la vida y el botín del tormento asignado al aparecer. Las partidas anteriores
   conservan su progreso y empiezan con las mejoras de arena a cero.
 - **Mazmorras:** la cripta está abierta desde el principio. Hay doce más,
   que requieren una llave y entre 7 y 156 días de actividad distintos,
@@ -160,18 +166,27 @@ eliminarla.
   mazmorras anteriores; tienen las mismas reglas de combate y recompensas.
   Los nuevos progresos empiezan desde cero al actualizar una partida existente,
   sin alterar las mazmorras, llaves o expediciones anteriores.
-- **Tormento:** la dificultad se elige en el portal de desafíos y afecta solo
-  a las mazmorras, la torre y los bosses. Normal no cambia nada; Tormento I,
-  II, III y IV se desbloquean en los niveles 10, 20, 30 y 40. Multiplican la
-  vida por 1,75/2,5/4/6 y las recompensas de monedas, XP y fragmentos por
-  1,4/1,8/2,5/3,5, respectivamente. La vida y los fragmentos se redondean al
-  entero más próximo; las monedas y la XP se redondean tras aplicar también
-  sus bonos habituales.
-  La dificultad queda fijada al iniciar una expedición o al atacar por primera
-  vez cada planta o boss; cambiar el selector no modifica los encuentros en
-  curso. Una planta o boss que ya estaba dañado al actualizar y cualquier
-  expedición en curso permanecen en Normal hasta completarse. Los encuentros
-  sin iniciar usan la dificultad seleccionada al comenzar.
+- **Tormento global:** el selector del encabezado ofrece Normal y doce rangos,
+  desbloqueados cada diez niveles desde el 10 hasta el 120. Los rangos I a XII
+  multiplican la vida enemiga por 1,75/2,5/4/6/8/11/15/21/30/42/60/85 y
+  las monedas, XP y fragmentos por 1,4/1,8/2,5/3,5/4,5/5,5/7/9/11,5/14,5/18/22,5.
+  Cada rango también añade un 5 % al objetivo de las nuevas misiones. Los
+  sobres y la selección diaria de la tienda favorecen más las rarezas altas:
+  el peso de cada rareza se multiplica por `(1 + 0,15 × rango) ^ índice`,
+  excluyendo las rarezas bloqueadas por nivel y normalizando después. La tienda
+  conserva las ofertas y el tormento con que se generaron hasta el día siguiente.
+  Las monedas y fragmentos de logros y capítulos también aumentan; las llaves,
+  los objetos, la compensación por objeto duplicado y los porcentajes
+  permanentes de logros no cambian. Las recompensas de capítulo se calculan
+  con el tormento de la misión que lo completa.
+  La dificultad se fija al asignar una misión, al aparecer un monstruo, al
+  iniciar una expedición o al atacar por primera vez cada planta o boss;
+  cambiarla no modifica objetivos ni enemigos en curso. El combate automático
+  pendiente se calcula antes del cambio. Las misiones y enemigos anteriores
+  a esta actualización conservan sus objetivos y vida en Normal; las
+  expediciones, plantas y bosses ya iniciados conservan su tormento. La vida y
+  los fragmentos se redondean al entero más próximo; las monedas y la XP se
+  redondean tras aplicar también sus bonos habituales.
 - **Progresión a largo plazo:** hay logros por 7, 30, 90, 180 y 365 días
   distintos en los que se completa al menos una misión. Se cuentan a partir
   de esta actualización porque las partidas anteriores no guardaban ese
