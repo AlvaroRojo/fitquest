@@ -134,7 +134,7 @@ test('training improves autobattle and dungeon damage without changing mission t
 test('mission estimate includes partial progress and reduced rewards', () => {
   const g=game();
   assert.equal(g.run(`(() => {
-    S=fresh(); S.done.squat=15;
+    S=fresh(); S.active=['squat','push','plank','abs','jack','lunge']; S.done.squat=15;
     let p=missionEstimate(byId('squat'));
     if(p.damage!==5 || p.xp!==35 || p.coins!==10)return false;
     S.completedToday=6; p=missionEstimate(byId('squat'));
