@@ -221,6 +221,9 @@
   #character .hero-stage[data-power="1"]{box-shadow:inset 0 0 35px #ae78c455,0 0 20px #b37eb077}
   #character .hero-stage[data-power="2"]{border-color:#f0c579;box-shadow:inset 0 0 40px #d8924f66,0 0 25px #e2a35e77}
   #character .hero-stage[data-power="3"]{border-color:#9df6ef;box-shadow:inset 0 0 40px #4bd7d766,0 0 30px #67e5ee88}
+  .hero-power{display:grid;grid-template-columns:1fr auto;gap:4px 12px;align-items:center;margin:0 0 14px;padding:12px 14px;border:1px solid #d6ad70;border-radius:12px;background:radial-gradient(ellipse at 90% 0%,#a6638a66,transparent 55%),linear-gradient(120deg,#45313e,#171b2c);box-shadow:inset 0 1px #fff3,0 0 20px #c2898433}
+  .hero-power strong{color:#ffe0a2;font:700 1.2rem Georgia,serif;font-variant-numeric:tabular-nums}
+  .hero-power small{color:#e4c7b6}.hero-power .bar{grid-column:1/-1;height:8px}.hero-power .bar>div{background:linear-gradient(90deg,#bc6e8f,#f4c578,#a5f2e7)}
   #character .slot{border-style:solid;border-color:#806855;box-shadow:inset 0 1px #fff1}
   #character .slot.is-equipped{border-color:#d6ad66;background:linear-gradient(145deg,#594232,#292335);box-shadow:inset 0 0 12px #d6a95722}
   #character .character-stat{border-color:#99724e;background:linear-gradient(145deg,#342c37,#161c2b)}
@@ -253,6 +256,13 @@
   .pack-reel-card{width:128px;height:132px;display:grid;place-items:center;align-content:center;gap:5px;padding:8px;border:2px solid var(--loot-color);border-radius:10px;background:radial-gradient(ellipse,var(--loot-glow),#171c2b 78%);text-align:center;box-shadow:inset 0 0 18px var(--loot-glow)}
   .pack-reel-card b{font-size:2rem}.pack-reel-card small{color:#fff0d4;font-size:.7rem;line-height:1.2;overflow-wrap:anywhere}
   .pack-reel-card.winner{box-shadow:inset 0 0 18px var(--loot-glow),0 0 14px var(--loot-glow)}
+  .pack-stage{isolation:isolate}
+  .pack-stage::before{content:"";position:absolute;inset:0;z-index:2;pointer-events:none;opacity:0;background:radial-gradient(circle,#fffbd4cc 0,var(--loot-glow) 18%,transparent 65%)}
+  .pack-stage.reveal::before{animation:loot-flash 1.6s ease-out}
+  .pack-stage.reveal .winner{animation:loot-winner 1.6s ease-out}
+  .pack-stage.spinning{box-shadow:inset 0 0 35px #dca35b55,0 0 20px #e6a95233}
+  @keyframes loot-flash{0%{opacity:0}15%{opacity:1}100%{opacity:0}}
+  @keyframes loot-winner{0%{filter:brightness(1)}20%{filter:brightness(1.8);box-shadow:0 0 35px var(--loot-color)}100%{filter:brightness(1)}}
   @keyframes pack-burst{0%{transform:scale(.3);opacity:0}20%{opacity:1}100%{transform:scale(var(--burst-size,3));opacity:0}}
   .loot-tier[data-tier="0"]{--loot-color:#c4c6cf;--loot-glow:#aab1c733}
   .loot-tier[data-tier="1"]{--loot-color:#82c88d;--loot-glow:#3aa75a55}
@@ -273,6 +283,8 @@
   .wheel-stage::before{content:"▼";position:absolute;top:0;z-index:2;color:#fff0c8;font-size:1.6rem;text-shadow:0 0 8px #f6a63f}
   .loot-wheel{display:grid;place-items:center;width:185px;aspect-ratio:1;border:6px solid #e7bb72;border-radius:50%;background:conic-gradient(#a7b3bd 0 51.4deg,#62a576 51.4deg 102.8deg,#4c98c5 102.8deg 154.2deg,#d9a64a 154.2deg 205.6deg,#9b64bf 205.6deg 257deg,#c65a58 257deg 308.4deg,#5ecabc 308.4deg);box-shadow:0 0 22px #e5a46477,inset 0 0 20px #0009;transition:transform 2.8s cubic-bezier(.15,.65,.1,1)}
   .loot-wheel span{display:grid;place-items:center;width:54px;height:54px;border:2px solid #e8bf7b;border-radius:50%;background:#27202e;font-size:1.6rem}
+  .wheel-stage.spinning .loot-wheel{box-shadow:0 0 35px #ffd17faa,inset 0 0 20px #fff7}
+  .wheel-stage.burst .loot-wheel span{animation:loot-winner 1.2s ease-out}
   .battle-layout{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));gap:12px}
   .battle-layout>.card{margin:0}
   .battle-stage{min-height:360px;background:radial-gradient(ellipse at 50% 80%,#be624b88,transparent 35%),radial-gradient(ellipse at 50% 30%,#71558e,#13152a 70%)}
@@ -335,10 +347,13 @@
   .expedition-grid .dungeon-card{margin:0;display:flex;flex-direction:column;gap:6px}
   .expedition-grid .dungeon-card h3,.expedition-grid .dungeon-card p{margin:0}
   .expedition-grid .dungeon-card button{margin-top:auto}
-  .expedition-challenge{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,270px),1fr));gap:14px;align-items:stretch}
-  .challenge-stage{min-height:260px;--encounter-accent:#e8bc83;--encounter-glow:#a765bb}
-  .challenge-stage .full-creature{width:clamp(190px,24vw,280px);max-height:250px}
-  .challenge-details{display:flex;flex-direction:column;gap:10px;justify-content:center}
+  .expedition-challenge{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,270px),1fr));gap:14px;align-items:stretch;min-width:0}
+  .expedition-challenge>*{min-width:0}
+  .expedition-challenge .challenge-stage{min-height:300px;padding:70px 10px 10px;--encounter-accent:#e8bc83;--encounter-glow:#a765bb}
+  .challenge-stage .big{max-width:100%;display:grid;place-items:center}
+  .challenge-stage .full-creature{display:block;width:min(100%,280px);max-width:100%;height:auto;max-height:220px}
+  .challenge-details{display:flex;flex-direction:column;gap:10px;justify-content:center;overflow-wrap:anywhere}
+  #level-dungeon-run:not(:empty){margin:14px 0 20px;padding:14px;border:1px solid #bb8872;border-radius:14px;background:radial-gradient(ellipse at 50% 0%,#9a455755,transparent 65%),#171b2b;box-shadow:0 0 20px #ac557033}
   .challenge-details p{margin:0}.challenge-details button{margin:0}
   .challenge-pill{display:inline-block;align-self:flex-start;padding:4px 9px;border:1px solid #a87d4c;border-radius:999px;background:#282331;color:#ffe0a2;font-size:.8rem}
   .challenge-progress{height:12px}.challenge-progress>div{background:linear-gradient(90deg,#d8855c,#ffdc89)}
@@ -476,6 +491,11 @@
 <section id="character" role="tabpanel" aria-labelledby="tab-character" hidden>
 <div class="card hero-card">
   <h2>🛡️ Personaje</h2>
+  <div class="hero-power" aria-label="Poder y evolución del personaje">
+    <div><small>PODER DEL HÉROE</small><br><strong id="hero-power-score"></strong></div>
+    <div><strong id="hero-evolution"></strong><br><small id="hero-next"></small></div>
+    <div class="bar" role="progressbar" id="hero-progress" aria-label="Progreso hacia la próxima evolución" aria-valuemin="0" aria-valuemax="10"><div></div></div>
+  </div>
   <div id="eq" class="hero-layout"><div class="hero-stage" id="hero"></div></div>
   <h3 class="jewelry-heading">💎 Joyería</h3>
   <div id="jewelry" class="jewelry-slots" aria-label="Huecos de joyería"></div>
@@ -550,7 +570,7 @@
   <p>Elige un sobre: los más caros y el tormento mejoran tus probabilidades. Solo aparecen rarezas disponibles para tu nivel. Las monedas son del juego, nunca dinero real.</p>
   <p>Todos los objetos de una rareza tienen la misma probabilidad. Los duplicados también se guardan en el inventario.</p>
   <div id="pack-list" class="pack-list"></div>
-  <div id="pack-stage" class="pack-stage" aria-hidden="true"><div class="pack-reel" id="pack-reel"><div class="pack-reel-card loot-tier" data-tier="3"><b>🎁</b><small>Abre un sobre</small></div></div></div>
+  <div id="pack-stage" class="pack-stage loot-tier" data-tier="0" aria-hidden="true"><div class="pack-reel" id="pack-reel"><div class="pack-reel-card loot-tier" data-tier="3"><b>🎁</b><small>Abre un sobre</small></div></div></div>
   <p id="pack-result" class="pack-result" role="status" aria-live="polite"></p>
   <section class="armory-section" aria-labelledby="wheel-title">
     <h3 id="wheel-title">🎡 Ruleta de daño</h3>
@@ -900,7 +920,9 @@ const statBreakdown=stat=>{
   return {attributes,equipment,achievements,forge,total:attributes+equipment+achievements+forge};
 };
 const bonus=stat=>1+statBreakdown(stat).total/100;
-const heroPowerTier=()=>{const power=statBreakdown('dmg').total;return power>=120?3:power>=60?2:power>=20?1:0};
+const heroPower=()=>S.level+Object.keys(ATTRIBUTES).reduce((sum,stat)=>sum+statBreakdown(stat).total,0)+
+  Object.values(S.battleUpgrades).reduce((sum,rank)=>sum+rank,0);
+const heroEvolution=power=>Math.max(1,Math.min(100,Math.floor((power-1)/10)+1));
 const globalStats=()=>({
   missions:S.totalMissions,kills:S.kills,days:S.activeDays,
   dungeons:S.dungeonClears,packs:S.packsOpened,achievements:S.achievements.length,
@@ -1538,10 +1560,18 @@ function encounterBiome(encounter){
 }
 function heroArt(){
   const equipped=key=>Boolean(S.eq[key]);
-  const tier=heroPowerTier();
-  return `<svg class="hero-art" viewBox="0 0 150 220" role="img" aria-label="Héroe y su equipo">
+  const evolution=heroEvolution(heroPower()),realm=Math.floor((evolution-1)/10),rank=(evolution-1)%10;
+  const colors=['#d7b1ee','#e8bd91','#8fdbca','#9bbce9','#e09fbf','#e9d581','#c69df4','#f39c89','#86e3ed','#fff0ad'];
+  const accent=colors[realm];
+  const stars=Array.from({length:rank+1},(_,i)=>{
+    const angle=(Math.PI*2*i/(rank+1))-Math.PI/2;
+    return `<circle cx="${(75+60*Math.cos(angle)).toFixed(2)}" cy="${(105+88*Math.sin(angle)).toFixed(2)}" r="2.7" fill="${accent}"/>`;
+  }).join('');
+  return `<svg class="hero-art" viewBox="0 0 150 220" role="img" aria-label="Héroe y su equipo, evolución ${evolution} de 100">
     <ellipse cx="75" cy="208" rx="50" ry="8" fill="#14102b" opacity=".8"/>
-    ${tier>=1?`<path d="M50 72 Q19 83 21 180 L46 167 75 188 104 167 129 180 Q131 83 100 72Z" fill="${tier>=3?'#285c70':tier>=2?'#83502f':'#593b70'}" stroke="${tier>=3?'#a1f9f0':tier>=2?'#ffd17f':'#d7b1ee'}" stroke-width="2"/>`:''}
+    <ellipse cx="75" cy="105" rx="${45+realm}" ry="${70+realm}" fill="none" stroke="${accent}" stroke-width="${1+realm*.2}" stroke-dasharray="${3+realm} ${9-realm*.5}" opacity=".7"/>
+    ${stars}
+    ${realm>=1?`<path d="M50 72 Q19 83 21 180 L46 167 75 188 104 167 129 180 Q131 83 100 72Z" fill="${realm>=7?'#285c70':realm>=4?'#83502f':'#593b70'}" stroke="${accent}" stroke-width="2"/>`:''}
     <path d="M53 125 L49 185 L65 185 L75 139 L85 185 L101 185 L97 125Z" fill="${equipped('pants')?'#8c78b4':'#3e3a58'}" stroke="#cfb7eb" stroke-width="2"/>
     <path d="M46 183 L67 183 L67 200 L40 200Z M83 183 L104 183 L110 200 L83 200Z" fill="${equipped('boots')?'#d1a86f':'#34293e'}" stroke="#bca5d9" stroke-width="2"/>
     <path d="M48 72 L30 122 L43 128 L58 96 M102 72 L120 122 L107 128 L92 96" fill="${equipped('arms')?'#bfa3dd':'#716786'}" stroke="#cfb7eb" stroke-width="2"/>
@@ -1550,8 +1580,9 @@ function heroArt(){
     <circle cx="75" cy="42" r="25" fill="#cda7a4" stroke="#efd6d5" stroke-width="2"/>
     <path d="M49 42 Q46 10 75 13 Q104 10 101 42 L91 36 L59 36Z" fill="${equipped('helmet')?'#aab3d2':'#4e3559'}" stroke="#cdb7e5" stroke-width="2"/>
     <path d="M62 44 L69 46 M81 46 L88 44" stroke="#24132e" stroke-width="3"/>
-    ${tier>=2?'<path d="M39 69 L24 58 34 85 48 90 M111 69 L126 58 116 85 102 90" fill="#c3925a" stroke="#ffe0a2" stroke-width="2"/><path d="M75 98 L82 108 75 118 68 108Z" fill="#ffe1a3"/>':''}
-    ${tier>=3?'<path d="M34 59 L15 39 22 75 39 81 M116 59 L135 39 128 75 111 81" fill="#62d9df" stroke="#d7fffa" stroke-width="2"/><path d="M53 22 L49 8 62 15 75 3 88 15 101 8 97 22" fill="#efc775" stroke="#fff1bb" stroke-width="2"/>':''}
+    ${realm>=2?`<path d="M39 69 L24 58 34 85 48 90 M111 69 L126 58 116 85 102 90" fill="#c3925a" stroke="${accent}" stroke-width="2"/><path d="M75 98 L82 108 75 118 68 108Z" fill="${accent}"/>`:''}
+    ${realm>=4?`<path d="M34 59 L15 39 22 75 39 81 M116 59 L135 39 128 75 111 81" fill="#62d9df" stroke="${accent}" stroke-width="2"/><path d="M53 22 L49 8 62 15 75 3 88 15 101 8 97 22" fill="#efc775" stroke="${accent}" stroke-width="2"/>`:''}
+    ${realm>=7?`<path d="M44 75 Q10 52 7 110 L32 97 M106 75 Q140 52 143 110 L118 97" fill="none" stroke="${accent}" stroke-width="${realm-4}"/>`:''}
     ${equipped('necklace')?'<circle cx="75" cy="83" r="5" fill="#68f0e2"/>':''}
     ${equipped('earring1')?'<circle cx="51" cy="54" r="3" fill="#ffe38c"/>':''}
     ${equipped('earring2')?'<circle cx="99" cy="54" r="3" fill="#ffe38c"/>':''}
@@ -1748,7 +1779,8 @@ function renderPacks(){
       const result=drawPack(pack.id);
       save();render();
       if(!result){$('pack-result').textContent='No se puede abrir este sobre.';return}
-      const reel=$('pack-reel'),winner=36;
+      const reel=$('pack-reel'),stage=$('pack-stage'),winner=36;
+      stage.classList.remove('reveal');stage.classList.add('spinning');stage.dataset.tier=result.tier;
       reel.replaceChildren();
       for(let i=0;i<40;i++){
         const item=i===winner?result.item:samplePackItem(pack);
@@ -1762,8 +1794,12 @@ function renderPacks(){
       reel.style.transition='';
       reel.style.transform=`translateX(-${winner*136+64}px)`;
       $('pack-result').textContent='Abriendo sobre...';
-      const duration=matchMedia('(prefers-reduced-motion: reduce)').matches?50:4000;
-      lootTimer=setTimeout(()=>{lootTimer=null;$('pack-result').textContent=result.message;renderPacks()},duration);
+      const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
+      lootTimer=setTimeout(()=>{
+        stage.classList.remove('spinning');stage.classList.add('reveal');
+        $('pack-result').textContent=result.message;
+        lootTimer=setTimeout(()=>{stage.classList.remove('reveal');lootTimer=null;renderPacks()},reduced?50:1600);
+      },reduced?50:4000);
       renderPacks();
     };
     card.appendChild(button);box.appendChild(card);
@@ -1778,7 +1814,7 @@ function renderPacks(){
       save();render();
       if(!result){$('wheel-result').textContent='No se puede girar la ruleta.';return}
       const wheel=$('loot-wheel');
-      const stage=$('wheel-stage');stage.classList.remove('burst');stage.dataset.tier=result.tier;
+      const stage=$('wheel-stage');stage.classList.remove('burst');stage.classList.add('spinning');stage.dataset.tier=result.tier;
       stage.style.setProperty('--burst-size',String(2+result.tier*.7));
       stage.style.setProperty('--flare-size',String(.6+result.tier*.12));
       const target=(360-(result.tier+.5)*360/7)%360;
@@ -1787,7 +1823,7 @@ function renderPacks(){
       $('wheel-result').textContent='La ruleta está girando...';
       const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
       lootTimer=setTimeout(()=>{
-        stage.classList.add('burst');$('wheel-result').textContent=result.message;
+        stage.classList.remove('spinning');stage.classList.add('burst');$('wheel-result').textContent=result.message;
         lootTimer=setTimeout(()=>{stage.classList.remove('burst');lootTimer=null;renderPacks()},reduced?50:1200);
       },reduced?50:2800);
       renderPacks();
@@ -1819,7 +1855,13 @@ function renderAttributes(){
 }
 function renderChar(){
   const hero=$('hero');
-  hero.dataset.power=heroPowerTier();
+  const power=heroPower(),evolution=heroEvolution(power),progress=evolution===100?10:(power-1)%10;
+  hero.dataset.power=evolution>=71?3:evolution>=41?2:evolution>=11?1:0;
+  $('hero-power-score').textContent=power.toLocaleString('es-ES');
+  $('hero-evolution').textContent=`Evolución ${evolution} / 100`;
+  $('hero-next').textContent=evolution===100?'Aspecto máximo':`Siguiente: ${1+evolution*10} de poder`;
+  $('hero-progress').setAttribute('aria-valuenow',String(progress));
+  $('hero-progress').firstElementChild.style.width=`${progress*10}%`;
   $('hero').innerHTML=heroArt();
   $('eq').replaceChildren(hero);
   $('jewelry').replaceChildren();
@@ -2115,7 +2157,7 @@ $('inventory-next').onclick=()=>{inventoryPage++;dismantleConfirm=null;renderCha
 $('reset').onclick=()=>{
   const b=$('reset');
   if(b.dataset.armed){clearTimeout(resetTimer);delete b.dataset.armed;b.textContent='Reiniciar partida';
-    clearTimeout(lootTimer);lootTimer=null;S=fresh();dismantleConfirm=null;inventoryPage=0;$('inventory-type').value='all';$('inventory-equipped').value='all';$('pack-result').textContent='';$('wheel-result').textContent='';$('wheel-stage').classList.remove('burst');$('pack-reel').replaceChildren();$('pack-reel').style.transform='translateX(-64px)';$('mission-status').textContent='';$('torment-status').textContent='';save();render();return}
+    clearTimeout(lootTimer);lootTimer=null;S=fresh();dismantleConfirm=null;inventoryPage=0;$('inventory-type').value='all';$('inventory-equipped').value='all';$('pack-result').textContent='';$('wheel-result').textContent='';$('wheel-stage').classList.remove('burst','spinning');$('pack-stage').classList.remove('spinning','reveal');$('pack-reel').replaceChildren();$('pack-reel').style.transform='translateX(-64px)';$('mission-status').textContent='';$('torment-status').textContent='';save();render();return}
   b.dataset.armed=1;b.textContent='¿Seguro? Pulsa otra vez para borrar';
   resetTimer=setTimeout(()=>{delete b.dataset.armed;b.textContent='Reiniciar partida'},4000);
 };
@@ -2134,6 +2176,7 @@ setInterval(()=>{
     save();render(true);
     if(!$('store').hidden && (S.coins!==previousCoins || S.level!==previousLevel)) renderShop();
     if(!$('character').hidden && S.coins!==previousCoins) renderAttributes();
+    if(!$('character').hidden && (S.level!==previousLevel || S.achievements.length!==previousAchievements)) renderChar();
     if(!$('achievements').hidden && S.achievements.length!==previousAchievements) renderAchievements();
     if(S.level!==previousLevel) renderTorment();
     if(!$('dungeons').hidden && (S.level!==previousLevel || S.achievements.length!==previousAchievements || previousRun!==S.dungeonRun || previousRunUpdated!==S.dungeonRun?.autoUpdated)){

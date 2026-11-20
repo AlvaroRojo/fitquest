@@ -84,9 +84,13 @@ eliminarla.
   compatible. Se usa el primer hueco libre o, si están ocupados, se sustituye
   el primero; el objeto anterior permanece en el inventario. También puedes
   arrastrar un objeto a un hueco concreto o pulsar un hueco equipado para
-  vaciarlo. La joyería se muestra por separado. El aspecto del héroe evoluciona al
-  alcanzar +20 %, +60 % y +120 % de bonificación total de daño; puede volver
-  a una apariencia anterior si se reduce ese bono. Los objetos equipados se
+  vaciarlo. La joyería se muestra por separado. El marcador de poder suma el
+  nivel del personaje, los porcentajes totales de daño, XP y monedas (equipo,
+  mejoras de objetos, atributos, forja y logros) y los rangos de mejoras de
+  arena. Es un indicador visual y no añade bonificaciones de combate. El héroe
+  tiene 100 evoluciones visuales: la primera comienza en 1 de poder y se
+  alcanza una nueva cada 10 puntos, hasta la última en 991. El aspecto puede
+  retroceder si disminuye el poder. Los objetos equipados se
   muestran primero en el inventario; dentro de los equipados y los no
   equipados se ordenan de mayor a menor rareza. Sus fondos reflejan la rareza.
   Las copias del mismo objeto son independientes: cada una se puede equipar,
@@ -123,7 +127,8 @@ eliminarla.
   actuales se muestran antes de comprar.
   Cada objeto de una rareza tiene igual probabilidad. Cada premio se añade al
   inventario, incluso si es repetido, sin devolución de monedas. La compra se
-  guarda inmediatamente, antes de mostrar el carrusel animado. La **ruleta de
+  guarda inmediatamente, antes de mostrar el carrusel animado y su destello de
+  revelación según la rareza. La **ruleta de
   daño** permite elegir cualquiera de los sobres con las mismas probabilidades
   y precio, pero solo entrega espadas, brazos y anillos de daño. Al detenerse,
   muestra una explosión adaptada a la rareza. Las tiradas también cuentan como

@@ -266,15 +266,34 @@ test('inventory sorts equipped items first and rarity descending within each gro
   })()`),true);
 });
 
-test('hero appearance tiers follow total damage power and can decrease', () => {
+test('hero power follows equipment, upgrades, attributes and arena upgrades', () => {
   const g=game();
   assert.equal(g.run(`(() => {
-    S=fresh(); if(heroPowerTier()!==0)return false;
-    S.attributes.dmg=19; if(heroPowerTier()!==0)return false;
-    S.achievements=['kill1']; if(heroPowerTier()!==1)return false;
-    S.attributes.dmg=58; if(heroPowerTier()!==2)return false;
-    S.attributes.dmg=118; if(heroPowerTier()!==3)return false;
-    S.attributes.dmg=0; return heroPowerTier()===0;
+    S=fresh(); if(heroPower()!==1 || heroEvolution(heroPower())!==1)return false;
+    S.level=5; S.attributes={dmg:3,xp:4,coin:5};
+    S.owned=['sword_0_0']; S.eq.sword='sword_0_0'; S.upgrades.sword_0_0=2;
+    S.battleUpgrades={damage:2,speed:1,loot:3};
+    if(heroPower()!==5+3+4+5+ITEM.sword_0_0.pct+2+6)return false;
+    const power=heroPower(); delete S.eq.sword;
+    return heroPower()===power-ITEM.sword_0_0.pct-2 &&
+      heroEvolution(1)===1 && heroEvolution(10)===1 && heroEvolution(11)===2 &&
+      heroEvolution(990)===99 && heroEvolution(991)===100 && heroEvolution(100000)===100;
+  })()`),true);
+});
+
+test('all 100 hero evolutions have visually distinct artwork', () => {
+  const g=game();
+  const hero=script.slice(script.indexOf('function heroArt(){'),script.indexOf('const navigationButtons='));
+  g.run(hero);
+  assert.equal(g.run(`(() => {
+    S=fresh(); const images=new Set();
+    for(let i=1;i<=100;i++){
+      S.level=1+(i-1)*10;
+      const art=heroArt().replace(/aria-label="[^"]*"/,'');
+      if(images.has(art)) return false;
+      images.add(art);
+    }
+    return images.size===100;
   })()`),true);
 });
 
