@@ -115,13 +115,20 @@ eliminarla.
   Cada objeto de una rareza tiene igual probabilidad. Un duplicado devuelve
   el 25 % del precio. La compra se guarda inmediatamente, antes de mostrar la
   animación, que respeta la preferencia del sistema de reducir movimiento.
-- **Autobatalla:** siempre está activa. El héroe causa 2 de daño cada 10 segundos,
-  multiplicado por los bonos de daño de equipo y logros. Al volver se aplican
-  como máximo ocho horas desde la última actualización; el resto se pierde.
-  La arena tiene sus propios monstruos y victorias, independientes de los de
-  misiones; comparten la experiencia, las monedas y los logros del personaje.
-  Las partidas anteriores conservan su encuentro original y la arena nueva
-  empieza en el primer monstruo.
+- **Autobatalla:** siempre está activa y recorre 16 tipos de monstruos.
+  Los élites y jefes de la arena son únicamente visuales: su vida y botín
+  siguen la misma progresión que los demás enemigos de arena.
+  El ataque inicial causa 2 de daño cada 10 segundos, con los bonos generales
+  de daño. Tres mejoras permanentes usan monedas del juego: daño (+1 al daño
+  base por rango; coste 100 + 50 por rango), velocidad (-0,4 s por rango;
+  coste 250 + 125 por rango, máximo 20 rangos y 2 s) y botín (+10 % a las
+  monedas y XP de arena por rango; coste 200 + 100 por rango). Daño y botín
+  no tienen límite. Antes de mejorar se calcula el combate pendiente con las
+  mejoras anteriores; al cambiar la velocidad se conserva la fracción del
+  ataque en curso. Al volver se aplican como máximo ocho horas desde la última
+  actualización; el resto se pierde. La arena tiene sus propios monstruos y
+  victorias, independientes de las misiones. Las partidas anteriores
+  conservan su progreso y empiezan con las mejoras de arena a cero.
 - **Mazmorras:** la cripta está abierta desde el principio. Hay doce más,
   que requieren una llave y entre 7 y 156 días de actividad distintos,
   según la mazmorra. Los días no tienen que ser consecutivos y descansar no

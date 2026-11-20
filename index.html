@@ -251,6 +251,25 @@
   .pack-emblem{font-size:3.5rem;line-height:1}
   .pack-stage.opening .pack-emblem{animation:pack-open 1s ease-out}
   @keyframes pack-open{20%{transform:rotate(-12deg) scale(1.1)}40%{transform:rotate(12deg) scale(1.2)}65%{transform:scale(1.35);filter:drop-shadow(0 0 18px #ffda80)}100%{transform:scale(1)}}
+  .battle-layout{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));gap:12px}
+  .battle-layout>.card{margin:0}
+  .battle-stage{min-height:360px;background:radial-gradient(ellipse at 50% 80%,#be624b88,transparent 35%),radial-gradient(ellipse at 50% 30%,#71558e,#13152a 70%)}
+  #battle-encounter[data-biome="forest"] .battle-scenery{filter:hue-rotate(95deg)}
+  #battle-encounter[data-biome="swamp"] .battle-scenery{filter:hue-rotate(135deg)}
+  #battle-encounter[data-biome="crypt"] .battle-scenery{filter:hue-rotate(220deg)}
+  #battle-encounter[data-biome="volcano"] .battle-scenery{filter:hue-rotate(330deg) saturate(1.5)}
+  #battle-encounter[data-biome="void"] .battle-scenery{filter:hue-rotate(265deg)}
+  .battle-stage .full-creature{width:clamp(240px,32vw,370px);max-height:340px}
+  .battle-stage .battle-icon{margin:0}
+  .battle-scenery{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+  .battle-stats{display:flex;gap:8px;flex-wrap:wrap}
+  .battle-stats span{padding:5px 9px;border:1px solid #806346;border-radius:8px;background:#171c28;color:#ffe0a2}
+  .battle-upgrades{display:grid;gap:10px}
+  .battle-upgrade{display:grid;gap:6px;padding:12px;border:1px solid #806346;border-radius:10px;background:linear-gradient(135deg,#493931,#1d2130)}
+  .battle-upgrade strong{color:#ffe0a2}.battle-upgrade small{color:#d8c6a9}
+  .battle-upgrade button{margin:0}
+  #battle-upgrade-status:empty{display:none}
+  @media(max-width:480px){.battle-stage{min-height:270px}.battle-stage .full-creature{width:220px}}
   #shop{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,210px),1fr));gap:10px}
   .forge-options{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,210px),1fr));gap:10px}
   #shop .shop-offer,.forge-option{display:flex;flex-direction:column;gap:8px;min-width:0;padding:14px;border:1px solid #806346;border-radius:12px;background:linear-gradient(145deg,#493931,#1d2130);box-shadow:inset 0 1px #fff2,0 5px 14px #0003}
@@ -460,14 +479,34 @@
 </section>
 
 <section id="battle" role="tabpanel" aria-labelledby="tab-battle" hidden>
+<div class="battle-layout">
+<div class="card encounter-card" id="battle-encounter">
+  <div class="encounter-header"><h2>⚔️ Arena automática</h2><span class="encounter-tag" id="battle-tag"></span></div>
+  <div class="encounter-stage battle-stage">
+    <svg class="battle-scenery" viewBox="0 0 600 400" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+      <circle cx="300" cy="145" r="115" fill="#df9f8c" opacity=".12"/>
+      <path d="M0 315 L75 185 115 245 170 150 245 290 310 210 365 275 445 145 510 245 550 175 600 300 V400 H0Z" fill="#171526"/>
+      <path d="M0 400 V260 L45 230 45 175 65 140 85 175 85 230 125 255 V400 M600 400 V260 L555 230 555 175 535 140 515 175 515 230 475 255 V400" fill="#0c101e" stroke="#ad8078" stroke-opacity=".45" stroke-width="3"/>
+      <path d="M0 370 Q150 310 300 360 T600 370 V400 H0Z" fill="#101321" stroke="#c99b7c" stroke-opacity=".4" stroke-width="3"/>
+      <path d="M45 340 L65 325 M540 340 L520 325 M170 373 L210 360 M430 373 L390 360" stroke="#e5aa7d" stroke-opacity=".5" stroke-width="3"/>
+    </svg>
+    <div class="encounter-light" aria-hidden="true"></div><div class="encounter-aura" aria-hidden="true"></div>
+    <div class="encounter-runes" aria-hidden="true"></div><div class="encounter-embers" aria-hidden="true"></div>
+    <div class="arena-label"><span class="live-dot"></span> Arena activa</div><div id="battle-icon" class="big battle-icon"></div>
+    <svg class="boss-flames" viewBox="0 0 600 160" preserveAspectRatio="none" aria-hidden="true"><path d="M0 160 V88 Q20 103 34 39 Q44 97 70 66 Q72 119 95 78 Q112 114 125 46 Q141 108 163 90 Q185 125 208 59 Q218 112 241 88 Q261 125 278 72 Q300 118 322 62 Q336 116 357 85 Q381 120 394 47 Q412 112 433 82 Q455 116 475 57 Q490 111 510 76 Q532 110 548 35 Q561 102 580 70 L600 88 V160Z" fill="#e94b25" opacity=".82"/><path d="M0 160 Q25 112 48 125 Q70 83 92 139 Q120 103 143 133 Q164 90 185 140 Q220 104 245 139 Q272 95 300 140 Q327 103 355 137 Q386 94 409 138 Q437 102 462 135 Q491 88 515 139 Q550 100 570 133 Q590 111 600 122 V160Z" fill="#ffbd58" opacity=".9"/></svg>
+  </div>
+  <div class="encounter-health">
+    <div class="row"><strong id="battle-name"></strong><span id="battle-hp"></span></div>
+    <div class="bar hp"><div id="battle-bar"></div></div>
+  </div>
+  <div id="battle-status" class="battle-stats"></div>
+  <small>Progreso sin conexión: máximo 8 horas.</small>
+</div>
 <div class="card">
-  <h2>⚔️ Arena automática</h2>
-  <p>Una arena independiente: tu héroe ataca automáticamente cada 10 segundos. El equipo y los logros se aplican aquí también.</p>
-  <div class="arena"><div class="arena-label"><span class="live-dot"></span> Arena activa</div><div id="battle-icon" class="battle-icon"></div></div>
-  <div class="row"><strong id="battle-name"></strong><span id="battle-hp"></span></div>
-  <div class="bar hp"><div id="battle-bar"></div></div>
-  <p id="battle-status"></p>
-  <p><small>Al volver se calcula hasta un máximo de 8 horas desde la última actualización; el tiempo adicional se pierde. También funciona en días de descanso.</small></p>
+  <h2>⚒️ Mejoras de arena</h2>
+  <div id="battle-upgrades" class="battle-upgrades"></div>
+  <p id="battle-upgrade-status" role="status" aria-live="polite"></p>
+</div>
 </div>
 </section>
 
@@ -731,6 +770,18 @@ const inventoryEquippedFirst=ids=>{
 };
 const target = (ex,l) => Math.max(ex.base, Math.round(ex.base*Math.min(2,1+0.05*(l-1))/ex.step[0])*ex.step[0]);
 const BATTLE_INTERVAL=10000, OFFLINE_LIMIT=8*60*60*1000;
+const BATTLE_UPGRADES={
+  damage:{name:'Golpe devastador',icon:'⚔️',cost:100,step:50},
+  speed:{name:'Ritmo imparable',icon:'⚡',cost:250,step:125,max:20},
+  loot:{name:'Botín del campeón',icon:'💰',cost:200,step:100}
+};
+const battleDamage=()=> (2+S.battleUpgrades.damage)*bonus('dmg');
+const battleInterval=()=> BATTLE_INTERVAL-400*S.battleUpgrades.speed;
+const battleLoot=()=> 1+0.1*S.battleUpgrades.loot;
+const battleUpgradeCost=stat=>BATTLE_UPGRADES[stat].cost+BATTLE_UPGRADES[stat].step*S.battleUpgrades[stat];
+function autoEncounter(kills){
+  return {species:kills%MISSION_MONSTERS.length,kind:kills%10===9?'boss':kills%5===4?'elite':'normal'};
+}
 const PACKS=[
   {id:'basic',name:'Sobre aventurero',icon:'📦',level:1,cost:100,weights:[60,25,12,3,1,.4,.1]},
   {id:'silver',name:'Sobre de plata',icon:'🥈',level:5,cost:300,weights:[25,40,25,8,2,.8,.2]},
@@ -787,7 +838,8 @@ const fresh = () => ({level:1,xp:0,coins:0,owned:[],eq:{},streak:0,kills:0,
   targets:{},totalMissions:0,packsOpened:0,achievements:[],missionKills:0,autoKills:0,autoMonsterHp:monsterHp(0),battleUpdated:Date.now(),
   keys:0,keyPity:0,unlockedDungeons:['crypt'],dungeonRun:null,lastDungeonDay:null,dungeonClears:0,materials:0,activeDays:0,lastActivityDay:null,
   weeklyRewards:0,balanceVersion:1,unlimitedMissionsVersion:1,upgrades:{},attributes:{dmg:0,xp:0,coin:0},encounter:nextEncounter(0),
-  missionDifficultyVersion:1,legacyMissions:{},shopStock:null,forgeRanks:{dmg:0,xp:0,coin:0},forgeLastWeek:null,forgeWeek:null,forgeWeekPurchases:0});
+  missionDifficultyVersion:1,legacyMissions:{},shopStock:null,forgeRanks:{dmg:0,xp:0,coin:0},forgeLastWeek:null,forgeWeek:null,forgeWeekPurchases:0,
+  battleUpgrades:{damage:0,speed:0,loot:0}});
 let S;
 try{S=JSON.parse(localStorage.getItem(KEY)||'null') || fresh()}
 catch(error){alert('No se puede leer la partida guardada. No se ha borrado; revisa los datos del navegador.');throw error}
@@ -815,6 +867,7 @@ S.forgeRanks ??= {dmg:0,xp:0,coin:0};
 S.forgeLastWeek ??= null;
 S.forgeWeek ??= S.forgeLastWeek;
 S.forgeWeekPurchases ??= S.forgeLastWeek ? 1 : 0;
+S.battleUpgrades ??= {damage:0,speed:0,loot:0};
 let legacyTicks=0;
 if(S.missionKills==null){
   if(S.autoBattle===true && Number.isFinite(S.battleUpdated)){
@@ -957,10 +1010,11 @@ function hit(dmg,arena='mission'){
   while(S[hp]<=0){
     const encounter=automatic?null:S.encounter;
     const type=encounter?ENCOUNTER_TYPES[encounter.kind]:ENCOUNTER_TYPES.normal;
-    const reward=Math.round((10+S[kills]*2)*bonus('coin')*type.coins);
-    S.coins+=reward;gain(Math.round((20+S[kills]*3)*bonus('xp')*type.xp));
+    const loot=automatic?battleLoot():1;
+    const reward=Math.round((10+S[kills]*2)*bonus('coin')*type.coins*loot);
+    S.coins+=reward;gain(Math.round((20+S[kills]*3)*bonus('xp')*type.xp*loot));
     S.materials+=type.materials;
-    const monster=automatic||encounter.legacy?MONSTERS[S[kills]%MONSTERS.length]:encounter.kind==='lucky'?'🍀 Goblin de la suerte':MISSION_MONSTERS[encounter.species].name;
+    const monster=automatic?MISSION_MONSTERS[autoEncounter(S.autoKills).species].name:encounter.legacy?MONSTERS[S[kills]%MONSTERS.length]:encounter.kind==='lucky'?'🍀 Goblin de la suerte':MISSION_MONSTERS[encounter.species].name;
     S[kills]++;S.kills++;
     log(`💀 ${automatic?'Arena':'Misión'}: derrotaste a ${monster} (+${reward} 🪙${type.materials?`, +${type.materials} 🔩`:''})`);
     if(!automatic) S.encounter=nextEncounter(S.missionKills);
@@ -971,16 +1025,29 @@ function hit(dmg,arena='mission'){
 function settleBattle(now=Date.now()){
   const elapsed=Math.max(0,now-S.battleUpdated);
   const capped=Math.min(elapsed,OFFLINE_LIMIT);
-  const ticks=Math.floor(capped/BATTLE_INTERVAL);
+  const interval=battleInterval();
+  const ticks=Math.floor(capped/interval);
   if(ticks>0){
     const killsBefore=S.autoKills,coinsBefore=S.coins;
-    for(let i=0;i<ticks;i++) hit(2*bonus('dmg'),'auto');
-    S.battleUpdated=elapsed>OFFLINE_LIMIT?now:now-(capped%BATTLE_INTERVAL);
+    for(let i=0;i<ticks;i++) hit(battleDamage(),'auto');
+    S.battleUpdated=elapsed>OFFLINE_LIMIT?now:now-(capped%interval);
     unlockAchievements();
     if(elapsed>=60000){
       log(`⌛ Autobatalla: ${Math.floor(capped/60000)} min, ${S.autoKills-killsBefore} monstruos, +${S.coins-coinsBefore} monedas${elapsed>OFFLINE_LIMIT?' (límite de 8 h)':''}.`);
     }
   }else if(now<S.battleUpdated) S.battleUpdated=now;
+}
+function buyBattleUpgrade(stat,now=Date.now()){
+  if(!Object.hasOwn(BATTLE_UPGRADES,stat)) return false;
+  settleBattle(now);
+  const upgrade=BATTLE_UPGRADES[stat],rank=S.battleUpgrades[stat];
+  if((upgrade.max!=null&&rank>=upgrade.max)||S.coins<battleUpgradeCost(stat)) return false;
+  const oldInterval=battleInterval();
+  S.coins-=battleUpgradeCost(stat);
+  S.battleUpgrades[stat]++;
+  if(stat==='speed') S.battleUpdated=now-(now-S.battleUpdated)*battleInterval()/oldInterval;
+  log(`⚒️ Arena: ${upgrade.name} mejorado a ${rank+1}`);
+  return true;
 }
 function awardKey(){
   if(S.unlockedDungeons.length+S.keys>=DUNGEONS.length) return;
@@ -1279,13 +1346,17 @@ function render(liveOnly=false){
   const max=encounter.maxHp;
   $('mHp').textContent=`${Math.max(0,Math.ceil(S.monsterHp))}/${max} HP`;
   $('hpbar').style.width=Math.min(100,100*S.monsterHp/max)+'%';
-  const autoMonster=MONSTERS[S.autoKills%MONSTERS.length].split(' ');
+  const autoMonster=autoEncounter(S.autoKills);
   const autoMax=monsterHp(S.autoKills);
-  $('battle-icon').innerHTML=monsterArt(S.autoKills);
-  $('battle-name').textContent=autoMonster.slice(1).join(' ');
+  const battleIcon=$('battle-icon'),artKey=`${autoMonster.species}-${autoMonster.kind}`;
+  if(battleIcon.dataset.art!==artKey){battleIcon.innerHTML=missionMonsterArt(autoMonster);battleIcon.dataset.art=artKey}
+  $('battle-encounter').dataset.kind=autoMonster.kind;
+  $('battle-encounter').dataset.biome=encounterBiome(autoMonster);
+  $('battle-tag').textContent=`Enemigo ${S.autoKills+1}`;
+  $('battle-name').textContent=MISSION_MONSTERS[autoMonster.species].name;
   $('battle-hp').textContent=`${Math.max(0,Math.ceil(S.autoMonsterHp))}/${autoMax} HP`;
   $('battle-bar').style.width=Math.min(100,100*S.autoMonsterHp/autoMax)+'%';
-  $('battle-status').textContent=`Siempre activa · ${Math.round(2*bonus('dmg')*100)/100} de daño cada 10 segundos · ${S.autoKills} victorias`;
+  $('battle-status').innerHTML=`<span>⚔️ ${Math.round(battleDamage()*100)/100} daño</span><span>⚡ ${(battleInterval()/1000).toFixed(1)} s</span><span>💰 +${S.battleUpgrades.loot*10}% botín</span><span>🏆 ${S.autoKills} victorias</span>`;
   renderPacks();
   for(const [name,value] of Object.entries(globalStats())) $(`stat-${name}`).textContent=value.toLocaleString('es-ES');
   if(liveOnly && !dayChanged) return;
@@ -1324,7 +1395,29 @@ function render(liveOnly=false){
   }
   $('cnt').textContent=`(${S.completedToday} hoy · sin límite)`;
   $('weekly-progress').innerHTML=journeyMarkup();
-  renderChar();renderAttributes();renderShop();renderAchievements();renderDungeons();
+  renderChar();renderAttributes();renderShop();renderAchievements();renderDungeons();renderBattleUpgrades();
+}
+function renderBattleUpgrades(){
+  const box=$('battle-upgrades');box.replaceChildren();
+  for(const [stat,upgrade] of Object.entries(BATTLE_UPGRADES)){
+    const rank=S.battleUpgrades[stat],maxed=upgrade.max!=null&&rank>=upgrade.max;
+    const info=stat==='damage'?`Daño base: ${2+rank} → ${3+rank}`:
+      stat==='speed'?`Intervalo: ${(battleInterval()/1000).toFixed(1)} s${maxed?'':` → ${((battleInterval()-400)/1000).toFixed(1)} s`}`:
+      `Monedas y XP de arena: +${rank*10}% → +${(rank+1)*10}%`;
+    const row=document.createElement('div');row.className='battle-upgrade';
+    row.innerHTML=`<strong>${upgrade.icon} ${upgrade.name} · rango ${rank}</strong><small>${info}</small>`;
+    const button=document.createElement('button');button.type='button';
+    button.textContent=maxed?'Nivel máximo':`Mejorar · ${battleUpgradeCost(stat)} 🪙`;
+    button.setAttribute('aria-label',`${button.textContent}: ${upgrade.name}`);
+    button.disabled=maxed||S.coins<battleUpgradeCost(stat);
+    button.onclick=()=>{
+      const improved=buyBattleUpgrade(stat);
+      save();render();
+      $('battle-upgrade-status').textContent=improved?'':'No se puede comprar esta mejora.';
+      if(improved) $('battle-upgrades').querySelectorAll('button')[Object.keys(BATTLE_UPGRADES).indexOf(stat)]?.focus({preventScroll:true});
+    };
+    row.appendChild(button);box.appendChild(row);
+  }
 }
 function renderPacks(){
   const box=$('pack-list');
@@ -1576,9 +1669,10 @@ setInterval(()=>{
     if(!$('store').hidden && (S.coins!==previousCoins || S.level!==previousLevel)) renderShop();
     if(!$('character').hidden && S.coins!==previousCoins) renderAttributes();
     if(!$('achievements').hidden && S.achievements.length!==previousAchievements) renderAchievements();
+    if(!$('battle').hidden && S.coins!==previousCoins) renderBattleUpgrades();
     if(!$('battle').hidden) animateHit('battle-icon');
   }
-},10000);
+},1000);
 document.addEventListener('visibilitychange',()=>{
   if(!document.hidden){settleBattle();rollDay();render();save()}
 });

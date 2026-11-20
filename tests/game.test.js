@@ -522,6 +522,78 @@ test('offline battle applies newly unlocked bonuses just like live ticks', () =>
   })()`), true);
 });
 
+test('arena upgrades preserve old saves and validate costs and speed cap', () => {
+  const first=game();
+  first.run("S=fresh(); S.coins=100; S.autoKills=3; S.autoMonsterHp=20; delete S.battleUpgrades; save()");
+  const g=game(first.saved());
+  assert.equal(g.run(`(() => {
+    if(S.autoKills!==3 || S.autoMonsterHp!==20 || battleDamage()!==2 || battleInterval()!==10000 || battleLoot()!==1) return false;
+    S.battleUpdated=1000;
+    if(buyBattleUpgrade('invalid',1000) || buyBattleUpgrade('speed',1000) || S.coins!==100) return false;
+    if(!buyBattleUpgrade('damage',1000) || S.coins!==0 || battleDamage()!==3 || battleUpgradeCost('damage')!==150) return false;
+    S.coins=100000;
+    for(let i=0;i<20;i++) if(!buyBattleUpgrade('speed',1000)) return false;
+    const coins=S.coins;
+    if(battleInterval()!==2000 || buyBattleUpgrade('speed',1000) || S.coins!==coins) return false;
+    if(!buyBattleUpgrade('loot',1000) || battleLoot()!==1.1) return false;
+    save(); return true;
+  })()`),true);
+  const restored=game(g.saved());
+  assert.equal(restored.run('S.battleUpgrades.speed'),20);
+  assert.equal(restored.run('S.battleUpgrades.damage'),1);
+  assert.equal(restored.run('S.battleUpgrades.loot'),1);
+});
+
+test('arena upgrades settle old damage and preserve fractional attack progress', () => {
+  const g=game();
+  assert.equal(g.run(`(() => {
+    S=fresh(); S.coins=1000; S.battleUpdated=1000;
+    if(!buyBattleUpgrade('damage',16000) || S.autoMonsterHp!==48) return false;
+    if(!buyBattleUpgrade('speed',16000) || battleInterval()!==9600) return false;
+    if(S.battleUpdated!==11200) return false;
+    settleBattle(20799); if(S.autoMonsterHp!==48) return false;
+    settleBattle(20800); return S.autoMonsterHp===45;
+  })()`),true);
+});
+
+test('arena loot upgrades apply to arena coins and XP only', () => {
+  const g=game();
+  assert.equal(g.run(`(() => {
+    S=fresh(); S.achievements=ACHIEVEMENTS.map(a=>a.id); S.battleUpgrades.loot=5;
+    const coin=bonus('coin'),xp=bonus('xp');
+    S.autoMonsterHp=1; hit(1,'auto');
+    if(S.coins!==Math.round(10*coin*1.5) || S.xp!==Math.round(20*xp*1.5)) return false;
+    S.coins=0; S.xp=0; S.monsterHp=1; hit(1,'mission');
+    return S.coins===Math.round(10*coin) && S.xp===Math.round(20*xp);
+  })()`),true);
+});
+
+test('upgraded arena has equivalent online and capped offline progress', () => {
+  const g=game();
+  assert.equal(g.run(`(() => {
+    function setup(){
+      S=fresh(); S.battleUpgrades={damage:2,speed:20,loot:3}; S.battleUpdated=1000;
+    }
+    function snapshot(){return JSON.stringify([S.autoMonsterHp,S.autoKills,S.coins,S.xp,S.achievements])}
+    setup(); settleBattle(61000); const offline=snapshot();
+    setup(); for(let now=3000;now<=61000;now+=2000) settleBattle(now);
+    if(snapshot()!==offline) return false;
+    setup(); settleBattle(1000+OFFLINE_LIMIT); const capped=snapshot();
+    setup(); settleBattle(1000+OFFLINE_LIMIT*2);
+    return snapshot()===capped;
+  })()`),true);
+});
+
+test('arena cycles through all illustrated monsters without changing health scaling', () => {
+  const g=game();
+  assert.equal(g.run(`(() => {
+    const encounters=Array.from({length:16},(_,i)=>autoEncounter(i));
+    return new Set(encounters.map(e=>e.species)).size===16 &&
+      encounters[4].kind==='elite' && encounters[9].kind==='boss' &&
+      autoEncounter(16).species===0 && monsterHp(9)===320;
+  })()`),true);
+});
+
 test('missions remain unlimited and targets do not change mid-mission', () => {
   const g = game();
   assert.equal(g.run(`(() => { S=fresh(); S.completedToday=5;
