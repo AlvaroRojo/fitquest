@@ -25,9 +25,12 @@ function game(saved) {
   };
 }
 
-test('city destinations select one accessible tab and return to the city', () => {
-  const sections = ['city', 'adventure', 'character', 'store', 'achievements', 'packs', 'battle', 'dungeons'];
-  const panels = Object.fromEntries(sections.map(id => [id, { hidden: id !== 'city' }]));
+test('navigation starts in adventure and selects one accessible tab', () => {
+  const sections = ['adventure', 'character', 'store', 'achievements', 'packs', 'battle', 'dungeons'];
+  assert.deepEqual([...html.matchAll(/data-section="([^"]+)"/g)].map(match => match[1]), sections);
+  assert.match(html, /id="tab-adventure"[^>]*aria-selected="true"/);
+  assert.match(html, /<section id="adventure" role="tabpanel" aria-labelledby="tab-adventure">/);
+  const panels = Object.fromEntries(sections.map(id => [id, { hidden: id !== 'adventure' }]));
   const element = dataset => ({
     dataset, attributes: {}, handlers: {},
     addEventListener(type, handler) { this.handlers[type] = handler; },
@@ -36,10 +39,12 @@ test('city destinations select one accessible tab and return to the city', () =>
   });
   let focused;
   const tabs = sections.map(section => element({ section }));
-  const pins = sections.slice(1).map(mapTarget => element({ mapTarget }));
   const context = vm.createContext({
     document: {
-      querySelectorAll: selector => selector === '.navigation [role="tab"]' ? tabs : pins,
+      querySelectorAll: selector => {
+        assert.equal(selector, '.navigation [role="tab"]');
+        return tabs;
+      },
     },
     $: id => panels[id],
     render: () => {},
@@ -49,18 +54,23 @@ test('city destinations select one accessible tab and return to the city', () =>
     script.slice(script.indexOf('for(const button of navigationButtons){', script.indexOf('function journeyMarkup(')), script.indexOf('function render(liveOnly=')),
     context,
   );
-  for (const pin of pins) {
-    pin.handlers.click();
-    assert.equal(focused.dataset.section, pin.dataset.mapTarget);
+  for (const selectedTab of tabs) {
+    selectedTab.handlers.click();
     for (const tab of tabs) {
-      const selected = tab.dataset.section === pin.dataset.mapTarget;
+      const selected = tab === selectedTab;
       assert.equal(tab.attributes['aria-selected'], String(selected));
       assert.equal(tab.tabIndex, selected ? 0 : -1);
       assert.equal(panels[tab.dataset.section].hidden, !selected);
     }
-    tabs[0].handlers.click();
-    assert.equal(panels.city.hidden, false);
   }
+  let prevented = false;
+  tabs[0].handlers.keydown({ key: 'End', preventDefault() { prevented = true; } });
+  assert.equal(prevented, true);
+  assert.equal(focused, tabs.at(-1));
+  assert.equal(panels.dungeons.hidden, false);
+  tabs.at(-1).handlers.keydown({ key: 'Home', preventDefault() {} });
+  assert.equal(focused, tabs[0]);
+  assert.equal(panels.adventure.hidden, false);
 });
 
 test('migrates existing saves without changing equipment or progress', () => {

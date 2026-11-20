@@ -8,9 +8,8 @@ eliminarla.
 
 ## Cómo jugar
 
-- **Ciudad:** el mapa de Puerto del Alba es el punto de entrada. Pulsa un
-  lugar para abrir la sección correspondiente; el menú también permite
-  navegar con teclado o en móviles.
+- **Navegación:** utiliza el menú superior para cambiar de sección. También
+  puedes usar las flechas, Inicio y Fin del teclado entre las pestañas.
 - **Misiones y monstruos:** pulsa **Completado** solo después de realizar el
   objetivo indicado. Hay tres misiones activas, puedes cambiar cualquiera perdiendo su progreso,
   y se pueden completar sin límite al día. Hay 20 tipos de ejercicios y el
