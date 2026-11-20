@@ -136,3 +136,124 @@ test('arena loot and experience use equipment and achievement bonuses', () => {
     return S.coins===12 && S.xp===24;
   })()`), true);
 });
+
+test('keys have a 3% chance, a 30-mission guarantee and no surplus', () => {
+  const g = game();
+  assert.equal(g.run(`(() => {
+    S=fresh(); Math.random=()=>0.03; awardKey(); if(S.keys!==0||S.keyPity!==1)return false;
+    Math.random=()=>0.029; awardKey(); if(S.keys!==1||S.keyPity!==0)return false;
+    Math.random=()=>1; for(let i=0;i<29;i++) awardKey();
+    if(S.keys!==1||S.keyPity!==29)return false;
+    awardKey(); if(S.keys!==2||S.keyPity!==0)return false;
+    for(let i=0;i<100;i++) awardKey();
+    return S.keys===4 && S.keyPity===0;
+  })()`), true);
+});
+
+test('dungeons require a key and activity days and unlock permanently', () => {
+  const g = game();
+  assert.equal(g.run(`(() => {
+    S=fresh(); S.keys=1; S.activeDays=29;
+    if(unlockDungeon('forest') || S.keys!==1)return false;
+    S.activeDays=30;
+    if(!unlockDungeon('forest') || S.keys!==0 || !S.unlockedDungeons.includes('forest'))return false;
+    if(unlockDungeon('forest'))return false;
+    return startDungeon('forest') && !startDungeon('forest') && S.dungeonRun.id==='forest';
+  })()`), true);
+});
+
+test('dungeon progress, victory rewards and daily limits persist independently', () => {
+  const g = game();
+  assert.equal(g.run(`(() => {
+    S=fresh(); S.battleUpdated=Date.now(); const mission=S.monsterHp,auto=S.autoMonsterHp;
+    if(!startDungeon('crypt'))return false;
+    let attacks=0;
+    while(S.dungeonRun && attacks++<30) attackDungeon();
+    const snapshot=[S.dungeonClears,S.materials,S.kills,S.monsterHp,S.autoMonsterHp];
+    if(JSON.stringify(snapshot)!==JSON.stringify([1,5,3,mission,auto]))return false;
+    save();
+    return !startDungeon('crypt') && !attackDungeon();
+  })()`), true);
+  const saved=g.saved();
+  assert.equal(saved.dungeonRun, null);
+  assert.equal(saved.materials, 5);
+  assert.ok(saved.coins > 0 && saved.xp > 0);
+});
+
+test('equipment placement validates slots and dismantling only consumes unequipped owned items', () => {
+  const g = game();
+  assert.equal(g.run(`(() => {
+    S=fresh(); S.owned=['sword_0_0','ring_3_0'];
+    if(placeItem('sword_0_0','helmet') || placeItem('sword_3_0','sword'))return false;
+    if(!placeItem('sword_0_0','sword') || dismantle('sword_0_0'))return false;
+    if(!placeItem('ring_3_0','ring2') || placeItem('ring_3_0','ring1'))return false;
+    delete S.eq.ring2;
+    return dismantle('ring_3_0') && S.materials===25 &&
+      !S.owned.includes('ring_3_0') && !dismantle('ring_3_0');
+  })()`), true);
+});
+
+test('new dungeon and material state survives reloading', () => {
+  const first=game();
+  first.run(`S=fresh(); S.keys=2; S.keyPity=12; S.materials=17;
+    S.activeDays=30; S.unlockedDungeons.push('forest'); startDungeon('forest');
+    attackDungeon(); save();`);
+  const previous=first.saved();
+  const second=game(previous);
+  second.run('save()');
+  const restored=second.saved();
+  assert.equal(restored.keys,2);
+  assert.equal(restored.keyPity,12);
+  assert.equal(restored.materials,17);
+  assert.equal(restored.activeDays,30);
+  assert.deepEqual(restored.unlockedDungeons, ['crypt','forest']);
+  assert.deepEqual(restored.dungeonRun, previous.dungeonRun);
+});
+
+test('multiple missions on the same day count as one activity day', () => {
+  const g=game();
+  assert.equal(g.run(`(() => {
+    S=fresh(); S.battleUpdated=Date.now(); completeMission(byId(S.active[0]));
+    completeMission(byId(S.active[0]));
+    return S.totalMissions===2 && S.activeDays===1;
+  })()`), true);
+});
+
+test('existing activity on migration day does not suppress new activity-day progress', () => {
+  const g=game();
+  assert.equal(g.run(`(() => {
+    S=fresh(); S.lastActive=today(); S.battleUpdated=Date.now();
+    completeMission(byId(S.active[0]));
+    return S.activeDays===1 && S.lastActivityDay===today();
+  })()`), true);
+});
+
+test('long-term milestones reward 365 non-consecutive activity days', () => {
+  const g = game();
+  assert.equal(g.run(`(() => {
+    S=fresh(); S.activeDays=364; unlockAchievements();
+    if(S.achievements.includes('days365'))return false;
+    S.activeDays++; unlockAchievements();
+    return S.achievements.includes('days365') && bonus('dmg')>=1.12;
+  })()`), true);
+});
+
+test('365 simulated activity days produce the annual milestone and unlock all dungeons', () => {
+  const g = game();
+  assert.equal(g.run(`(() => {
+    const RealDate=Date; let clock=RealDate.UTC(2026,0,1,12);
+    Date=class extends RealDate {
+      constructor(...args){if(args.length) super(...args);else super(clock)}
+      static now(){return clock}
+    };
+    Math.random=()=>0.999; S=fresh();
+    for(let day=1;day<=365;day++){
+      S.battleUpdated=clock;
+      completeMission(byId(S.active[0]));
+      for(const dungeon of DUNGEONS) if(dungeon.days<=S.activeDays) unlockDungeon(dungeon.id);
+      clock+=86400000;
+    }
+    return S.activeDays===365 && S.totalMissions===365 &&
+      S.unlockedDungeons.length===DUNGEONS.length && S.achievements.includes('days365');
+  })()`), true);
+});

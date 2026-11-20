@@ -46,12 +46,27 @@
   .arena-label{position:relative;text-transform:uppercase;letter-spacing:.18em;color:#d9c6ff;font-size:.72em}
   .live-dot{display:inline-block;width:8px;height:8px;background:#66ffd1;border-radius:50%;box-shadow:0 0 10px #66ffd1;animation:pulse 2s ease-in-out infinite}
   .arena .flash{animation:impact .45s ease-out}
+  .creature{width:125px;height:135px;overflow:visible}
+  .creature .eyes{animation:glow 2s ease-in-out infinite}
+  .creature .jaw{transform-origin:70px 96px;animation:snarl 2.8s ease-in-out infinite}
+  .hero-layout{display:grid;grid-template-columns:170px 1fr;gap:14px;align-items:center}
+  .hero-stage{min-height:220px;display:grid;place-items:center;border:1px solid #6d5994;border-radius:12px;background:radial-gradient(ellipse at center,#7655ac77,#0a1024 72%)}
+  .hero-art{width:150px;max-width:100%;filter:drop-shadow(0 0 12px #9a7cff88);animation:float 3s ease-in-out infinite}
+  .slot.selected-target{border:2px solid #77f7df;box-shadow:0 0 12px #67ddc488}
+  .inventory-item{border:1px solid #464d76;border-radius:10px;padding:10px;margin:8px 0;background:#11182dcc}
+  .inventory-item[draggable="true"]{cursor:grab}
+  .item-actions{display:flex;gap:6px;flex-wrap:wrap}
+  .danger{border-color:#f08493;color:#ffe1e7}
+  .dungeon-card{border:1px solid #514475;border-radius:10px;padding:12px;margin:10px 0;background:#12162bdd}
+  .chapter{font-size:.75em;color:#9be6d6;letter-spacing:.1em;text-transform:uppercase}
   @keyframes float{50%{transform:translateY(-8px)}}
   @keyframes portal{50%{transform:scale(1.1);opacity:.55}}
   @keyframes pulse{50%{opacity:.45}}
   @keyframes impact{40%{transform:scale(1.18);filter:drop-shadow(0 0 18px #ffcc80)}}
+  @keyframes glow{50%{opacity:.5;filter:drop-shadow(0 0 7px red)}}
+  @keyframes snarl{50%{transform:translateY(4px)}}
   @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none !important;transition:none !important}}
-  @media(max-width:480px){body{padding:10px}.navigation{grid-template-columns:repeat(2,1fr)}.row{flex-wrap:wrap}}
+  @media(max-width:480px){body{padding:10px}.navigation{grid-template-columns:repeat(2,1fr)}.row{flex-wrap:wrap}.hero-layout{grid-template-columns:1fr}.hero-stage{min-height:170px}.hero-art{height:160px}}
   [hidden]{display:none !important}
 </style>
 </head>
@@ -72,6 +87,7 @@
   <button type="button" role="tab" id="tab-achievements" data-section="achievements" aria-controls="achievements" aria-selected="false" tabindex="-1">🏆 Logros</button>
   <button type="button" role="tab" id="tab-packs" data-section="packs" aria-controls="packs" aria-selected="false" tabindex="-1">🎁 Sobres</button>
   <button type="button" role="tab" id="tab-battle" data-section="battle" aria-controls="battle" aria-selected="false" tabindex="-1">⚔️ Autobatalla</button>
+  <button type="button" role="tab" id="tab-dungeons" data-section="dungeons" aria-controls="dungeons" aria-selected="false" tabindex="-1">🔑 Mazmorras</button>
 </div>
 
 <main>
@@ -97,8 +113,16 @@
 <section id="character" role="tabpanel" aria-labelledby="tab-character" hidden>
 <div class="card">
   <h2>Personaje</h2>
-  <div id="eq" class="grid"></div>
+  <p>Arrastra un objeto del inventario a su hueco o selecciónalo y pulsa el hueco. Pulsa un hueco equipado sin selección para vaciarlo.</p>
+  <div class="hero-layout"><div class="hero-stage" id="hero"></div><div id="eq" class="grid"></div></div>
   <p><small id="bonuses"></small></p>
+</div>
+<div class="card">
+  <h2>🎒 Inventario y desmantelamiento</h2>
+  <p id="materials"></p>
+  <p><small>Los fragmentos se guardan para un futuro sistema de fabricación; todavía no se pueden gastar. Los objetos equipados deben desequiparse antes de romperlos.</small></p>
+  <p id="inventory-status" role="status" aria-live="polite"></p>
+  <div id="inventory"></div>
 </div>
 </section>
 
@@ -138,6 +162,17 @@
   <div class="bar hp"><div id="battle-bar"></div></div>
   <p id="battle-status"></p>
   <p><small>Al volver se calcula hasta un máximo de 8 horas desde la última actualización; el tiempo adicional se pierde. También funciona en días de descanso.</small></p>
+</div>
+</section>
+
+<section id="dungeons" role="tabpanel" aria-labelledby="tab-dungeons" hidden>
+<div class="card">
+  <h2>🔑 Mazmorras del vacío</h2>
+  <p>Una expedición al día, con tres enemigos. Una llave y los días de actividad requeridos desbloquean cada mazmorra para siempre; el combate es independiente de las misiones y la arena.</p>
+  <p id="dungeon-keys"></p>
+  <p><small>Obtienes una llave con un 3 % de probabilidad al completar una misión, garantizada en la misión 30 sin llave. Solo se generan mientras queden mazmorras por desbloquear. Los días de actividad no tienen que ser consecutivos: descansa cuando lo necesites.</small></p>
+  <div id="dungeon-run"></div>
+  <div id="dungeon-list"></div>
 </div>
 </section>
 </main>
@@ -208,7 +243,9 @@ const ACHIEVEMENTS=[
   {id:'kill25',name:'Cazador de élite',description:'Derrota 25 monstruos',stat:'xp',pct:4,goal:25,value:s=>s.kills},
   {id:'level5',name:'Subiendo de rango',description:'Alcanza el nivel 5',stat:'coin',pct:3,goal:5,value:s=>s.level},
   {id:'level15',name:'Héroe veterano',description:'Alcanza el nivel 15',stat:'dmg',pct:5,goal:15,value:s=>s.level},
-  {id:'pack10',name:'Coleccionista',description:'Abre 10 sobres',stat:'xp',pct:3,goal:10,value:s=>s.packsOpened}
+  {id:'pack10',name:'Coleccionista',description:'Abre 10 sobres',stat:'xp',pct:3,goal:10,value:s=>s.packsOpened},
+  ...[7,30,90,180,365].map((days,i)=>({id:`days${days}`,name:['Recluta','Viajero','Veterano','Guardián','Leyenda anual'][i],description:`Entrena en ${days} días diferentes`,stat:['xp','coin','dmg','xp','dmg'][i],pct:[2,3,4,5,8][i],goal:days,value:s=>s.activeDays})),
+  {id:'dungeon5',name:'Explorador del vacío',description:'Completa 5 expediciones',stat:'dmg',pct:3,goal:5,value:s=>s.dungeonClears}
 ];
 const bonus=stat=>{
   let t=0;
@@ -218,10 +255,19 @@ const bonus=stat=>{
 };
 const target = (ex,l) => Math.max(ex.base, Math.round(ex.base*Math.min(2,1+0.05*(l-1))/ex.step[0])*ex.step[0]);
 const BATTLE_INTERVAL=10000, OFFLINE_LIMIT=8*60*60*1000, PACK_COST=100;
+const DUNGEONS=[
+  {id:'crypt',name:'Cripta de las Sombras',description:'Los ecos de la primera expedición.',hp:36,reward:20,days:0},
+  {id:'forest',name:'Bosque Maldito',description:'Raíces y colmillos acechan en la oscuridad.',hp:60,reward:35,days:30},
+  {id:'abyss',name:'Abismo Carmesí',description:'Un portal abierto hacia enemigos más fuertes.',hp:90,reward:50,days:60},
+  {id:'citadel',name:'Ciudadela de Ceniza',description:'Los centinelas custodian las ruinas.',hp:135,reward:70,days:120},
+  {id:'throne',name:'Trono del Eclipse',description:'Un desafío para héroes veteranos.',hp:200,reward:95,days:180}
+];
+const KEY_CHANCE=.03, KEY_PITY=30, DUNGEON_ENEMIES=3;
 
 const fresh = () => ({level:1,xp:0,coins:0,owned:[],eq:{},streak:0,kills:0,
   day:today(),done:{},bonus:{},lastActive:null,lastRest:null,monsterHp:monsterHp(0),log:[],active:pickMissions(),completedToday:0,
-  targets:{},totalMissions:0,packsOpened:0,achievements:[],missionKills:0,autoKills:0,autoMonsterHp:monsterHp(0),battleUpdated:Date.now()});
+  targets:{},totalMissions:0,packsOpened:0,achievements:[],missionKills:0,autoKills:0,autoMonsterHp:monsterHp(0),battleUpdated:Date.now(),
+  keys:0,keyPity:0,unlockedDungeons:['crypt'],dungeonRun:null,lastDungeonDay:null,dungeonClears:0,materials:0,activeDays:0,lastActivityDay:null});
 let S;
 try{S=JSON.parse(localStorage.getItem(KEY)||'null') || fresh()}
 catch(error){alert('No se puede leer la partida guardada. No se ha borrado; revisa los datos del navegador.');throw error}
@@ -232,6 +278,15 @@ S.targets ??= {};
 S.totalMissions ??= 0;
 S.packsOpened ??= 0;
 S.achievements ??= [];
+S.keys ??= 0;
+S.keyPity ??= 0;
+S.unlockedDungeons ??= ['crypt'];
+S.dungeonRun ??= null;
+S.lastDungeonDay ??= null;
+S.dungeonClears ??= 0;
+S.materials ??= 0;
+S.activeDays ??= 0;
+S.lastActivityDay ??= null;
 let legacyTicks=0;
 if(S.missionKills==null){
   if(S.autoBattle===true && Number.isFinite(S.battleUpdated)){
@@ -258,11 +313,12 @@ function missionTarget(ex){
   return S.targets[ex.id];
 }
 function rollDay(){
-  const t=today(); if(S.day===t) return;
+  const t=today(); if(S.day===t) return false;
   // la racha sobrevive si ayer hubo actividad o descanso
   const last=Math.max(S.lastActive?+new Date(S.lastActive):0,S.lastRest?+new Date(S.lastRest):0);
   if(!last || (new Date(t)-last)/864e5>1) S.streak=0;
   S.day=t;S.done={};S.bonus={};S.targets={};S.completedToday=0;
+  return true;
 }
 const streakMult = () => 1+Math.min(0.3,S.streak*0.02);
 
@@ -299,6 +355,69 @@ function settleBattle(now=Date.now()){
     }
   }else if(now<S.battleUpdated) S.battleUpdated=now;
 }
+function awardKey(){
+  if(S.unlockedDungeons.length+S.keys>=DUNGEONS.length) return;
+  S.keyPity++;
+  if(Math.random()<KEY_CHANCE || S.keyPity>=KEY_PITY){
+    S.keys++;S.keyPity=0;
+    log('🔑 ¡Has encontrado una llave de mazmorra!');
+  }
+}
+function unlockDungeon(id){
+  const dungeon=DUNGEONS.find(d=>d.id===id);
+  if(!dungeon || S.keys<1 || S.activeDays<dungeon.days || S.unlockedDungeons.includes(id)) return false;
+  S.keys--;S.unlockedDungeons.push(id);
+  log(`🔓 Desbloqueada para siempre: ${dungeon.name}`);
+  return true;
+}
+function dungeonMaxHp(dungeon,stage){
+  return dungeon.hp*(stage===DUNGEON_ENEMIES-1?2:1);
+}
+function startDungeon(id){
+  const dungeon=DUNGEONS.find(d=>d.id===id);
+  if(!dungeon || !S.unlockedDungeons.includes(id) || S.dungeonRun || S.lastDungeonDay===today()) return false;
+  S.lastDungeonDay=today();
+  S.dungeonRun={id,stage:0,hp:dungeonMaxHp(dungeon,0)};
+  log(`🗝️ Expedición iniciada: ${dungeon.name}`);
+  return true;
+}
+function attackDungeon(){
+  const run=S.dungeonRun;
+  if(!run) return false;
+  const dungeon=DUNGEONS.find(d=>d.id===run.id);
+  if(!dungeon) return false;
+  run.hp-=12*bonus('dmg');
+  if(run.hp<=0){
+    const reward=Math.round(dungeon.reward*bonus('coin'));
+    S.coins+=reward;
+    gain(Math.round(dungeon.reward*bonus('xp')));
+    S.kills++;
+    log(`💀 Mazmorra: enemigo derrotado (+${reward} 🪙)`);
+    run.stage++;
+    if(run.stage===DUNGEON_ENEMIES){
+      S.materials+=5;S.dungeonClears++;S.dungeonRun=null;
+      log(`🏆 ${dungeon.name} completada: +5 fragmentos`);
+    }else run.hp=dungeonMaxHp(dungeon,run.stage);
+    unlockAchievements();
+  }
+  return true;
+}
+function dismantle(id){
+  const item=ITEM[id];
+  if(!item || !S.owned.includes(id) || Object.values(S.eq).includes(id)) return false;
+  S.owned=S.owned.filter(owned=>owned!==id);
+  const fragments=[2,5,12,25][item.tier];
+  S.materials+=fragments;
+  log(`🔨 ${item.name} desmantelado: +${fragments} fragmentos`);
+  return true;
+}
+function placeItem(id,slotKey){
+  const item=ITEM[id],slot=EQ_SLOTS.find(s=>s.k===slotKey);
+  if(!item || !slot || item.g!==slot.g || !S.owned.includes(id) || Object.values(S.eq).includes(id)) return false;
+  S.eq[slotKey]=id;
+  log(`🎽 Equipado: ${item.name}`);
+  return true;
+}
 function completeMission(ex){
   settleBattle();
   rollDay();
@@ -313,6 +432,8 @@ function completeMission(ex){
   log(`✅ Misión completada: ${ex.name} (+bonus)`);
   S.completedToday++;
   S.totalMissions++;
+  awardKey();
+  if(S.lastActivityDay!==today()){S.activeDays++;S.lastActivityDay=today()}
   unlockAchievements();
   if(S.completedToday<MAX_DAILY){
     const next=randomMission(S.active);
@@ -334,6 +455,43 @@ if(legacyTicks){
 }
 
 const $=id=>document.getElementById(id);
+let selectedItem=null, dismantleConfirm=null;
+function monsterArt(index){
+  const colors=['#746b9b','#805c85','#77656f','#8a5270','#696d83','#704e9f','#526f82','#85556c'];
+  const color=colors[index%colors.length],wide=index%2===0;
+  const horns=wide?'M37 53 L15 4 L55 34 M85 34 L125 4 L103 53':'M37 53 L8 26 L55 34 M85 34 L132 26 L103 53';
+  return `<svg class="creature" viewBox="0 0 140 140" aria-hidden="true">
+    <path d="${horns}" fill="${color}" stroke="#c3a9dc" stroke-width="3"/>
+    <path d="M29 79 L8 71 L25 95 L13 105 L33 103 M111 79 L132 71 L115 95 L127 105 L107 103" fill="${color}" stroke="#b48bac" stroke-width="3"/>
+    <path d="M23 56 Q24 18 70 24 Q116 18 117 56 L111 104 Q100 126 70 128 Q40 126 29 104Z" fill="${color}" stroke="#d0a6ca" stroke-width="3"/>
+    <path d="M49 32 L55 53 L70 43 L85 53 L91 32 M31 82 L45 87 M109 82 L95 87" fill="none" stroke="#38293e" stroke-width="4"/>
+    <path d="M30 59 Q48 48 62 62 L58 74 Q44 67 34 71Z M110 59 Q92 48 78 62 L82 74 Q96 67 106 71Z" fill="#171025"/>
+    <g class="eyes" fill="#ff536e"><path d="M37 62 L57 66 L49 72Z"/><path d="M103 62 L83 66 L91 72Z"/></g>
+    <g class="jaw"><path d="M38 93 Q70 80 102 93 L93 114 Q70 126 47 114Z" fill="#190c20" stroke="#e8b3c5"/><path d="M43 94 L50 105 L57 91 L64 104 L70 90 L77 104 L84 91 L91 105 L97 94" fill="#f3e5e9"/></g>
+    <path d="M62 81 L70 74 L78 81 L70 85Z" fill="#32203a"/>
+  </svg>`;
+}
+function heroArt(){
+  const equipped=key=>Boolean(S.eq[key]);
+  return `<svg class="hero-art" viewBox="0 0 150 220" role="img" aria-label="Héroe y su equipo">
+    <ellipse cx="75" cy="208" rx="50" ry="8" fill="#14102b" opacity=".8"/>
+    <path d="M53 125 L49 185 L65 185 L75 139 L85 185 L101 185 L97 125Z" fill="${equipped('pants')?'#8c78b4':'#3e3a58'}" stroke="#cfb7eb" stroke-width="2"/>
+    <path d="M46 183 L67 183 L67 200 L40 200Z M83 183 L104 183 L110 200 L83 200Z" fill="${equipped('boots')?'#d1a86f':'#34293e'}" stroke="#bca5d9" stroke-width="2"/>
+    <path d="M48 72 L30 122 L43 128 L58 96 M102 72 L120 122 L107 128 L92 96" fill="${equipped('arms')?'#bfa3dd':'#716786'}" stroke="#cfb7eb" stroke-width="2"/>
+    <path d="M49 69 Q75 59 101 69 L102 130 L48 130Z" fill="${equipped('chest')?'#8f79c7':'#4a4666'}" stroke="#e1c7f1" stroke-width="3"/>
+    <path d="M61 75 L75 91 L89 75 M60 115 L75 125 L90 115" fill="none" stroke="#d7c1ed" stroke-width="2"/>
+    <circle cx="75" cy="42" r="25" fill="#cda7a4" stroke="#efd6d5" stroke-width="2"/>
+    <path d="M49 42 Q46 10 75 13 Q104 10 101 42 L91 36 L59 36Z" fill="${equipped('helmet')?'#aab3d2':'#4e3559'}" stroke="#cdb7e5" stroke-width="2"/>
+    <path d="M62 44 L69 46 M81 46 L88 44" stroke="#24132e" stroke-width="3"/>
+    ${equipped('necklace')?'<circle cx="75" cy="83" r="5" fill="#68f0e2"/>':''}
+    ${equipped('earring1')?'<circle cx="51" cy="54" r="3" fill="#ffe38c"/>':''}
+    ${equipped('earring2')?'<circle cx="99" cy="54" r="3" fill="#ffe38c"/>':''}
+    ${equipped('ring1')?'<circle cx="38" cy="125" r="4" fill="#ffe38c"/>':''}
+    ${equipped('ring2')?'<circle cx="112" cy="125" r="4" fill="#ffe38c"/>':''}
+    ${equipped('sword')?'<path d="M19 140 L23 46 L31 33 L34 46 L29 140Z" fill="#b8eeff" stroke="#fff" stroke-width="2"/><path d="M13 136 L40 139 M25 137 L24 156" stroke="#e9b86c" stroke-width="5"/>':''}
+    ${equipped('shield')?'<path d="M104 90 L131 84 L139 99 L133 140 L117 151 L102 135Z" fill="#8074b8" stroke="#e5d6ff" stroke-width="3"/><path d="M118 98 L119 139 M109 119 L130 119" stroke="#f6c575" stroke-width="3"/>':''}
+  </svg>`;
+}
 const navigationButtons=Array.from(document.querySelectorAll('.navigation [role="tab"]'));
 function selectSection(button){
   for(const option of navigationButtons){
@@ -342,6 +500,7 @@ function selectSection(button){
     option.tabIndex=selected?0:-1;
     $(option.dataset.section).hidden=!selected;
   }
+  render();
 }
 function animateHit(id){
   const icon=$(id);
@@ -365,8 +524,8 @@ for(const button of navigationButtons){
     navigationButtons[next].focus();
   });
 }
-function render(){
-  rollDay();
+function render(liveOnly=false){
+  const dayChanged=rollDay();
   unlockAchievements();
   $('lvl').textContent=`Nivel ${S.level}`;
   $('coins').textContent=`🪙 ${S.coins}`;
@@ -374,17 +533,20 @@ function render(){
   $('xpbar').style.width=100*S.xp/xpNeeded(S.level)+'%';
   $('xptxt').textContent=`XP ${S.xp}/${xpNeeded(S.level)}`;
   const mn=MONSTERS[S.missionKills%MONSTERS.length].split(' ');
-  $('mIcon').textContent=mn[0];$('mName').textContent=mn.slice(1).join(' ');
+  $('mIcon').innerHTML=monsterArt(S.missionKills);$('mName').textContent=mn.slice(1).join(' ');
   const max=monsterHp(S.missionKills);
   $('mHp').textContent=`${Math.max(0,Math.ceil(S.monsterHp))}/${max} HP`;
   $('hpbar').style.width=Math.min(100,100*S.monsterHp/max)+'%';
   const autoMonster=MONSTERS[S.autoKills%MONSTERS.length].split(' ');
   const autoMax=monsterHp(S.autoKills);
-  $('battle-icon').textContent=autoMonster[0];
+  $('battle-icon').innerHTML=monsterArt(S.autoKills);
   $('battle-name').textContent=autoMonster.slice(1).join(' ');
   $('battle-hp').textContent=`${Math.max(0,Math.ceil(S.autoMonsterHp))}/${autoMax} HP`;
   $('battle-bar').style.width=Math.min(100,100*S.autoMonsterHp/autoMax)+'%';
   $('battle-status').textContent=`Siempre activa · ${Math.round(2*bonus('dmg')*100)/100} de daño cada 10 segundos · ${S.autoKills} victorias`;
+  $('log').innerHTML=S.log.map(l=>`<div>${l}</div>`).join('');
+  $('open-pack').disabled=S.coins<PACK_COST;
+  if(liveOnly && !dayChanged) return;
   $('missions').innerHTML='';
   for(const ex of S.active.map(byId)){
     const tgt=missionTarget(ex),d=S.done[ex.id]||0;
@@ -416,22 +578,60 @@ function render(){
   }
   $('cnt').textContent=`(${S.completedToday}/${MAX_DAILY} hoy)`;
   $('rest').disabled=!!S.lastRest&&daysBetween(S.lastRest,today())<7;
-  renderChar();renderShop();renderAchievements();
+  renderChar();renderShop();renderAchievements();renderDungeons();
   $('open-pack').disabled=S.coins<PACK_COST;
   $('log').innerHTML=S.log.map(l=>`<div>${l}</div>`).join('');
 }
 function renderChar(){
+  $('hero').innerHTML=heroArt();
   $('eq').innerHTML='';
   for(const sl of EQ_SLOTS){
     const g=GROUPS[sl.g],it=ITEM[S.eq[sl.k]];
     const b=document.createElement('button');b.className='slot';
     b.innerHTML=`<b>${g.icon}</b>${it?`${it.name}<br><span class="ok">+${it.pct}% ${STAT_TXT[it.stat]}</span>`:`${g.label}${sl.n?' '+sl.n:''}<br>vacío`}`;
-    b.title=it?'Pulsa para desequipar':'Equipa un objeto desde la tienda';
-    b.onclick=()=>{if(it){settleBattle();delete S.eq[sl.k];save();render()}};
+    if(selectedItem && ITEM[selectedItem]?.g===sl.g) b.classList.add('selected-target');
+    b.title=selectedItem?'Pulsa para colocar el objeto seleccionado':it?'Pulsa para desequipar':'Selecciona un objeto del inventario';
+    const put=id=>{
+      settleBattle();
+      if(placeItem(id,sl.k)){selectedItem=null;dismantleConfirm=null;save();render()}
+      else{$('inventory-status').textContent='Este objeto no encaja en ese hueco o ya está equipado.';save()}
+    };
+    b.onclick=()=>{
+      if(selectedItem) put(selectedItem);
+      else if(it){settleBattle();delete S.eq[sl.k];save();render()}
+    };
+    b.ondragover=event=>{if(event.dataTransfer.types.includes('application/x-fitquest-item')) event.preventDefault()};
+    b.ondrop=event=>{event.preventDefault();put(event.dataTransfer.getData('application/x-fitquest-item'))};
     $('eq').appendChild(b);
   }
   const f=k=>Math.round((bonus(k)-1)*100);
   $('bonuses').textContent=`Bonos: daño +${f('dmg')}% · XP +${f('xp')}% · monedas +${f('coin')}%`;
+  $('materials').textContent=`🔩 Fragmentos: ${S.materials}`;
+  $('inventory-status').textContent=selectedItem?`Seleccionado: ${ITEM[selectedItem].name}. Elige un hueco resaltado.`:'';
+  const inventory=$('inventory');inventory.innerHTML='';
+  if(!S.owned.length){inventory.textContent='Todavía no tienes objetos. Consigue uno en la tienda o en los sobres.';return}
+  for(const id of S.owned){
+    const item=ITEM[id];if(!item) continue;
+    const worn=Object.values(S.eq).includes(id);
+    const row=document.createElement('div');row.className='inventory-item';
+    row.draggable=!worn;
+    row.ondragstart=event=>{event.dataTransfer.setData('application/x-fitquest-item',id);event.dataTransfer.effectAllowed='move'};
+    row.ondragend=()=>render();
+    row.innerHTML=`<strong>${GROUPS[item.g].icon} ${item.name}</strong> <small>· ${TIER_NAMES[item.tier]} · +${item.pct}% ${STAT_TXT[item.stat]}${worn?' · equipado':''}</small>`;
+    const actions=document.createElement('div');actions.className='item-actions';
+    const select=document.createElement('button');select.textContent=selectedItem===id?'Cancelar selección':'Seleccionar para equipar';select.disabled=worn;
+    select.onclick=()=>{selectedItem=selectedItem===id?null:id;dismantleConfirm=null;render()};
+    const destroy=document.createElement('button');destroy.className='danger';
+    destroy.textContent=dismantleConfirm===id?'Confirmar desmantelamiento':`Desmantelar (+${[2,5,12,25][item.tier]})`;
+    destroy.disabled=worn;
+    destroy.onclick=()=>{
+      if(dismantleConfirm!==id){dismantleConfirm=id;selectedItem=null;render();return}
+      settleBattle();
+      if(!dismantle(id)){$('inventory-status').textContent='No se puede desmantelar este objeto.';save();return}
+      selectedItem=null;dismantleConfirm=null;save();render();
+    };
+    actions.append(select,destroy);row.appendChild(actions);inventory.appendChild(row);
+  }
 }
 function equip(it){
   settleBattle();
@@ -469,6 +669,42 @@ function renderAchievements(){
     box.appendChild(el);
   }
 }
+function renderDungeons(){
+  const remaining=Math.max(0,KEY_PITY-S.keyPity);
+  $('dungeon-keys').textContent=`🔑 Llaves: ${S.keys} · días de actividad: ${S.activeDays} · ${S.unlockedDungeons.length}/${DUNGEONS.length} mazmorras abiertas${S.unlockedDungeons.length+S.keys<DUNGEONS.length?` · llave garantizada en ${remaining} misiones sin hallazgo`:''}`;
+  const list=$('dungeon-list');list.innerHTML='';
+  for(const dungeon of DUNGEONS){
+    const unlocked=S.unlockedDungeons.includes(dungeon.id);
+    const card=document.createElement('div');card.className='dungeon-card';
+    card.innerHTML=`<div class="chapter">${unlocked?'Desbloqueada':`Cerrada · 1 llave · ${dungeon.days} días de actividad`}</div><h3>${dungeon.name}</h3><p>${dungeon.description}</p><small>Vida: ${dungeon.hp} · jefe: ${dungeon.hp*2} · botín por enemigo: ${dungeon.reward} monedas y XP antes de bonos</small><br>`;
+    const button=document.createElement('button');
+    if(unlocked){
+      button.textContent='Iniciar expedición';
+      button.disabled=!!S.dungeonRun || S.lastDungeonDay===today();
+      button.onclick=()=>{settleBattle();if(startDungeon(dungeon.id)){save();render()}else{$('dungeon-keys').textContent='No se puede iniciar esta expedición ahora.';save()}};
+    }else{
+      button.textContent='Desbloquear · 1 llave';button.disabled=S.keys<1 || S.activeDays<dungeon.days;
+      button.onclick=()=>{settleBattle();if(unlockDungeon(dungeon.id)){save();render()}else{$('dungeon-keys').textContent='No se puede desbloquear esta mazmorra.';save()}};
+    }
+    card.appendChild(button);list.appendChild(card);
+  }
+  const box=$('dungeon-run');box.innerHTML='';
+  if(!S.dungeonRun){
+    const text=document.createElement('p');
+    text.textContent=S.lastDungeonDay===today()?'Ya iniciaste tu expedición de hoy. Vuelve mañana.':'Elige una mazmorra desbloqueada para empezar.';
+    box.appendChild(text);return;
+  }
+  const run=S.dungeonRun,dungeon=DUNGEONS.find(d=>d.id===run.id);
+  const max=dungeonMaxHp(dungeon,run.stage);
+  const fighter=document.createElement('div');fighter.className='dungeon-card';
+  fighter.innerHTML=`<h3>${dungeon.name} · ${run.stage===DUNGEON_ENEMIES-1?'JEFE':'Enemigo '+(run.stage+1)}</h3>
+    <div class="arena"><div class="arena-label">Encuentro ${run.stage+1}/${DUNGEON_ENEMIES}</div><div class="battle-icon" id="dungeon-icon">${monsterArt(DUNGEONS.indexOf(dungeon)+run.stage)}</div></div>
+    <p>${Math.max(0,Math.ceil(run.hp))}/${max} HP · Ataque: ${Math.round(12*bonus('dmg')*100)/100}</p>
+    <div class="bar hp"><div style="width:${Math.max(0,100*run.hp/max)}%"></div></div>`;
+  const attack=document.createElement('button');attack.className='complete';attack.textContent='⚔️ Atacar';
+  attack.onclick=()=>{settleBattle();if(attackDungeon()){save();render();if(S.dungeonRun) animateHit('dungeon-icon')}else{$('dungeon-keys').textContent='No hay un encuentro activo.';save()}};
+  fighter.appendChild(attack);box.appendChild(fighter);
+}
 $('open-pack').onclick=()=>{
   settleBattle();
   if(S.coins<PACK_COST){save();render();return}
@@ -495,7 +731,7 @@ let resetTimer;
 $('reset').onclick=()=>{
   const b=$('reset');
   if(b.dataset.armed){clearTimeout(resetTimer);delete b.dataset.armed;b.textContent='Reiniciar partida';
-    S=fresh();$('pack-result').textContent='';save();render();return}
+    S=fresh();selectedItem=null;dismantleConfirm=null;$('pack-result').textContent='';save();render();return}
   b.dataset.armed=1;b.textContent='¿Seguro? Pulsa otra vez para borrar';
   resetTimer=setTimeout(()=>{delete b.dataset.armed;b.textContent='Reiniciar partida'},4000);
 };
@@ -506,8 +742,14 @@ render();
 save();
 setInterval(()=>{
   const previous=S.battleUpdated;
+  const previousCoins=S.coins,previousLevel=S.level,previousAchievements=S.achievements.length;
   settleBattle();
-  if(S.battleUpdated!==previous){save();render();if(!$('battle').hidden) animateHit('battle-icon')}
+  if(S.battleUpdated!==previous){
+    save();render(true);
+    if(!$('store').hidden && (S.coins!==previousCoins || S.level!==previousLevel)) renderShop();
+    if(!$('achievements').hidden && S.achievements.length!==previousAchievements) renderAchievements();
+    if(!$('battle').hidden) animateHit('battle-icon');
+  }
 },10000);
 document.addEventListener('visibilitychange',()=>{
   if(!document.hidden){settleBattle();rollDay();render();save()}
