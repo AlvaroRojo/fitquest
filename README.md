@@ -8,11 +8,13 @@ eliminarla.
 
 ## Cómo jugar
 
-- **Misiones y monstruos:** registra solo el ejercicio que hayas realizado.
-  Hay tres misiones activas, puedes cambiar cualquiera perdiendo su progreso,
+- **Misiones y monstruos:** pulsa **Completado** solo después de realizar el
+  objetivo indicado. Hay tres misiones activas, puedes cambiar cualquiera perdiendo su progreso,
   y se pueden completar hasta seis al día. Los objetivos se fijan al comenzar
   cada misión; descansar y adaptar el ejercicio siempre es más importante
-  que una recompensa. Los objetivos no son recomendaciones médicas.
+  que una recompensa. Los objetivos no son recomendaciones médicas. Si una
+  partida anterior tenía progreso parcial, termina la parte restante antes
+  de confirmar; únicamente se recompensará la parte que faltaba.
 - **Personaje y tienda:** compra equipo con monedas del juego y equípalo. Los
   objetos comprados y los obtenidos en sobres comparten inventario. Pulsa un
   hueco equipado para vaciarlo.
@@ -24,11 +26,13 @@ eliminarla.
   cada categoría todos los objetos tienen la misma probabilidad. Los
   duplicados devuelven 25 monedas; los objetos de sobres se pueden equipar
   aunque todavía no se haya alcanzado el nivel exigido en la tienda.
-- **Autobatalla:** si está activa, el héroe causa 2 de daño cada 10 segundos,
+- **Autobatalla:** siempre está activa. El héroe causa 2 de daño cada 10 segundos,
   multiplicado por los bonos de daño de equipo y logros. Al volver se aplican
   como máximo ocho horas desde la última actualización; el resto se pierde.
-  Pausarla evita todo progreso mientras está pausada. Los monstruos y sus
-  recompensas son los mismos que en la sección de misiones.
+  La arena tiene sus propios monstruos y victorias, independientes de los de
+  misiones; comparten la experiencia, las monedas y los logros del personaje.
+  Las partidas anteriores conservan su encuentro original y la arena nueva
+  empieza en el primer monstruo.
 
 Los bonos de cada estadística se suman entre sí. Las misiones, el equipo y las
 recompensas son mecánicas de juego, no un plan de entrenamiento: adapta cada
