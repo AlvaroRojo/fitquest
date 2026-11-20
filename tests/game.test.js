@@ -99,6 +99,7 @@ test('migrates existing saves without changing equipment or progress', () => {
 
 test('attribute training validates type and cost and continues past the old cap', () => {
   const g=game();
+  g.run(`for(let i=ACHIEVEMENTS.length-1;i>=0;i--) if(ACHIEVEMENTS[i].id.startsWith('hero-attributes-')) ACHIEVEMENTS.splice(i,1)`);
   assert.equal(g.run(`(() => {
     S=fresh(); S.coins=99;
     if(trainAttribute('dmg') || trainAttribute('toString')) return false;
@@ -180,6 +181,7 @@ test('daily shop uses weighted rarities among eligible tiers', () => {
 
 test('weekly forge permits ten increasingly costly purchases and applies to equipped stats', () => {
   const g=game();
+  g.run(`for(let i=ACHIEVEMENTS.length-1;i>=0;i--) if(ACHIEVEMENTS[i].id.startsWith('forge-ranks-')) ACHIEVEMENTS.splice(i,1)`);
   assert.equal(g.run(`(() => {
     const RealDate=Date; let clock=RealDate.UTC(2026,0,4,12);
     Date=class extends RealDate {
@@ -556,6 +558,7 @@ test('arena upgrades preserve old saves and validate costs and speed cap', () =>
   const first=game();
   first.run("S=fresh(); S.coins=100; S.autoKills=3; S.autoMonsterHp=20; delete S.battleUpgrades; save()");
   const g=game(first.saved());
+  g.run(`for(let i=ACHIEVEMENTS.length-1;i>=0;i--) if(['arena-ranks-','arena-victories-'].some(prefix=>ACHIEVEMENTS[i].id.startsWith(prefix))) ACHIEVEMENTS.splice(i,1)`);
   assert.equal(g.run(`(() => {
     if(S.autoKills!==3 || S.autoMonsterHp!==20 || battleDamage()!==2 || battleInterval()!==10000 || battleLoot()!==1) return false;
     S.battleUpdated=1000;
@@ -589,7 +592,7 @@ test('arena upgrades settle old damage and preserve fractional attack progress',
 test('arena loot upgrades apply to arena coins and XP only', () => {
   const g=game();
   assert.equal(g.run(`(() => {
-    S=fresh(); S.achievements=ACHIEVEMENTS.map(a=>a.id); S.battleUpgrades.loot=5;
+    S=fresh(); S.level=100; S.achievements=ACHIEVEMENTS.map(a=>a.id); S.battleUpgrades.loot=5;
     const coin=bonus('coin'),xp=bonus('xp');
     S.autoMonsterHp=1; hit(1,'auto');
     if(S.coins!==Math.round(10*coin*1.5) || S.xp!==Math.round(20*xp*1.5)) return false;
@@ -602,7 +605,7 @@ test('upgraded arena has equivalent online and capped offline progress', () => {
   const g=game();
   assert.equal(g.run(`(() => {
     function setup(){
-      S=fresh(); S.battleUpgrades={damage:2,speed:20,loot:3}; S.battleUpdated=1000;
+      S=fresh(); S.battleUpgrades={damage:2,speed:20,loot:3}; S.battleUpdated=1000; unlockAchievements();
     }
     function snapshot(){return JSON.stringify([S.autoMonsterHp,S.autoKills,S.coins,S.xp,S.achievements])}
     setup(); settleBattle(61000); const offline=snapshot();
@@ -1258,6 +1261,57 @@ test('long-term milestones reward 365 non-consecutive activity days', () => {
     S.activeDays++; unlockAchievements();
     return S.achievements.includes('days365') && bonus('dmg')>=1.12;
   })()`), true);
+});
+
+test('new incremental achievements unlock at thresholds and survive reload', () => {
+  const g=game();
+  assert.equal(g.run(`(() => {
+    S=fresh();
+    const ids=['arena-victories-10','mission-victories-5','tower-floors-2','weekly-bosses-1',
+      'collection-3','forge-ranks-2','arena-ranks-2','hero-attributes-3',
+      'missions-legend-7500','packs-legend-750'];
+    S.achievements=ACHIEVEMENTS.map(a=>a.id).filter(id=>!ids.includes(id));
+    S.autoKills=9;S.missionKills=4;S.tower.floor=2;S.weeklyBoss.index=0;
+    S.owned=['sword_0_0','shield_0_0'];S.forgeRanks.dmg=1;
+    S.battleUpgrades.damage=1;S.attributes.dmg=2;S.totalMissions=7499;S.packsOpened=749;
+    unlockAchievements();
+    if(ids.some(id=>S.achievements.includes(id))) return false;
+    S.autoKills++;S.missionKills++;S.tower.floor++;S.weeklyBoss.index++;
+    addItem('ring_0_0');S.forgeRanks.dmg++;S.battleUpgrades.damage++;
+    S.attributes.dmg++;S.totalMissions++;S.packsOpened++;
+    unlockAchievements();
+    if(ids.some(id=>!S.achievements.includes(id))) return false;
+    const coins=S.coins,materials=S.materials;
+    unlockAchievements();
+    if(S.coins!==coins || S.materials!==materials) return false;
+    save();return true;
+  })()`),true);
+  assert.equal(game(g.saved()).run(`S.achievements.includes('tower-floors-2') && S.achievements.includes('packs-legend-750')`),true);
+});
+
+test('buying training, forge, arena upgrades and store items saves newly earned achievements', () => {
+  const g=game();
+  assert.equal(g.run(`(() => {
+    S=fresh();S.coins=100000;S.achievements=ACHIEVEMENTS.map(a=>a.id)
+      .filter(id=>!['hero-attributes-1','forge-ranks-1','arena-ranks-1','collection-1'].includes(id));
+    ensureShopStock();const id=S.shopStock.offers[0];
+    if(!buyDailyItem(id) || !trainAttribute('dmg') || !buyForgeUpgrade('dmg') ||
+      !buyBattleUpgrade('damage')) return false;
+    if(!['hero-attributes-1','forge-ranks-1','arena-ranks-1','collection-1'].every(id=>S.achievements.includes(id))) return false;
+    save();return true;
+  })()`),true);
+  assert.equal(game(g.saved()).run(`S.achievements.includes('collection-1') && S.achievements.includes('arena-ranks-1')`),true);
+});
+
+test('pack carousel varies its path while stopping within the winning card', () => {
+  const g=game();
+  assert.equal(g.run(`(() => {
+    Math.random=()=>0;const first=packReelLayout();
+    Math.random=()=>0.999999999;const last=packReelLayout();
+    return first.winner===24 && last.winner===52 && first.offset===-40 && last.offset===40 &&
+      first.duration===3800 && last.duration===5200 &&
+      Math.abs(first.offset)<64 && Math.abs(last.offset)<64;
+  })()`),true);
 });
 
 test('365 simulated activity days produce the annual milestone and unlock all dungeons', () => {

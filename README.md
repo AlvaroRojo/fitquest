@@ -97,7 +97,9 @@ eliminarla.
   mejorar o desmantelar por separado.
   Desmantela objetos no equipados con
   dos pulsaciones: dan 2, 5, 12, 25, 40, 65 o 100 fragmentos según su rareza. El inventario
-  se puede filtrar por tipo y estado y muestra hasta 12 objetos por página.
+  se puede filtrar por tipo y estado y muestra hasta 4 objetos por página.
+  En ordenador, personaje, entrenamiento e inventario se muestran juntos
+  en un panel compacto.
   Puedes usar fragmentos para mejorar un objeto sin un máximo de nivel; cada mejora añade un 1 %
   a su estadística. El coste es 5 + 3 por nivel de mejora actual + 2 por
   índice de rareza (común 0 a divino 6). Desmantelar elimina el objeto y
@@ -116,7 +118,10 @@ eliminarla.
   y la racha actual.
 - **Logros:** desbloquean mejoras permanentes al alcanzar sus objetivos. Las
   misiones se cuentan desde esta versión; los niveles y monstruos derrotados
-  de partidas antiguas sí se reconocen.
+  de partidas antiguas sí se reconocen. Hay nuevos hitos incrementales para
+  arena, cacería de misiones, torre, bosses semanales, colección, forja,
+  mejoras de arena, atributos y objetivos avanzados de misiones y sobres.
+  El progreso existente se reconoce automáticamente al cargar la partida.
 - **Sobres:** hay cuatro tipos, comprados únicamente con monedas del juego:
   aventurero (100, nivel 1), plata (300, nivel 5), dorado (800, nivel 15)
   y arcano (1800, nivel 30). Las siete rarezas se desbloquean en los niveles
@@ -127,7 +132,8 @@ eliminarla.
   actuales se muestran antes de comprar.
   Cada objeto de una rareza tiene igual probabilidad. Cada premio se añade al
   inventario, incluso si es repetido, sin devolución de monedas. La compra se
-  guarda inmediatamente, antes de mostrar el carrusel animado y su destello de
+  guarda inmediatamente, antes de mostrar el carrusel animado, cuyo recorrido
+  y punto de parada cambian en cada apertura, y su destello de
   revelación según la rareza. La **ruleta de
   daño** permite elegir cualquiera de los sobres con las mismas probabilidades
   y precio, pero solo entrega espadas, brazos y anillos de daño. Al detenerse,
