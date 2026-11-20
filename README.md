@@ -18,13 +18,24 @@ eliminarla.
   que una recompensa. Los objetivos no son recomendaciones médicas. Si una
   partida anterior tenía progreso parcial, termina la parte restante antes
   de confirmar; únicamente se recompensará la parte que faltaba.
-  El tablón muestra una estimación del daño, XP y monedas de cada encargo;
-  no incluye el botín de monstruos ni los logros desbloqueados durante él.
+  El tablón muestra una estimación del daño, XP y monedas de cada encargo.
+  El daño incluye los bonos de equipo, atributos, logros y racha; la
+  estimación no incluye el botín de monstruos ni los logros nuevos.
   Las primeras seis misiones del día dan la recompensa completa; las
-  posteriores dan el 25 % de XP, daño y monedas de misión. Las recompensas
-  de monstruos derrotados siguen siendo las normales. Solo la primera misión
-  del día puede generar una llave. Esto evita que acumular ejercicio sea
-  necesario para progresar.
+  posteriores dan el 25 % de XP, daño y monedas de misión. El botín de
+  monstruos no se reduce. Solo la primera misión del día puede generar una
+  llave. Esto evita que acumular ejercicio sea necesario para progresar.
+- **Encuentros de misiones:** cada enemigo tiene vida según su especie.
+  Tras cada cinco victorias aparece un élite y, tras cada diez, un jefe
+  en su lugar. En los demás encuentros hay un 5 % de probabilidad de
+  encontrar un goblin de la suerte y otro 5 % de una criatura astral;
+  son encuentros aleatorios, no eventos de tiempo limitado. Los élites dan
+  el doble de monedas y XP y 2 fragmentos; los jefes dan el cuádruple y 5.
+  El goblin da 5 veces las monedas, 1,5 veces la XP y 3 fragmentos; la
+  criatura astral da el doble de monedas, el triple de XP y 4 fragmentos.
+  El equipo y los logros también mejoran monedas y XP. El encuentro y su
+  vida restante se guardan al cerrar; al actualizar se conserva la vida
+  del enemigo anterior. Estos encuentros son independientes de la arena.
 - **Personaje y tienda:** compra equipo con monedas del juego y equípalo. Los
   objetos comprados y los obtenidos en sobres comparten inventario. En la
   pestaña de personaje arrastra un objeto a un hueco compatible, o selecciónalo

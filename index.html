@@ -47,6 +47,7 @@
   .live-dot{display:inline-block;width:8px;height:8px;background:#66ffd1;border-radius:50%;box-shadow:0 0 10px #66ffd1;animation:pulse 2s ease-in-out infinite}
   .arena .flash{animation:impact .45s ease-out}
   .creature{width:125px;height:135px;overflow:visible}
+  .creature>g:first-child{transform-origin:70px 75px;animation:creature-breathe 2.6s ease-in-out infinite}
   .creature .eyes{animation:glow 2s ease-in-out infinite}
   .creature .jaw{transform-origin:70px 96px;animation:snarl 2.8s ease-in-out infinite}
   .hero-layout{display:grid;grid-template-columns:170px 1fr;gap:14px;align-items:center}
@@ -88,6 +89,7 @@
   @keyframes impact{40%{transform:scale(1.18);filter:drop-shadow(0 0 18px #ffcc80)}}
   @keyframes glow{50%{opacity:.5;filter:drop-shadow(0 0 7px red)}}
   @keyframes snarl{50%{transform:translateY(4px)}}
+  @keyframes creature-breathe{50%{transform:scale(1.035,.97)}}
   body{background:radial-gradient(ellipse at 85% 0%,#503451 0,transparent 36%),radial-gradient(ellipse at 0% 40%,#1a3745 0,transparent 38%),#0b1020;color:#f3eee6;line-height:1.5}
   body::before{background:repeating-linear-gradient(45deg,transparent 0 78px,#ead7a505 79px,transparent 80px);mask-image:none}
   .game-header{position:relative;overflow:hidden;padding:18px 24px;margin-bottom:12px;border:1px solid #a87d4c;border-radius:16px;background:radial-gradient(ellipse at 80% 10%,#a9744455,transparent 48%),linear-gradient(110deg,#3f2a2a,#1a1b30 72%);box-shadow:inset 0 1px #fff3,0 12px 30px #0006}
@@ -113,6 +115,16 @@
   .quest-board .mission,.inventory-item,.dungeon-card,.attribute{border-color:#78604f;background:linear-gradient(135deg,#3b3033,#211f30);box-shadow:inset 0 1px #fff1}
   .quest-board .mission{padding:15px;border-radius:12px}
   .quest-rewards span{border:1px solid #7d654b;background:#171c28;border-radius:7px}
+  .encounter-tag{display:inline-block;margin-bottom:10px;padding:4px 10px;border:1px solid #a87d4c;border-radius:999px;background:#272137;color:#ffdaa0;font-size:.75rem;font-weight:700;letter-spacing:.04em}
+  .encounter-tag[data-kind="boss"]{border-color:#ed7587;color:#ffd2d8;background:#4b222f}
+  .encounter-tag[data-kind="elite"]{border-color:#c49bf5;color:#ead6ff;background:#3a294c}
+  .encounter-tag[data-kind="lucky"],.encounter-tag[data-kind="event"]{border-color:#e4c15f;color:#fff0ae;background:#443b22}
+  .encounter-info{color:#d8c6a9;font-size:.85rem}
+  .quest-board{grid-template-columns:repeat(auto-fit,minmax(min(100%,230px),1fr));align-items:stretch}
+  .quest-board .mission{display:flex;flex-direction:column;gap:6px;min-width:0}
+  .quest-board .mission>.row{align-items:flex-start;flex-wrap:wrap}
+  .quest-board .mission-actions{margin-top:auto}
+  .quest-board .quest-rewards{margin:0}
   .hero-stage{background:radial-gradient(ellipse at center,#a9749266,#14192c 72%);border-color:#9e7794}
   .slot{border-color:#806a67;background:linear-gradient(145deg,#292536,#141b2a)}
   .week-card{background:linear-gradient(120deg,#1d4544,#29243b);border-color:#599a8e}
@@ -122,6 +134,7 @@
   #shop .item,#achievement-list .achievement{border-color:#78604f;background:linear-gradient(135deg,#3b3033,#211f30)}
   @media(min-width:1000px){
     #adventure:not([hidden]),#character:not([hidden]){display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px;align-items:start}
+    #adventure:not([hidden]){grid-template-columns:minmax(0,2fr) minmax(0,3fr)}
     #adventure>.card,#character>.card{margin-bottom:0}
     #adventure>button{justify-self:start}
     #character>.card:last-child{grid-column:1/-1}
@@ -160,9 +173,11 @@
 <section id="adventure" role="tabpanel" aria-labelledby="tab-adventure">
 <div class="card">
   <h2>Monstruo</h2>
+  <div class="encounter-tag" id="encounter-tag"></div>
   <div class="arena"><div class="arena-label">Encuentro de misiones</div><div class="big" id="mIcon"></div></div>
   <div class="row"><b id="mName"></b><span id="mHp"></span></div>
   <div class="bar hp"><div id="hpbar"></div></div>
+  <p class="encounter-info" id="encounter-info"></p>
   <p><small>Tu ejercicio real es el daño. El combate avanza solo cuando entrenas.</small></p>
 </div>
 
@@ -170,6 +185,7 @@
   <h2>📜 Tablón de encargos <small id="cnt"></small></h2>
   <p>Elige una misión, realiza el ejercicio a tu ritmo y marca «Completado».</p>
   <div id="missions" class="quest-board"></div>
+  <p><small>El daño mostrado incluye los bonos de equipo, atributos, logros y racha. Las estimaciones no incluyen botín de monstruos ni logros nuevos.</small></p>
   <p><small>Recompensa completa en las primeras 6 misiones del día. Desde la séptima, la XP, el daño y las monedas de misión bajan al 25 %. La primera misión diaria puede dar una llave; puedes seguir completando misiones sin límite.</small></p>
   <p class="notice"><small>No hay límite de misiones, pero hacer más ejercicio no es necesario para conseguir los hitos de actividad. Adapta cada ejercicio a tu capacidad, descansa cuando lo necesites y detente si sientes dolor. No es asesoramiento médico.</small></p>
   <button id="rest">😴 Día de descanso (1 por semana, mantiene racha)</button>
@@ -292,6 +308,23 @@ function pickMissions(){
   const a=[]; while(a.length<SLOTS) a.push(randomMission(a)); return a;
 }
 const MONSTERS = ['🐀 Rata gigante','🦇 Murciélago','🐺 Lobo','👹 Orco','🧟 Zombi','🐉 Dragón menor','👻 Espectro','🦖 Titán'];
+const MISSION_MONSTERS = [
+  {name:'Rata gigante',art:'rat',hp:0.9},{name:'Murciélago umbrío',art:'bat',hp:0.8},
+  {name:'Lobo de ceniza',art:'wolf',hp:1.05},{name:'Orco de la grieta',art:'orc',hp:1.2},
+  {name:'Zombi de la cripta',art:'zombie',hp:1.1},{name:'Dragón menor',art:'dragon',hp:1.3},
+  {name:'Espectro errante',art:'ghost',hp:0.85},{name:'Titán de piedra',art:'golem',hp:1.35},
+  {name:'Araña venenosa',art:'spider',hp:0.95},{name:'Slime del pantano',art:'slime',hp:0.9},
+  {name:'Calavera maldita',art:'skull',hp:1},{name:'Caballero caído',art:'knight',hp:1.25},
+  {name:'Cultista del vacío',art:'cultist',hp:1},{name:'Cuervo sombrío',art:'bird',hp:0.85},
+  {name:'Escorpión de fuego',art:'scorpion',hp:1.15},{name:'Ojo del abismo',art:'eye',hp:1}
+];
+const ENCOUNTER_TYPES = {
+  normal:{label:'Enemigo común',hp:1,coins:1,xp:1,materials:0},
+  elite:{label:'✦ Élite',hp:1.8,coins:2,xp:2,materials:2},
+  boss:{label:'👑 Jefe',hp:3,coins:4,xp:4,materials:5},
+  lucky:{label:'🍀 Goblin de la suerte',hp:0.8,coins:5,xp:1.5,materials:3},
+  event:{label:'✨ Evento: criatura astral',hp:1.4,coins:2,xp:3,materials:4}
+};
 const KEY = 'fitquest-save';
 
 const today = () => { const d=new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; };
@@ -299,6 +332,19 @@ const daysBetween = (a,b) => Math.round((new Date(b)-new Date(a))/864e5);
 const xpNeeded = l => Math.round(100+20*(l-1)+6*(l-1)*(l-1));
 const monsterHp = n => Math.round(50+12*n+2*n*n);
 const missionMonsterHp = n => Math.round(50+4*Math.sqrt(n));
+function nextEncounter(kills){
+  if(kills===0) return {kind:'normal',species:0,maxHp:missionMonsterHp(0),legacy:true};
+  let kind;
+  if(kills%10===0) kind='boss';
+  else if(kills%5===0) kind='elite';
+  else {
+    const roll=Math.random();
+    kind=roll<0.05?'lucky':roll<0.1?'event':'normal';
+  }
+  const species=Math.floor(Math.random()*MISSION_MONSTERS.length);
+  const hp=kind==='lucky'?1:MISSION_MONSTERS[species].hp;
+  return {kind,species,maxHp:Math.max(1,Math.round(missionMonsterHp(kills)*hp*ENCOUNTER_TYPES[kind].hp))};
+}
 
 const EQ_SLOTS=[
   {k:'helmet',g:'helmet'},{k:'necklace',g:'necklace'},{k:'earring1',g:'earring',n:1},
@@ -405,7 +451,7 @@ const fresh = () => ({level:1,xp:0,coins:0,owned:[],eq:{},streak:0,kills:0,
   day:today(),done:{},bonus:{},lastActive:null,lastRest:null,monsterHp:monsterHp(0),log:[],active:pickMissions(),completedToday:0,
   targets:{},totalMissions:0,packsOpened:0,achievements:[],missionKills:0,autoKills:0,autoMonsterHp:monsterHp(0),battleUpdated:Date.now(),
   keys:0,keyPity:0,unlockedDungeons:['crypt'],dungeonRun:null,lastDungeonDay:null,dungeonClears:0,materials:0,activeDays:0,lastActivityDay:null,
-  weeklyRewards:0,balanceVersion:1,unlimitedMissionsVersion:1,upgrades:{},attributes:{dmg:0,xp:0,coin:0}});
+  weeklyRewards:0,balanceVersion:1,unlimitedMissionsVersion:1,upgrades:{},attributes:{dmg:0,xp:0,coin:0},encounter:nextEncounter(0)});
 let S;
 try{S=JSON.parse(localStorage.getItem(KEY)||'null') || fresh()}
 catch(error){alert('No se puede leer la partida guardada. No se ha borrado; revisa los datos del navegador.');throw error}
@@ -449,6 +495,7 @@ if(!S.balanceVersion){
   }
   S.balanceVersion=1;
 }
+S.encounter ??= {kind:'normal',species:S.missionKills%MONSTERS.length,maxHp:missionMonsterHp(S.missionKills),legacy:true};
 if(!S.unlimitedMissionsVersion){
   for(const id of [...S.active]){
     if(!S.bonus[id]) continue;
@@ -501,12 +548,16 @@ function hit(dmg,arena='mission'){
   const kills=automatic?'autoKills':'missionKills';
   S[hp]-=dmg;
   while(S[hp]<=0){
-    const reward=Math.round((10+S[kills]*2)*bonus('coin'));
-    S.coins+=reward;gain(Math.round((20+S[kills]*3)*bonus('xp')));
-    const monster=MONSTERS[S[kills]%MONSTERS.length];
+    const encounter=automatic?null:S.encounter;
+    const type=encounter?ENCOUNTER_TYPES[encounter.kind]:ENCOUNTER_TYPES.normal;
+    const reward=Math.round((10+S[kills]*2)*bonus('coin')*type.coins);
+    S.coins+=reward;gain(Math.round((20+S[kills]*3)*bonus('xp')*type.xp));
+    S.materials+=type.materials;
+    const monster=automatic||encounter.legacy?MONSTERS[S[kills]%MONSTERS.length]:encounter.kind==='lucky'?'🍀 Goblin de la suerte':MISSION_MONSTERS[encounter.species].name;
     S[kills]++;S.kills++;
-    log(`💀 ${automatic?'Arena':'Misión'}: derrotaste a ${monster} (+${reward} 🪙)`);
-    S[hp]+=(automatic?monsterHp:missionMonsterHp)(S[kills]);
+    log(`💀 ${automatic?'Arena':'Misión'}: derrotaste a ${monster} (+${reward} 🪙${type.materials?`, +${type.materials} 🔩`:''})`);
+    if(!automatic) S.encounter=nextEncounter(S.missionKills);
+    S[hp]+=automatic?monsterHp(S.autoKills):S.encounter.maxHp;
     unlockAchievements();
   }
 }
@@ -668,6 +719,31 @@ function monsterArt(index){
     <path d="M62 81 L70 74 L78 81 L70 85Z" fill="#32203a"/>
   </svg>`;
 }
+function missionMonsterArt(encounter){
+  const art=encounter.kind==='lucky'?'goblin':MISSION_MONSTERS[encounter.species].art;
+  const shapes={
+    rat:`<path d="M37 45 Q8 13 14 54 L29 78 M103 45 Q132 13 126 54 L111 78" fill="#795c6c"/><ellipse cx="70" cy="80" rx="45" ry="38" fill="#8a7783"/><path d="M35 83 Q70 65 105 83 L70 118Z" fill="#ad919a"/><circle cx="70" cy="91" r="6" fill="#e88a97"/>`,
+    bat:`<path d="M48 57 Q18 18 5 41 L10 93 Q21 73 32 91 Q42 70 53 89 M92 57 Q122 18 135 41 L130 93 Q119 73 108 91 Q98 70 87 89" fill="#725a91"/><path d="M42 55 L43 24 60 41 Q70 35 80 41 L97 24 98 55 Q112 106 70 116 Q28 106 42 55Z" fill="#987ca8"/>`,
+    wolf:`<path d="M30 62 L19 12 55 39 Q70 30 85 39 L121 12 110 62 Q116 109 70 121 Q24 109 30 62Z" fill="#7c8294"/><path d="M40 89 L70 72 100 89 87 113 53 113Z" fill="#b9a8ad"/><path d="M60 91 L80 91 70 101Z" fill="#292032"/>`,
+    orc:`<path d="M26 58 L4 35 30 39 M114 58 L136 35 110 39" fill="#729779"/><path d="M27 48 Q70 19 113 48 L108 100 Q70 131 32 100Z" fill="#789d7e"/><path d="M44 100 L51 76 60 104 M96 100 L89 76 80 104" fill="#e4d7b6"/>`,
+    zombie:`<path d="M27 55 Q20 20 70 20 Q120 20 113 55 L108 105 Q70 128 32 105Z" fill="#819d7a"/><path d="M45 37 L65 37 61 48 78 48 M88 79 L98 84 89 91" fill="none" stroke="#394a3e" stroke-width="4"/><path d="M48 99 L92 99 M53 94 L53 104 M66 94 L66 104 M79 94 L79 104" stroke="#292032" stroke-width="4"/>`,
+    dragon:`<path d="M37 52 L15 4 57 31 M103 52 L125 4 83 31" fill="#bb7593"/><path d="M30 55 Q70 16 110 55 L105 91 Q100 119 70 124 Q40 119 35 91Z" fill="#a45b78"/><path d="M40 85 Q70 65 100 85 L92 106 48 106Z" fill="#4a243b"/><path d="M47 87 L54 99 61 84 70 99 79 84 86 99 93 87" fill="#f3e5e9"/>`,
+    ghost:`<path d="M29 97 V56 Q29 18 70 18 Q111 18 111 56 V108 L96 98 84 111 70 99 56 111 44 98 29 108Z" fill="#90b3bf"/><ellipse cx="70" cy="93" rx="10" ry="13" fill="#292440"/>`,
+    golem:`<path d="M22 48 L41 20 99 20 118 48 111 105 87 124 53 124 29 105Z" fill="#7d8191"/><path d="M32 52 L53 47 60 56 80 56 87 47 108 52 M42 85 L98 85 92 104 48 104Z" fill="#272638"/><path d="M55 25 L64 36 58 45 M94 31 L87 40 95 48" fill="none" stroke="#c3a9ba" stroke-width="3"/>`,
+    spider:`<path d="M45 58 L20 37 6 50 M42 70 L16 65 5 79 M43 83 L19 90 12 108 M95 58 L120 37 134 50 M98 70 L124 65 135 79 M97 83 L121 90 128 108" fill="none" stroke="#b285a2" stroke-width="8" stroke-linecap="round"/><ellipse cx="70" cy="75" rx="32" ry="38" fill="#72536e"/><circle cx="57" cy="56" r="4" fill="#ff6c84"/><circle cx="83" cy="56" r="4" fill="#ff6c84"/>`,
+    slime:`<path d="M18 98 Q18 75 38 64 Q39 26 70 25 Q101 26 102 64 Q122 75 122 98 Q120 119 70 120 Q20 119 18 98Z" fill="#589e94"/><path d="M48 45 Q56 34 68 35" fill="none" stroke="#c8fff0" stroke-width="4"/><path d="M55 96 Q70 108 85 96" fill="none" stroke="#203f43" stroke-width="4"/>`,
+    skull:`<path d="M30 58 Q30 17 70 17 Q110 17 110 58 L103 91 93 98 93 115 47 115 47 98 37 91Z" fill="#d2c1b6"/><path d="M60 80 L70 67 80 80Z" fill="#322638"/><path d="M55 102 V114 M65 102 V114 M75 102 V114 M85 102 V114" stroke="#62505b" stroke-width="3"/>`,
+    knight:`<path d="M28 52 Q30 18 70 18 Q110 18 112 52 L106 105 70 124 34 105Z" fill="#7d8b9b"/><path d="M25 57 H115 L105 82 H35Z" fill="#202539"/><path d="M70 20 V53 M53 96 H87 M58 104 H82" stroke="#d4b8a0" stroke-width="4"/><path d="M70 18 Q98 -2 112 13 L92 20Z" fill="#af6572"/>`,
+    cultist:`<path d="M18 112 L31 50 Q36 15 70 15 Q104 15 109 50 L122 112 100 103 70 120 40 103Z" fill="#55456c"/><path d="M39 59 Q70 36 101 59 L96 94 Q70 111 44 94Z" fill="#242033"/><path d="M70 22 L77 31 70 39 63 31Z" fill="#eab879"/>`,
+    bird:`<path d="M40 62 L8 33 23 85 46 99 M100 62 L132 33 117 85 94 99" fill="#48576f"/><path d="M39 56 Q70 15 101 56 L95 98 Q70 119 45 98Z" fill="#647188"/><path d="M55 82 L70 110 85 82Z" fill="#e3ad6d"/>`,
+    scorpion:`<path d="M43 69 L13 48 5 63 28 79 M97 69 L127 48 135 63 112 79 M94 41 Q120 8 103 5 Q87 5 95 21" fill="none" stroke="#c27f67" stroke-width="8" stroke-linecap="round"/><path d="M35 64 Q70 31 105 64 L99 103 70 120 41 103Z" fill="#9f665d"/>`,
+    eye:`<path d="M13 71 Q70 5 127 71 Q70 137 13 71Z" fill="#c6a9bc"/><circle cx="70" cy="71" r="27" fill="#935b8e"/><ellipse cx="70" cy="71" rx="9" ry="22" fill="#261b35"/><circle cx="79" cy="62" r="5" fill="#fff"/>`,
+    goblin:`<path d="M36 60 L4 28 35 36 M104 60 L136 28 105 36" fill="#71ad72"/><path d="M33 53 Q70 24 107 53 L101 104 Q70 128 39 104Z" fill="#80b97a"/><path d="M42 91 Q70 105 98 91 L91 109 49 109Z" fill="#38272b"/><path d="M46 35 L61 10 70 23 79 10 94 35Z" fill="#e7bb55" stroke="#fff0ae" stroke-width="3"/>`
+  };
+  const eyes=art==='eye'?'':`<g class="eyes" fill="#ff778c"><path d="M43 63 L61 67 52 73Z M97 63 L79 67 88 73Z"/></g>`;
+  const adornment=encounter.kind==='boss'?'<path d="M42 29 L39 8 55 17 70 3 85 17 101 8 98 29Z" fill="#e5b55e" stroke="#ffdf91" stroke-width="3"/>':encounter.kind==='elite'?'<path d="M70 4 L76 16 70 26 64 16Z" fill="#e6c6ff"/>':encounter.kind==='event'?'<path d="M12 20 L15 12 18 20 26 23 18 26 15 34 12 26 4 23Z M118 105 L121 97 124 105 132 108 124 111 121 119 118 111 110 108Z" fill="#ffe59e"/>':'';
+  return `<svg class="creature" viewBox="0 0 140 140" aria-hidden="true"><g stroke="#d4b5c5" stroke-width="2.5" stroke-linejoin="round">${shapes[art]}</g>${eyes}${adornment}</svg>`;
+}
 function heroArt(){
   const equipped=key=>Boolean(S.eq[key]);
   return `<svg class="hero-art" viewBox="0 0 150 220" role="img" aria-label="Héroe y su equipo">
@@ -743,9 +819,12 @@ function render(liveOnly=false){
   $('streak').textContent=`🔥 Racha ${S.streak} (x${streakMult().toFixed(2)})`;
   $('xpbar').style.width=100*S.xp/xpNeeded(S.level)+'%';
   $('xptxt').textContent=`XP ${S.xp}/${xpNeeded(S.level)}`;
-  const mn=MONSTERS[S.missionKills%MONSTERS.length].split(' ');
-  $('mIcon').innerHTML=monsterArt(S.missionKills);$('mName').textContent=mn.slice(1).join(' ');
-  const max=missionMonsterHp(S.missionKills);
+  const encounter=S.encounter,type=ENCOUNTER_TYPES[encounter.kind];
+  const mn=encounter.legacy?MONSTERS[S.missionKills%MONSTERS.length].split(' ').slice(1).join(' '):encounter.kind==='lucky'?'Goblin de la suerte':MISSION_MONSTERS[encounter.species].name;
+  $('mIcon').innerHTML=missionMonsterArt(encounter);$('mName').textContent=mn;
+  $('encounter-tag').textContent=type.label;$('encounter-tag').dataset.kind=encounter.kind;
+  $('encounter-info').textContent=encounter.kind==='normal'?'Derrota al enemigo para obtener monedas y experiencia.':`Recompensa: x${type.coins} monedas · x${type.xp} XP${type.materials?` · ${type.materials} fragmentos`:''}.`;
+  const max=encounter.maxHp;
   $('mHp').textContent=`${Math.max(0,Math.ceil(S.monsterHp))}/${max} HP`;
   $('hpbar').style.width=Math.min(100,100*S.monsterHp/max)+'%';
   const autoMonster=MONSTERS[S.autoKills%MONSTERS.length].split(' ');
@@ -765,8 +844,7 @@ function render(liveOnly=false){
     const el=document.createElement('div');el.className='mission';
     el.innerHTML=`<div class="row"><strong>${EXERCISE_ICONS[ex.id]} ${ex.name}</strong><span>Objetivo: ${tgt} ${ex.unit}</span></div>
       ${d>0?`<p><small>Progreso anterior: ${d}/${tgt} ${ex.unit}. Completa lo que falta y confirma.</small></p><div class="bar mis"><div style="width:${Math.min(100,100*d/tgt)}%"></div></div>`:''}
-      <div class="quest-rewards"><span>⚔️ ${Math.round(preview.damage*10)/10} daño</span><span>✨ ~${preview.xp} XP</span><span>🪙 ${preview.coins} monedas</span>
-      <small>Estimación actual; no incluye recompensas por vencer monstruos ni logros nuevos.</small></div>`;
+      <div class="quest-rewards"><span>⚔️ ${Math.round(preview.damage*10)/10} daño</span><span>✨ ~${preview.xp} XP</span><span>🪙 ${preview.coins} monedas</span></div>`;
     const actions=document.createElement('div');actions.className='mission-actions';
     const complete=document.createElement('button');
     complete.type='button';complete.className='complete';complete.textContent='✓ Completado';

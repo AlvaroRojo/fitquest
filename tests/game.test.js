@@ -142,6 +142,61 @@ test('mission estimate includes partial progress and reduced rewards', () => {
   })()`),true);
 });
 
+test('mission damage preview and actual damage include all character modifiers', () => {
+  const g=game();
+  assert.equal(g.run(`(() => {
+    S=fresh(); S.active=['squat','push','plank']; S.done.squat=15;
+    S.eq={sword:'sword_3_0'}; S.attributes.dmg=10; S.achievements=['mission10'];
+    S.streak=5; S.battleUpdated=Date.now();
+    const preview=missionEstimate(byId('squat'));
+    const expected=5*bonus('dmg')*streakMult();
+    if(Math.abs(preview.damage-expected)>1e-8 || expected<=5)return false;
+    completeMission(byId('squat'));
+    return Math.abs(S.monsterHp-(50-expected))<1e-8;
+  })()`),true);
+});
+
+test('encounter selection gives scheduled elite and boss and bounded random events', () => {
+  const g=game();
+  assert.equal(g.run(`(() => {
+    Math.random=()=>0;
+    const goblin=nextEncounter(1),elite=nextEncounter(5),boss=nextEncounter(10);
+    if(goblin.kind!=='lucky' || elite.kind!=='elite' || boss.kind!=='boss')return false;
+    if(goblin.maxHp!==Math.round(missionMonsterHp(1)*.8))return false;
+    Math.random=()=>.07;
+    const event=nextEncounter(1);
+    if(event.kind!=='event')return false;
+    Math.random=()=>.5;
+    const normal=nextEncounter(1);
+    return normal.kind==='normal' && normal.maxHp===Math.round(missionMonsterHp(1)*MISSION_MONSTERS[normal.species].hp);
+  })()`),true);
+});
+
+test('special rewards and overflow damage use the defeated and next encounters', () => {
+  const g=game();
+  assert.equal(g.run(`(() => {
+    S=fresh(); S.missionKills=4; S.kills=4;
+    S.encounter={kind:'lucky',species:0,maxHp:40}; S.monsterHp=3;
+    Math.random=()=>0; hit(5);
+    const elite=S.encounter;
+    return S.missionKills===5 && S.kills===5 && S.coins===90 && S.xp===48 &&
+      S.materials===3 && elite.kind==='elite' && S.monsterHp===elite.maxHp-2;
+  })()`),true);
+});
+
+test('new encounter persists on reload and legacy migration preserves current health', () => {
+  const g=game();
+  g.run(`S=fresh(); S.missionKills=9; S.encounter={kind:'event',species:8,maxHp:123}; S.monsterHp=37.5; save()`);
+  const reloaded=game(g.saved());
+  assert.deepEqual(reloaded.saved().encounter,{kind:'event',species:8,maxHp:123});
+  assert.equal(reloaded.run('S.monsterHp'),37.5);
+  const old=g.saved(); delete old.encounter;
+  const migrated=game(old);
+  assert.equal(migrated.run('S.monsterHp'),37.5);
+  assert.equal(migrated.run('S.encounter.maxHp'),migrated.run('missionMonsterHp(9)'));
+  assert.equal(migrated.run('S.encounter.species'),1);
+});
+
 test('migration settles only active legacy battle time on the original monster', () => {
   const base = {
     level:1, xp:0, coins:0, owned:[], eq:{}, streak:0, kills:0,
