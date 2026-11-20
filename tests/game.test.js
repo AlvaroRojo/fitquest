@@ -26,7 +26,7 @@ function game(saved) {
 }
 
 test('navigation starts in adventure and selects one accessible tab', () => {
-  const sections = ['adventure', 'character', 'store', 'achievements', 'packs', 'battle', 'dungeons'];
+  const sections = ['adventure', 'character', 'store', 'achievements', 'packs', 'battle', 'dungeons', 'torment'];
   assert.deepEqual([...html.matchAll(/data-section="([^"]+)"/g)].map(match => match[1]), sections);
   assert.match(html, /id="tab-adventure"[^>]*aria-selected="true"/);
   assert.match(html, /<section id="adventure" role="tabpanel" aria-labelledby="tab-adventure">/);
@@ -67,7 +67,7 @@ test('navigation starts in adventure and selects one accessible tab', () => {
   tabs[0].handlers.keydown({ key: 'End', preventDefault() { prevented = true; } });
   assert.equal(prevented, true);
   assert.equal(focused, tabs.at(-1));
-  assert.equal(panels.dungeons.hidden, false);
+  assert.equal(panels.torment.hidden, false);
   tabs.at(-1).handlers.keydown({ key: 'Home', preventDefault() {} });
   assert.equal(focused, tabs[0]);
   assert.equal(panels.adventure.hidden, false);
@@ -819,6 +819,53 @@ test('torment unlocks by level and rejects locked or invalid selections', () => 
     save(); return true;
   })()`),true);
   assert.equal(game(g.saved()).run('S.torment'),12);
+});
+
+test('torment sanctuary displays unlocks and saves the selected difficulty', () => {
+  const elements=Object.fromEntries(['torment-current','torment-hp','torment-reward','torment-target',
+    'torment-options','torment-picker','torment-status','torment-summary'].map(id=>[id,{textContent:''}]));
+  const box=elements['torment-options'];
+  box.children=[];
+  box.replaceChildren=()=>{box.children=[]};
+  box.appendChild=child=>box.children.push(child);
+  box.contains=child=>box.children.includes(child);
+  box.addEventListener=(type,handler)=>{box.handler=handler};
+  box.querySelector=()=>null;
+  elements['torment-summary'].focus=()=>{elements['torment-summary'].focused=true};
+  const state={level:10,torment:0};
+  let saves=0;
+  const context=vm.createContext({
+    S:state,
+    TORMENTS:[{name:'Normal',level:1,hp:1,reward:1},{name:'Tormento I',level:10,hp:1.75,reward:1.4},{name:'Tormento II',level:20,hp:2.5,reward:1.8}],
+    document:{activeElement:null,createElement:()=>({dataset:{},setAttribute(name,value){this[name]=value}})},
+    $:id=>elements[id],
+    selectTorment:index=>{if(state.level<[1,10,20][index]) return false;state.torment=index;return true},
+    save:()=>{saves++},
+    render:()=>vm.runInContext('renderTorment()',context),
+  });
+  vm.runInContext(script.slice(script.indexOf('function renderTorment(){'),script.indexOf('function renderBattleUpgrades(){')),context);
+  vm.runInContext('renderTorment()',context);
+  assert.equal(elements['torment-current'].textContent,'Normal');
+  assert.equal(box.children.length,3);
+  assert.equal(box.children[0]['aria-pressed'],'true');
+  assert.equal(box.children[1].disabled,false);
+  assert.equal(box.children[2].disabled,true);
+  assert.match(box.children[2].innerHTML,/Nivel 20/);
+  const click=option=>box.handler({target:{closest:()=>option}});
+  click(box.children[2]);
+  assert.equal(saves,0);
+  elements['torment-picker'].open=true;
+  click(box.children[1]);
+  assert.equal(saves,1);
+  assert.equal(state.torment,1);
+  assert.equal(elements['torment-picker'].open,false);
+  assert.equal(elements['torment-current'].textContent,'Tormento I');
+  assert.equal(elements['torment-hp'].textContent,'×1.75');
+  assert.equal(elements['torment-reward'].textContent,'×1.4');
+  assert.equal(elements['torment-target'].textContent,'+5%');
+  assert.equal(box.children[1]['aria-pressed'],'true');
+  assert.match(elements['torment-status'].textContent,/Tormento I seleccionado/);
+  assert.equal(elements['torment-summary'].focused,true);
 });
 
 test('torment scales expedition health and rewards and remains locked through stages', () => {

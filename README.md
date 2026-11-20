@@ -166,7 +166,10 @@ eliminarla.
   mazmorras anteriores; tienen las mismas reglas de combate y recompensas.
   Los nuevos progresos empiezan desde cero al actualizar una partida existente,
   sin alterar las mazmorras, llaves o expediciones anteriores.
-- **Tormento global:** el selector del encabezado ofrece Normal y doce rangos,
+- **Tormento global:** en la pestaña **Tormento**, abre «Elegir tormento» para
+  comparar los efectos y seleccionar un rango disponible. El santuario muestra
+  la dificultad activa; los rangos bloqueados indican el nivel necesario.
+  Hay Normal y doce rangos,
   desbloqueados cada diez niveles desde el 10 hasta el 120. Los rangos I a XII
   multiplican la vida enemiga por 1,75/2,5/4/6/8/11/15/21/30/42/60/85 y
   las monedas, XP y fragmentos por 1,4/1,8/2,5/3,5/4,5/5,5/7/9/11,5/14,5/18/22,5.

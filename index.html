@@ -70,7 +70,7 @@
   .milestone.done{color:#a5f8df;border-color:#68cbb2}
   .status-card{background:linear-gradient(120deg,#473126,#272137);border-color:#ad8051;box-shadow:inset 0 0 0 2px #241c22,0 8px 22px #0008}
   .game-layout main{min-width:0}
-  .navigation{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:7px;padding:10px;border:1px solid #916941;border-radius:12px;background:linear-gradient(160deg,#493128,#221a28);box-shadow:inset 0 0 0 2px #251c21,0 10px 24px #0008}
+  .navigation{display:grid;grid-template-columns:repeat(auto-fit,minmax(135px,1fr));gap:7px;padding:10px;border:1px solid #916941;border-radius:12px;background:linear-gradient(160deg,#493128,#221a28);box-shadow:inset 0 0 0 2px #251c21,0 10px 24px #0008}
   .navigation button{text-align:center;padding:11px 9px;border-color:#79593e;background:linear-gradient(110deg,#5b4130,#342638)}
   .navigation button[aria-selected="true"]{background:linear-gradient(110deg,#a16e35,#683c38);outline:1px solid #f5cd7d;box-shadow:0 0 13px #dca15855}
   .card{border-color:#806348;background:linear-gradient(145deg,#2c2837,#171d2d);box-shadow:inset 0 0 0 1px #cfab6226,0 9px 24px #0008}
@@ -272,10 +272,41 @@
   .expedition-hub{background:radial-gradient(ellipse at 85% 0%,#8d5b7044,transparent 45%),linear-gradient(145deg,#352b39,#151c2d);border-color:#b79362}
   .expedition-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
   .expedition-heading h2{margin:0}.expedition-heading p{margin:4px 0 0;color:#d8c6a9}
-  .torment-selector{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:14px 0;padding:12px 14px;border:1px solid #a87d4c;border-radius:12px;background:linear-gradient(120deg,#4b3038,#211d30)}
-  .torment-selector label{color:#ffe0a2;font-weight:700}
-  .torment-selector select{flex:1 1 270px;min-width:0;margin:0;padding:8px;border-color:#ad8065}
-  .torment-selector small{width:100%;color:#e2c7af}
+  .torment-sanctuary{overflow:hidden;border-color:#b16c58;background:radial-gradient(ellipse at 80% 0%,#a2394566,transparent 45%),linear-gradient(145deg,#302137,#111827 80%)}
+  .torment-hero{display:grid;grid-template-columns:minmax(0,1fr) 200px;gap:20px;align-items:center}
+  .torment-eyebrow{color:#f3aa7a;font-size:.73rem;font-weight:800;letter-spacing:.18em;text-transform:uppercase}
+  .torment-sanctuary h2{margin:8px 0;color:#ffe4b2;font-size:clamp(1.5rem,3vw,2.4rem)}
+  .torment-intro{max-width:620px;color:#dfc4b8}
+  .torment-emblem{position:relative;display:grid;place-items:center;width:180px;height:180px;justify-self:center;border:1px solid #e6a17499;border-radius:50%;background:radial-gradient(circle,#a53841aa,#3b1c3499 50%,#171827 72%);box-shadow:0 0 35px #c34a4c55,inset 0 0 30px #f4a07133}
+  .torment-emblem::before,.torment-emblem::after{content:"";position:absolute;inset:12px;border:1px solid #f1bd8888;transform:rotate(45deg);border-radius:20%}
+  .torment-emblem::after{inset:24px;transform:rotate(-45deg);border-color:#e57d7188}
+  .torment-emblem span{z-index:1;font-size:4rem;filter:drop-shadow(0 0 16px #ff8d51);animation:float 3s ease-in-out infinite}
+  .torment-current{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:8px 0 18px;padding:12px 15px;border:1px solid #c78667;border-radius:12px;background:linear-gradient(110deg,#5b3039,#251d30);box-shadow:inset 0 1px #fff2}
+  .torment-current small{color:#e6bc9d;text-transform:uppercase;letter-spacing:.09em;font-weight:700}
+  .torment-current strong{color:#ffe2af;font:700 1.2rem Georgia,serif}
+  .torment-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+  .torment-stat{min-width:0;padding:12px;border:1px solid #835d58;border-radius:10px;background:#171923cc}
+  .torment-stat small,.torment-stat strong{display:block}
+  .torment-stat small{color:#d8b7a3;font-size:.75rem}
+  .torment-stat strong{color:#ffd39e;font-size:1.15rem;font-variant-numeric:tabular-nums}
+  .torment-picker{margin-top:20px;border:1px solid #ad765c;border-radius:12px;background:#151724cc}
+  .torment-picker summary{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 16px;cursor:pointer;list-style:none;color:#ffe3b5;font-weight:700}
+  .torment-picker summary::-webkit-details-marker{display:none}
+  .torment-picker summary::after{content:"⌄";font-size:1.5rem;color:#f7b981;transition:transform .2s}
+  .torment-picker[open] summary::after{transform:rotate(180deg)}
+  .torment-picker summary:focus-visible{outline:2px solid #8ce2ff;outline-offset:2px;border-radius:10px}
+  .torment-picker summary small{display:block;color:#ceaa9c;font-size:.76rem;font-weight:400}
+  .torment-options{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,210px),1fr));gap:8px;padding:0 12px 12px}
+  .torment-option{display:grid;gap:5px;text-align:left;min-width:0;margin:0;padding:12px;border-color:#795050;background:linear-gradient(145deg,#382733,#1d1b2b)}
+  .torment-option:hover:not(:disabled){border-color:#f0b37e;background:linear-gradient(145deg,#663b3b,#302238)}
+  .torment-option[aria-pressed="true"]{border-color:#ffc47f;background:linear-gradient(145deg,#75403c,#3c2636);box-shadow:inset 0 0 0 1px #ffc47f66,0 0 14px #e9684b44}
+  .torment-option:disabled{opacity:.65}
+  .torment-option strong{color:#ffe0b0;font:700 1rem Georgia,serif}
+  .torment-option small{color:#ddc0b3;font-size:.75rem}
+  .torment-option .torment-option-state{color:#f8bf89;font-size:.72rem;font-weight:700}
+  .torment-note{margin:16px 0 0;color:#dfc4b8;font-size:.86rem}
+  #torment-status:not(:empty){margin:12px 0 0;color:#ffd9a8;font-weight:700}
+  @media(max-width:600px){.torment-hero{grid-template-columns:minmax(0,1fr) 90px;gap:10px}.torment-emblem{width:85px;height:85px}.torment-emblem::before{inset:7px}.torment-emblem::after{inset:14px}.torment-emblem span{font-size:2.4rem}.torment-stat{padding:9px 6px}.torment-stat strong{font-size:1rem}}
   .expedition-nav{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,170px),1fr));gap:7px;margin:16px 0}
   .expedition-nav button{margin:0;min-height:48px;border-color:#816449;background:linear-gradient(145deg,#453438,#242332)}
   .expedition-nav button[aria-pressed="true"]{border-color:#f3c987;background:linear-gradient(135deg,#9b653b,#563449);box-shadow:0 0 14px #e6a95244}
@@ -361,11 +392,6 @@
   <div class="row"><b id="lvl"></b><span id="coins"></span><span id="streak"></span></div>
   <div class="bar xp"><div id="xpbar"></div></div>
   <small id="xptxt"></small>
-  <div class="torment-selector">
-    <label for="torment-select">🔥 Tormento global</label>
-    <select id="torment-select" aria-describedby="torment-info"></select>
-    <small id="torment-info"></small>
-  </div>
 </div>
 
 <div class="game-layout">
@@ -377,6 +403,7 @@
   <button type="button" role="tab" id="tab-packs" data-section="packs" aria-controls="packs" aria-selected="false" tabindex="-1">🎁 Sobres</button>
   <button type="button" role="tab" id="tab-battle" data-section="battle" aria-controls="battle" aria-selected="false" tabindex="-1">⚔️ Autobatalla</button>
   <button type="button" role="tab" id="tab-dungeons" data-section="dungeons" aria-controls="dungeons" aria-selected="false" tabindex="-1">🔑 Mazmorras</button>
+  <button type="button" role="tab" id="tab-torment" data-section="torment" aria-controls="torment" aria-selected="false" tabindex="-1">🔥 Tormento</button>
 </div>
 
 <main>
@@ -568,6 +595,32 @@
     <p id="level-dungeon-status"></p>
     <div id="level-dungeon-list" class="expedition-grid"></div>
   </div>
+</div>
+</section>
+
+<section id="torment" role="tabpanel" aria-labelledby="tab-torment" hidden>
+<div class="card torment-sanctuary">
+  <div class="torment-hero">
+    <div>
+      <div class="torment-eyebrow">✦ Santuario de dificultad ✦</div>
+      <h2>Forja tu destino</h2>
+      <p class="torment-intro">Elige el tormento que gobierna tu aventura. Cuanto mayor sea el desafío, mayores serán las recompensas.</p>
+    </div>
+    <div class="torment-emblem" aria-hidden="true"><span>🔥</span></div>
+  </div>
+  <div class="torment-current"><small>Dificultad activa</small><strong id="torment-current"></strong></div>
+  <div class="torment-stats" aria-label="Efectos del tormento activo">
+    <div class="torment-stat"><small>💀 Vida enemiga</small><strong id="torment-hp"></strong></div>
+    <div class="torment-stat"><small>💰 Recompensas</small><strong id="torment-reward"></strong></div>
+    <div class="torment-stat"><small>⚔️ Objetivo de misión</small><strong id="torment-target"></strong></div>
+  </div>
+  <details class="torment-picker" id="torment-picker">
+    <summary id="torment-summary"><span>Elegir tormento <small>Normal y 12 rangos · desbloqueos por nivel</small></span></summary>
+    <div class="torment-options" id="torment-options" aria-label="Niveles de tormento"></div>
+  </details>
+  <p id="torment-status" role="status" aria-live="polite"></p>
+  <p class="torment-note">Las nuevas misiones y enemigos usan el tormento elegido; los que ya están en curso conservan el suyo. Los sobres mejoran sus probabilidades y la tienda mantiene sus ofertas del día.</p>
+  <p class="torment-note">Los objetivos son mecánicas de juego: adapta siempre el ejercicio a tu capacidad.</p>
 </div>
 </section>
 </main>
@@ -1555,22 +1608,36 @@ function render(liveOnly=false){
   renderChar();renderAttributes();renderShop();renderAchievements();renderTorment();renderDungeons();renderTower();renderWeeklyBoss();renderLevelDungeons();renderBattleUpgrades();
 }
 function renderTorment(){
-  const select=$('torment-select');select.replaceChildren();
+  const current=TORMENTS[S.torment],box=$('torment-options');
+  const focused=document.activeElement?.dataset.torment;
+  $('torment-current').textContent=current.name;
+  $('torment-hp').textContent=`×${current.hp}`;
+  $('torment-reward').textContent=`×${current.reward}`;
+  $('torment-target').textContent=`+${S.torment*5}%`;
+  box.replaceChildren();
   TORMENTS.forEach((torment,index)=>{
-    const option=document.createElement('option');
-    option.value=index;option.disabled=S.level<torment.level;
-    option.textContent=`${torment.name} · nivel ${torment.level} · vida ×${torment.hp} · botín ×${torment.reward} · misiones +${index*5}%`;
-    select.appendChild(option);
+    const option=document.createElement('button');
+    const locked=S.level<torment.level,selected=S.torment===index;
+    option.type='button';option.className='torment-option';option.dataset.torment=index;
+    option.disabled=locked;option.setAttribute('aria-pressed',String(selected));
+    option.innerHTML=`<strong>${index?'🔥':'✦'} ${torment.name}</strong>
+      <small>💀 Vida ×${torment.hp} · 💰 Botín ×${torment.reward}<br>⚔️ Misiones +${index*5}%</small>
+      <span class="torment-option-state">${locked?`🔒 Nivel ${torment.level}`:selected?'✦ Activo':'Disponible'}</span>`;
+    box.appendChild(option);
   });
-  select.value=String(S.torment);
-  $('torment-info').textContent='Los cambios se aplican a nuevas misiones y enemigos; los encuentros actuales conservan su tormento. Los sobres mejoran sus probabilidades. Adapta siempre el ejercicio a tu capacidad.';
-}
-$('torment-select').addEventListener('change',event=>{
-  if(!selectTorment(Number(event.target.value))){
-    renderTorment();$('torment-info').textContent='Ese tormento todavía no está disponible.';return;
+  if(focused!==undefined && $('torment-picker').open){
+    box.querySelector(`[data-torment="${focused}"]`)?.focus({preventScroll:true});
   }
-  save();render();
-  $('torment-info').textContent=`${TORMENTS[S.torment].name} seleccionado. Los encuentros y misiones en curso mantienen su tormento. Adapta siempre el ejercicio a tu capacidad.`;
+}
+$('torment-options').addEventListener('click',event=>{
+  const option=event.target.closest('button[data-torment]');
+  if(!option || !$('torment-options').contains(option) || option.disabled) return;
+  if(!selectTorment(Number(option.dataset.torment))){
+    renderTorment();$('torment-status').textContent='Ese tormento todavía no está disponible.';return;
+  }
+  save();$('torment-picker').open=false;render();
+  $('torment-status').textContent=`${TORMENTS[S.torment].name} seleccionado. Las misiones y encuentros en curso mantienen su tormento.`;
+  $('torment-summary').focus({preventScroll:true});
 });
 function renderBattleUpgrades(){
   const box=$('battle-upgrades');box.replaceChildren();
@@ -1923,7 +1990,7 @@ $('inventory-next').onclick=()=>{inventoryPage++;dismantleConfirm=null;renderCha
 $('reset').onclick=()=>{
   const b=$('reset');
   if(b.dataset.armed){clearTimeout(resetTimer);delete b.dataset.armed;b.textContent='Reiniciar partida';
-    S=fresh();dismantleConfirm=null;inventoryPage=0;$('inventory-type').value='all';$('inventory-equipped').value='all';$('pack-result').textContent='';$('pack-stage').classList.remove('opening');$('mission-status').textContent='';save();render();return}
+    S=fresh();dismantleConfirm=null;inventoryPage=0;$('inventory-type').value='all';$('inventory-equipped').value='all';$('pack-result').textContent='';$('pack-stage').classList.remove('opening');$('mission-status').textContent='';$('torment-status').textContent='';save();render();return}
   b.dataset.armed=1;b.textContent='¿Seguro? Pulsa otra vez para borrar';
   resetTimer=setTimeout(()=>{delete b.dataset.armed;b.textContent='Reiniciar partida'},4000);
 };
@@ -1957,6 +2024,7 @@ window.addEventListener('storage',event=>{
   if(event.key!==KEY || event.newValue===null) return;
   try{S=JSON.parse(event.newValue)}
   catch(error){alert('No se puede leer la partida actualizada en otra pestaña.');throw error}
+  $('torment-status').textContent='';
   render();
 });
 </script>
