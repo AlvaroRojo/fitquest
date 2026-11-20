@@ -226,7 +226,7 @@
   #character .character-stat{border-color:#99724e;background:linear-gradient(145deg,#342c37,#161c2b)}
   #character .attribute{border-color:#9a7651;background:linear-gradient(120deg,#45372f,#222332)}
   #character .attribute button{border-color:#ba9061;background:linear-gradient(135deg,#815638,#493146)}
-  #inventory .inventory-item.is-equipped{border:2px solid #e8be6b;background:linear-gradient(135deg,#55422f,#292235);box-shadow:inset 0 0 18px #e8b65b22,0 0 14px #e8b65b33}
+  #inventory .inventory-item.is-equipped{border-width:2px;box-shadow:inset 0 0 18px #e8b65b44,0 0 14px #e8b65b55}
   .equipped-badge{display:inline-block;margin-left:4px;padding:1px 6px;border:1px solid #d5a955;border-radius:999px;background:#604722;color:#ffdf97;font-size:.7rem;font-weight:700;vertical-align:middle}
   .week-card{background:linear-gradient(120deg,#1d4544,#29243b);border-color:#599a8e}
   .bar{background:#0b0e18;box-shadow:inset 0 1px 4px #0009}
@@ -247,10 +247,27 @@
   .pack-offer{display:flex;flex-direction:column;gap:8px;padding:14px;border:1px solid #a87d4c;border-radius:12px;background:linear-gradient(145deg,#493931,#1d2130)}
   .pack-offer strong{color:#ffe0a2}.pack-offer button{margin:0;margin-top:auto}
   .pack-odds{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:3px 8px;color:#d8c6a9;font-size:.8rem}
-  .pack-stage{position:relative;display:grid;place-items:center;min-height:110px;margin:12px 0;border:1px solid #a87d4c;border-radius:12px;background:radial-gradient(ellipse,#765274,#171c2b 70%);overflow:hidden}
-  .pack-emblem{font-size:3.5rem;line-height:1}
-  .pack-stage.opening .pack-emblem{animation:pack-open 1s ease-out}
-  @keyframes pack-open{20%{transform:rotate(-12deg) scale(1.1)}40%{transform:rotate(12deg) scale(1.2)}65%{transform:scale(1.35);filter:drop-shadow(0 0 18px #ffda80)}100%{transform:scale(1)}}
+  .pack-stage{--loot-color:#c4c6cf;--loot-glow:#c4c6cf66;position:relative;display:grid;place-items:center;min-height:190px;margin:12px 0;border:1px solid var(--loot-color);border-radius:12px;background:radial-gradient(ellipse,var(--loot-glow),#171c2b 70%);overflow:hidden}
+  .pack-emblem{position:relative;z-index:2;font-size:4rem;line-height:1}
+  .pack-stage.opening .pack-emblem{animation:pack-open 1.6s ease-out forwards}
+  .pack-stage.opening::before,.pack-stage.opening::after{content:"";position:absolute;width:60px;height:60px;border:3px solid var(--loot-color);border-radius:50%;opacity:0;box-shadow:0 0 25px var(--loot-color);animation:pack-burst 1.6s ease-out}
+  .pack-stage.opening::after{animation-delay:.15s}
+  @keyframes pack-open{15%,35%{transform:rotate(-14deg) scale(1.12)}25%,45%{transform:rotate(14deg) scale(1.2)}55%{transform:scale(1.35);filter:drop-shadow(0 0 25px var(--loot-color))}72%,100%{transform:scale(2);opacity:0}}
+  @keyframes pack-burst{0%,50%{transform:scale(.3);opacity:0}60%{opacity:1}100%{transform:scale(var(--burst-size,3));opacity:0}}
+  .loot-tier[data-tier="0"]{--loot-color:#c4c6cf;--loot-glow:#aab1c733}
+  .loot-tier[data-tier="1"]{--loot-color:#82c88d;--loot-glow:#3aa75a55}
+  .loot-tier[data-tier="2"]{--loot-color:#75bff4;--loot-glow:#318cd966}
+  .loot-tier[data-tier="3"]{--loot-color:#ffd479;--loot-glow:#e9a43c77}
+  .loot-tier[data-tier="4"]{--loot-color:#d29bff;--loot-glow:#a84de388}
+  .loot-tier[data-tier="5"]{--loot-color:#ff8c7c;--loot-glow:#ee4a4277}
+  .loot-tier[data-tier="6"]{--loot-color:#9cfff0;--loot-glow:#4be5dc88}
+  #inventory .inventory-item.loot-tier,#shop .shop-offer.loot-tier{border-color:var(--loot-color);background:radial-gradient(ellipse at 90% 0%,var(--loot-glow),transparent 65%),linear-gradient(145deg,#352d3b,#171c2b);box-shadow:inset 0 1px #fff2,0 0 14px var(--loot-glow)}
+  #inventory .inventory-item.is-equipped{box-shadow:inset 0 0 18px var(--loot-glow),0 0 14px var(--loot-glow)}
+  #character .slot.is-equipped.loot-tier{border-color:var(--loot-color);background:radial-gradient(ellipse at 50% 0%,var(--loot-glow),transparent 70%),linear-gradient(145deg,#352d3b,#171c2b);box-shadow:inset 0 0 14px var(--loot-glow)}
+  .wheel-stage{position:relative;display:grid;place-items:center;min-height:210px;margin:12px 0}
+  .wheel-stage::before{content:"▼";position:absolute;top:0;z-index:2;color:#fff0c8;font-size:1.6rem;text-shadow:0 0 8px #f6a63f}
+  .loot-wheel{display:grid;place-items:center;width:185px;aspect-ratio:1;border:6px solid #e7bb72;border-radius:50%;background:conic-gradient(#a7b3bd 0 51.4deg,#62a576 51.4deg 102.8deg,#4c98c5 102.8deg 154.2deg,#d9a64a 154.2deg 205.6deg,#9b64bf 205.6deg 257deg,#c65a58 257deg 308.4deg,#5ecabc 308.4deg);box-shadow:0 0 22px #e5a46477,inset 0 0 20px #0009;transition:transform 2.8s cubic-bezier(.15,.65,.1,1)}
+  .loot-wheel span{display:grid;place-items:center;width:54px;height:54px;border:2px solid #e8bf7b;border-radius:50%;background:#27202e;font-size:1.6rem}
   .battle-layout{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));gap:12px}
   .battle-layout>.card{margin:0}
   .battle-stage{min-height:360px;background:radial-gradient(ellipse at 50% 80%,#be624b88,transparent 35%),radial-gradient(ellipse at 50% 30%,#71558e,#13152a 70%)}
@@ -290,12 +307,8 @@
   .torment-stat small{color:#d8b7a3;font-size:.75rem}
   .torment-stat strong{color:#ffd39e;font-size:1.15rem;font-variant-numeric:tabular-nums}
   .torment-picker{margin-top:20px;border:1px solid #ad765c;border-radius:12px;background:#151724cc}
-  .torment-picker summary{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 16px;cursor:pointer;list-style:none;color:#ffe3b5;font-weight:700}
-  .torment-picker summary::-webkit-details-marker{display:none}
-  .torment-picker summary::after{content:"⌄";font-size:1.5rem;color:#f7b981;transition:transform .2s}
-  .torment-picker[open] summary::after{transform:rotate(180deg)}
-  .torment-picker summary:focus-visible{outline:2px solid #8ce2ff;outline-offset:2px;border-radius:10px}
-  .torment-picker summary small{display:block;color:#ceaa9c;font-size:.76rem;font-weight:400}
+  .torment-picker h3{margin:0;padding:14px 16px;color:#ffe3b5}
+  .torment-picker h3 small{display:block;color:#ceaa9c;font-size:.76rem;font-weight:400}
   .torment-options{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,210px),1fr));gap:8px;padding:0 12px 12px}
   .torment-option{display:grid;gap:5px;text-align:left;min-width:0;margin:0;padding:12px;border-color:#795050;background:linear-gradient(145deg,#382733,#1d1b2b)}
   .torment-option:hover:not(:disabled){border-color:#f0b37e;background:linear-gradient(145deg,#663b3b,#302238)}
@@ -532,8 +545,15 @@
   <p>Elige un sobre: los más caros y el tormento mejoran tus probabilidades. Solo aparecen rarezas disponibles para tu nivel. Las monedas son del juego, nunca dinero real.</p>
   <p>Todos los objetos de una rareza tienen la misma probabilidad. Los duplicados devuelven el 25 % del precio del sobre.</p>
   <div id="pack-list" class="pack-list"></div>
-  <div id="pack-stage" class="pack-stage" aria-hidden="true"><span class="pack-emblem">🎁</span></div>
+  <div id="pack-stage" class="pack-stage loot-tier" data-tier="0" aria-hidden="true"><span class="pack-emblem">🎁</span></div>
   <p id="pack-result" class="pack-result" role="status" aria-live="polite"></p>
+  <section class="armory-section" aria-labelledby="wheel-title">
+    <h3 id="wheel-title">🎡 Ruleta de daño</h3>
+    <p>Solo otorga espadas, brazales y anillos de daño. Elige un sobre: usa el mismo precio, probabilidades, requisitos y devolución por duplicado.</p>
+    <div id="wheel-list" class="pack-list"></div>
+    <div class="wheel-stage" aria-hidden="true"><div class="loot-wheel" id="loot-wheel"><span>⚔️</span></div></div>
+    <p id="wheel-result" class="pack-result" role="status" aria-live="polite"></p>
+  </section>
 </div>
 </section>
 
@@ -579,8 +599,8 @@
     <button type="button" data-dungeon-view="level" aria-pressed="false" aria-controls="dungeon-level">⚔️ Mazmorras por nivel</button>
   </div>
   <p id="expedition-status" role="status" aria-live="polite"></p>
-  <div id="dungeon-run"></div>
   <div id="dungeon-classic" class="expedition-section">
+    <div id="dungeon-run"></div>
     <h3>🗝️ Mazmorras del vacío</h3>
     <p id="dungeon-keys"></p>
     <p id="dungeon-daily-status"></p>
@@ -591,8 +611,9 @@
   <div id="dungeon-bosses" class="expedition-section" hidden></div>
   <div id="dungeon-level" class="expedition-section" hidden>
     <h3>⚔️ Mazmorras por nivel</h3>
-    <p>Se abren al alcanzar el nivel indicado, sin llaves. Comparten el límite de una expedición diaria con las mazmorras del vacío.</p>
+    <p>Se abren por nivel, sin llaves. Cada expedición enfrenta automáticamente a un boss, incluso con el juego cerrado. Comparten el límite diario con las mazmorras del vacío.</p>
     <p id="level-dungeon-status"></p>
+    <div id="level-dungeon-run"></div>
     <div id="level-dungeon-list" class="expedition-grid"></div>
   </div>
 </div>
@@ -614,10 +635,10 @@
     <div class="torment-stat"><small>💰 Recompensas</small><strong id="torment-reward"></strong></div>
     <div class="torment-stat"><small>⚔️ Objetivo de misión</small><strong id="torment-target"></strong></div>
   </div>
-  <details class="torment-picker" id="torment-picker">
-    <summary id="torment-summary"><span>Elegir tormento <small>Normal y 12 rangos · desbloqueos por nivel</small></span></summary>
+  <div class="torment-picker">
+    <h3>Elegir tormento <small>Normal y 12 rangos · desbloqueos por nivel</small></h3>
     <div class="torment-options" id="torment-options" aria-label="Niveles de tormento"></div>
-  </details>
+  </div>
   <p id="torment-status" role="status" aria-live="polite"></p>
   <p class="torment-note">Las nuevas misiones y enemigos usan el tormento elegido; los que ya están en curso conservan el suyo. Los sobres mejoran sus probabilidades y la tienda mantiene sus ofertas del día.</p>
   <p class="torment-note">Los objetivos son mecánicas de juego: adapta siempre el ejercicio a tu capacidad.</p>
@@ -869,7 +890,7 @@ const globalStats=()=>({
 });
 const inventoryEquippedFirst=ids=>{
   const equipped=new Set(Object.values(S.eq));
-  return [...ids.filter(id=>equipped.has(id)),...ids.filter(id=>!equipped.has(id))];
+  return [...ids].sort((a,b)=>Number(equipped.has(b))-Number(equipped.has(a)) || ITEM[b].tier-ITEM[a].tier);
 };
 const target = (ex,l) => Math.max(ex.base, Math.round(ex.base*Math.min(2,1+0.05*(l-1))/ex.step[0])*ex.step[0]);
 const BATTLE_INTERVAL=10000, OFFLINE_LIMIT=8*60*60*1000;
@@ -897,7 +918,7 @@ function packOdds(pack,level,torment=0){
   const total=eligible.reduce((sum,weight)=>sum+weight,0);
   return eligible.map(weight=>weight/total);
 }
-function openPack(id){
+function drawPack(id,stat=null){
   const pack=PACKS.find(option=>option.id===id);
   if(!pack||S.level<pack.level||S.coins<pack.cost) return null;
   const odds=packOdds(pack,S.level,S.torment);
@@ -907,7 +928,7 @@ function openPack(id){
     if(roll<odds[i]){tier=i;break}
     roll-=odds[i];
   }
-  const pool=ITEMS.filter(item=>item.tier===tier&&item.lvl<=S.level);
+  const pool=ITEMS.filter(item=>item.tier===tier&&item.lvl<=S.level&&(!stat||item.stat===stat));
   const item=pool[Math.floor(Math.random()*pool.length)];
   const duplicate=S.owned.includes(item.id),refund=duplicate?Math.floor(pack.cost/4):0;
   S.coins-=pack.cost;
@@ -915,10 +936,11 @@ function openPack(id){
   else S.owned.push(item.id);
   S.packsOpened++;
   const message=`${TIER_ICONS[tier]} ${TIER_NAMES[tier]}: ${item.name}${duplicate?` · duplicado, +${refund} monedas`:' · añadido al inventario'}`;
-  log(`🎁 ${pack.name}: ${message}`);
+  log(`${stat==='dmg'?'🎡 Ruleta de daño':'🎁 '+pack.name}: ${message}`);
   unlockAchievements();
-  return message;
+  return {message,tier,item};
 }
+function openPack(id){return drawPack(id)?.message??null}
 const DUNGEONS=[
   {id:'crypt',name:'Cripta de las Sombras',description:'Los ecos de la primera expedición.',hp:36,reward:20,days:0},
   {id:'mire',name:'Pantano de las Almas',description:'Voces bajo el agua oscura.',hp:42,reward:23,days:7},
@@ -1027,6 +1049,14 @@ S.tower ??= {floor:1,hp:towerMaxHp(1),keys:0,lastAttack:null};
 S.weeklyBoss ??= {index:0,hp:WEEKLY_BOSSES[0].hp,lastAttackWeek:null};
 S.torment ??= 0;
 if(S.dungeonRun && S.dungeonRun.torment==null) S.dungeonRun.torment=0;
+if(S.dungeonRun && dungeonById(S.dungeonRun.id)?.level!=null && S.dungeonRun.autoUpdated==null){
+  const run=S.dungeonRun,dungeon=dungeonById(run.id);
+  const previousMax=dungeonMaxHp(dungeon,run.stage,run.torment);
+  run.hp=run.hp/previousMax*dungeonMaxHp(dungeon,DUNGEON_ENEMIES-1,run.torment);
+  run.rewardEnemies=DUNGEON_ENEMIES-run.stage;
+  run.stage=DUNGEON_ENEMIES-1;
+  run.autoUpdated=Date.now();
+}
 if(!Object.hasOwn(S.tower,'torment')) S.tower.torment=S.tower.floor<=TOWER_FLOORS&&S.tower.hp<towerMaxHp(S.tower.floor)?0:null;
 if(!Object.hasOwn(S.weeklyBoss,'torment')) S.weeklyBoss.torment=WEEKLY_BOSSES[S.weeklyBoss.index]&&S.weeklyBoss.hp<WEEKLY_BOSSES[S.weeklyBoss.index].hp?0:null;
 let legacyTicks=0;
@@ -1191,6 +1221,7 @@ function hit(dmg,arena='mission'){
   }
 }
 function settleBattle(now=Date.now()){
+  settleLevelDungeon(now);
   const elapsed=Math.max(0,now-S.battleUpdated);
   const capped=Math.min(elapsed,OFFLINE_LIMIT);
   const interval=battleInterval();
@@ -1235,12 +1266,14 @@ function unlockDungeon(id){
 function dungeonMaxHp(dungeon,stage,torment=0){
   return Math.round(dungeon.hp*(stage===DUNGEON_ENEMIES-1?2:1)*TORMENTS[torment].hp);
 }
-function startDungeon(id){
+function startDungeon(id,now=Date.now()){
   const dungeon=dungeonById(id);
   if(!dungeon || (dungeon.level!=null?S.level<dungeon.level:!S.unlockedDungeons.includes(id)) || S.dungeonRun || S.lastDungeonDay===today()) return false;
   S.lastDungeonDay=today();
   const torment=S.torment;
-  S.dungeonRun={id,stage:0,hp:dungeonMaxHp(dungeon,0,torment),torment};
+  const stage=dungeon.level!=null?DUNGEON_ENEMIES-1:0;
+  S.dungeonRun={id,stage,hp:dungeonMaxHp(dungeon,stage,torment),torment};
+  if(dungeon.level!=null){S.dungeonRun.autoUpdated=now;S.dungeonRun.rewardEnemies=DUNGEON_ENEMIES}
   log(`🗝️ Expedición iniciada: ${dungeon.name} · ${TORMENTS[torment].name}`);
   return true;
 }
@@ -1248,7 +1281,7 @@ function attackDungeon(){
   const run=S.dungeonRun;
   if(!run) return false;
   const dungeon=dungeonById(run.id);
-  if(!dungeon) return false;
+  if(!dungeon || dungeon.level!=null) return false;
   const difficulty=TORMENTS[run.torment];
   run.hp-=12*bonus('dmg');
   if(run.hp<=0){
@@ -1263,6 +1296,26 @@ function attackDungeon(){
       S.materials+=fragments;S.dungeonClears++;S.dungeonRun=null;
       log(`🏆 ${dungeon.name} completada: +${fragments} fragmentos`);
     }else run.hp=dungeonMaxHp(dungeon,run.stage,run.torment);
+    unlockAchievements(run.torment);
+  }
+  return true;
+}
+function settleLevelDungeon(now=Date.now()){
+  const run=S.dungeonRun,dungeon=run&&dungeonById(run.id);
+  if(!dungeon || dungeon.level==null) return false;
+  if(now<run.autoUpdated){run.autoUpdated=now;return true}
+  const ticks=Math.floor((now-run.autoUpdated)/BATTLE_INTERVAL);
+  if(!ticks) return false;
+  run.autoUpdated+=ticks*BATTLE_INTERVAL;
+  run.hp-=ticks*12*bonus('dmg');
+  if(run.hp<=0){
+    const difficulty=TORMENTS[run.torment];
+    const coins=run.rewardEnemies*Math.round(dungeon.reward*bonus('coin')*difficulty.reward);
+    const xp=run.rewardEnemies*Math.round(dungeon.reward*bonus('xp')*difficulty.reward);
+    const fragments=Math.round(5*difficulty.reward);
+    S.coins+=coins;gain(xp);S.materials+=fragments;S.kills++;S.dungeonClears++;
+    S.dungeonRun=null;
+    log(`🏆 ${dungeon.name}: boss derrotado (+${coins} 🪙, +${xp} XP, +${fragments} 🔩)`);
     unlockAchievements(run.torment);
   }
   return true;
@@ -1395,7 +1448,7 @@ if(legacyTicks){
 }
 
 const $=id=>document.getElementById(id);
-let dismantleConfirm=null, inventoryPage=0;
+let dismantleConfirm=null, inventoryPage=0, lootTimer=null, wheelRotation=0;
 const INVENTORY_PAGE_SIZE=12;
 function monsterArt(index){
   const colors=['#746b9b','#805c85','#77656f','#8a5270','#696d83','#704e9f','#526f82','#85556c'];
@@ -1625,7 +1678,7 @@ function renderTorment(){
       <span class="torment-option-state">${locked?`🔒 Nivel ${torment.level}`:selected?'✦ Activo':'Disponible'}</span>`;
     box.appendChild(option);
   });
-  if(focused!==undefined && $('torment-picker').open){
+  if(focused!==undefined){
     box.querySelector(`[data-torment="${focused}"]`)?.focus({preventScroll:true});
   }
 }
@@ -1635,9 +1688,8 @@ $('torment-options').addEventListener('click',event=>{
   if(!selectTorment(Number(option.dataset.torment))){
     renderTorment();$('torment-status').textContent='Ese tormento todavía no está disponible.';return;
   }
-  save();$('torment-picker').open=false;render();
+  save();render();
   $('torment-status').textContent=`${TORMENTS[S.torment].name} seleccionado. Las misiones y encuentros en curso mantienen su tormento.`;
-  $('torment-summary').focus({preventScroll:true});
 });
 function renderBattleUpgrades(){
   const box=$('battle-upgrades');box.replaceChildren();
@@ -1662,9 +1714,9 @@ function renderBattleUpgrades(){
   }
 }
 function renderPacks(){
-  const box=$('pack-list');
-  const focused=document.activeElement?.dataset.pack;
-  box.replaceChildren();
+  const box=$('pack-list'),wheelBox=$('wheel-list');
+  const focused=document.activeElement?.dataset.pack,focusedWheel=document.activeElement?.dataset.wheel;
+  box.replaceChildren();wheelBox.replaceChildren();
   for(const pack of PACKS){
     const locked=S.level<pack.level,odds=packOdds(pack,S.level,S.torment);
     const card=document.createElement('div');card.className='pack-offer';
@@ -1673,21 +1725,45 @@ function renderPacks(){
     const button=document.createElement('button');button.type='button';button.dataset.pack=pack.id;
     button.textContent=locked?`Disponible al nivel ${pack.level}`:`Abrir · ${pack.cost} 🪙`;
     button.setAttribute('aria-label',`${button.textContent} ${pack.name}`);
-    button.disabled=locked||S.coins<pack.cost;
+    button.disabled=locked||S.coins<pack.cost||lootTimer!==null;
     button.onclick=()=>{
       settleBattle();
-      const message=openPack(pack.id);
+      const result=drawPack(pack.id);
       save();render();
-      if(!message){$('pack-result').textContent='No se puede abrir este sobre.';return}
-      $('pack-result').textContent=message;
+      if(!result){$('pack-result').textContent='No se puede abrir este sobre.';return}
       const stage=$('pack-stage');
+      stage.dataset.tier=result.tier;
+      stage.style.setProperty('--burst-size',String(2+result.tier*.7));
       stage.classList.remove('opening');
       void stage.offsetWidth;
       stage.classList.add('opening');
+      $('pack-result').textContent='Abriendo sobre...';
+      lootTimer=setTimeout(()=>{lootTimer=null;$('pack-result').textContent=result.message;stage.classList.remove('opening');renderPacks()},1600);
+      renderPacks();
     };
     card.appendChild(button);box.appendChild(card);
+    const wheelCard=document.createElement('div');wheelCard.className='pack-offer';
+    wheelCard.innerHTML=`<strong>🎡 ${pack.name}</strong><small>Desbloqueo: nivel ${pack.level} · ${pack.cost} monedas · solo daño</small><div class="pack-odds" aria-label="Probabilidades actuales">${probabilities}</div>`;
+    const spin=document.createElement('button');spin.type='button';spin.dataset.wheel=pack.id;
+    spin.textContent=locked?`Disponible al nivel ${pack.level}`:`Girar · ${pack.cost} 🪙`;
+    spin.setAttribute('aria-label',`${spin.textContent} con ${pack.name}`);
+    spin.disabled=locked||S.coins<pack.cost||lootTimer!==null;
+    spin.onclick=()=>{
+      settleBattle();const result=drawPack(pack.id,'dmg');
+      save();render();
+      if(!result){$('wheel-result').textContent='No se puede girar la ruleta.';return}
+      const wheel=$('loot-wheel');
+      const target=(360-(result.tier+.5)*360/7)%360;
+      wheelRotation+=1800+(target-wheelRotation%360+360)%360;
+      wheel.style.transform=`rotate(${wheelRotation}deg)`;
+      $('wheel-result').textContent='La ruleta está girando...';
+      lootTimer=setTimeout(()=>{lootTimer=null;$('wheel-result').textContent=result.message;renderPacks()},2800);
+      renderPacks();
+    };
+    wheelCard.appendChild(spin);wheelBox.appendChild(wheelCard);
   }
   if(focused) box.querySelector(`[data-pack="${focused}"]:not(:disabled)`)?.focus({preventScroll:true});
+  if(focusedWheel) wheelBox.querySelector(`[data-wheel="${focusedWheel}"]:not(:disabled)`)?.focus({preventScroll:true});
 }
 function renderAttributes(){
   const box=$('attributes');box.innerHTML='';
@@ -1718,6 +1794,7 @@ function renderChar(){
   for(const sl of EQ_SLOTS){
     const g=GROUPS[sl.g],it=ITEM[S.eq[sl.k]];
     const b=document.createElement('button');b.className=it?'slot is-equipped':'slot';
+    if(it){b.classList.add('loot-tier');b.dataset.tier=it.tier}
     const jewelry=['ring','earring','necklace'].includes(sl.g);
     if(!jewelry) b.style.gridArea=sl.k;
     b.innerHTML=`<b>${g.icon}</b>${it?`${it.name}${upgradeLevel(it.id)?` +${upgradeLevel(it.id)}`:''}<br><span class="ok">+${itemPercent(it)}% ${STAT_TXT[it.stat]}</span>`:`${g.label}${sl.n?' '+sl.n:''}<br>vacío`}`;
@@ -1758,6 +1835,7 @@ function renderChar(){
     const item=ITEM[id];if(!item) continue;
     const worn=Object.values(S.eq).includes(id);
     const row=document.createElement('div');row.className=worn?'inventory-item is-equipped':'inventory-item';
+    row.classList.add('loot-tier');row.dataset.tier=item.tier;
     row.draggable=!worn;
     row.ondragstart=event=>{event.dataTransfer.setData('application/x-fitquest-item',id);event.dataTransfer.effectAllowed='move'};
     row.ondragend=()=>render();
@@ -1804,7 +1882,7 @@ function renderShop(){
     if(!it){const row=document.createElement('div');row.className='shop-offer';row.textContent=`Oferta desconocida: ${id}`;box.appendChild(row);continue}
     const owned=S.owned.includes(it.id),worn=Object.values(S.eq).includes(it.id);
     const sold=S.shopStock.sold.includes(it.id);
-    const row=document.createElement('div');row.className='shop-offer';
+    const row=document.createElement('div');row.className='shop-offer loot-tier';
     row.dataset.tier=it.tier;
     row.innerHTML=`<strong>${GROUPS[it.g].icon} ${it.name}${upgradeLevel(it.id)?` +${upgradeLevel(it.id)}`:''}</strong><small>${TIER_ICONS[it.tier]} ${TIER_NAMES[it.tier]} · +${itemPercent(it)}% ${STAT_TXT[it.stat]} · nivel ${it.lvl}</small>`;
     const b=document.createElement('button');
@@ -1866,13 +1944,25 @@ function renderDungeons(){
     }
     card.appendChild(button);list.appendChild(card);
   }
-  const box=$('dungeon-run');box.innerHTML='';
-  box.hidden=!S.dungeonRun;
+  const box=$('dungeon-run'),levelBox=$('level-dungeon-run');
+  box.innerHTML='';levelBox.innerHTML='';
+  box.hidden=!S.dungeonRun || dungeonById(S.dungeonRun.id).level!=null;
   if(!S.dungeonRun){
     return;
   }
   const run=S.dungeonRun,dungeon=dungeonById(run.id);
   const max=dungeonMaxHp(dungeon,run.stage,run.torment);
+  if(dungeon.level!=null){
+    const species=LEVEL_DUNGEONS.indexOf(dungeon)%MISSION_MONSTERS.length;
+    levelBox.innerHTML=`<div class="expedition-challenge">
+      ${challengeStage(species,'boss','⚔️ Combate automático')}
+      <div class="challenge-details"><span class="challenge-pill">👑 Boss · ${TORMENTS[run.torment].name}</span>
+      <h3>${MISSION_MONSTERS[species].name} · ${dungeon.name}</h3>
+      <p>❤️ ${Math.max(0,Math.ceil(run.hp))} / ${max} · ⚔️ ${Math.round(12*bonus('dmg')*100)/100} cada ${BATTLE_INTERVAL/1000} s</p>
+      <div class="bar hp"><div style="width:${Math.max(0,100*run.hp/max)}%"></div></div>
+      <small>La batalla continúa sin conexión hasta vencer al boss.</small></div></div>`;
+    return;
+  }
   const fighter=document.createElement('div');fighter.className='dungeon-card';
   fighter.innerHTML=`<h3>${dungeon.name} · ${TORMENTS[run.torment].name} · ${run.stage===DUNGEON_ENEMIES-1?'JEFE':'Enemigo '+(run.stage+1)}</h3>
     <div class="arena"><div class="arena-label">Encuentro ${run.stage+1}/${DUNGEON_ENEMIES}</div><div class="battle-icon" id="dungeon-icon">${monsterArt((dungeon.level!=null?LEVEL_DUNGEONS.indexOf(dungeon):DUNGEONS.indexOf(dungeon))+run.stage)}</div></div>
@@ -1956,7 +2046,7 @@ function renderLevelDungeons(){
     const unlocked=S.level>=dungeon.level;
     const card=document.createElement('div');card.className='dungeon-card';
     const difficulty=TORMENTS[S.torment];
-    card.innerHTML=`<div class="chapter">${unlocked?'🔓 Disponible':`🔒 Nivel ${dungeon.level}`}</div><h3>🏰 ${dungeon.name}</h3><p>${dungeon.description}</p><small>${difficulty.name} · ❤️ ${dungeonMaxHp(dungeon,0,S.torment)} · 👹 jefe ${dungeonMaxHp(dungeon,DUNGEON_ENEMIES-1,S.torment)} · 🪙 ${Math.round(dungeon.reward*difficulty.reward)} monedas y XP por enemigo antes de bonos</small>`;
+    card.innerHTML=`<div class="chapter">${unlocked?'🔓 Disponible':`🔒 Nivel ${dungeon.level}`}</div><h3>🏰 ${dungeon.name}</h3><p>${dungeon.description}</p><small>${difficulty.name} · 👹 boss ${dungeonMaxHp(dungeon,DUNGEON_ENEMIES-1,S.torment)} HP · 🪙 ${DUNGEON_ENEMIES*Math.round(dungeon.reward*difficulty.reward)} monedas y XP antes de bonos · ${Math.round(5*difficulty.reward)} fragmentos</small>`;
     const button=document.createElement('button');button.type='button';
     button.textContent=unlocked?'Iniciar expedición':`Disponible al nivel ${dungeon.level}`;
     button.disabled=!unlocked||!!S.dungeonRun||S.lastDungeonDay===today();
@@ -1990,7 +2080,7 @@ $('inventory-next').onclick=()=>{inventoryPage++;dismantleConfirm=null;renderCha
 $('reset').onclick=()=>{
   const b=$('reset');
   if(b.dataset.armed){clearTimeout(resetTimer);delete b.dataset.armed;b.textContent='Reiniciar partida';
-    S=fresh();dismantleConfirm=null;inventoryPage=0;$('inventory-type').value='all';$('inventory-equipped').value='all';$('pack-result').textContent='';$('pack-stage').classList.remove('opening');$('mission-status').textContent='';$('torment-status').textContent='';save();render();return}
+    clearTimeout(lootTimer);lootTimer=null;S=fresh();dismantleConfirm=null;inventoryPage=0;$('inventory-type').value='all';$('inventory-equipped').value='all';$('pack-result').textContent='';$('wheel-result').textContent='';$('pack-stage').classList.remove('opening');$('mission-status').textContent='';$('torment-status').textContent='';save();render();return}
   b.dataset.armed=1;b.textContent='¿Seguro? Pulsa otra vez para borrar';
   resetTimer=setTimeout(()=>{delete b.dataset.armed;b.textContent='Reiniciar partida'},4000);
 };
@@ -2002,16 +2092,17 @@ render();
 save();
 setInterval(()=>{
   const previous=S.battleUpdated;
+  const previousRun=S.dungeonRun,previousRunUpdated=previousRun?.autoUpdated;
   const previousCoins=S.coins,previousLevel=S.level,previousAchievements=S.achievements.length;
   settleBattle();
-  if(S.battleUpdated!==previous){
+  if(S.battleUpdated!==previous || previousRun!==S.dungeonRun || previousRunUpdated!==S.dungeonRun?.autoUpdated){
     save();render(true);
     if(!$('store').hidden && (S.coins!==previousCoins || S.level!==previousLevel)) renderShop();
     if(!$('character').hidden && S.coins!==previousCoins) renderAttributes();
     if(!$('achievements').hidden && S.achievements.length!==previousAchievements) renderAchievements();
     if(S.level!==previousLevel) renderTorment();
-    if(!$('dungeons').hidden && (S.level!==previousLevel || S.achievements.length!==previousAchievements)){
-      renderTower();renderWeeklyBoss();renderLevelDungeons();
+    if(!$('dungeons').hidden && (S.level!==previousLevel || S.achievements.length!==previousAchievements || previousRun!==S.dungeonRun || previousRunUpdated!==S.dungeonRun?.autoUpdated)){
+      renderDungeons();renderTower();renderWeeklyBoss();renderLevelDungeons();
     }
     if(!$('battle').hidden && S.coins!==previousCoins) renderBattleUpgrades();
     if(!$('battle').hidden) animateHit('battle-icon');

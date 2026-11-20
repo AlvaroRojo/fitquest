@@ -87,7 +87,9 @@ eliminarla.
   vaciarlo. La joyería se muestra por separado. El aspecto del héroe evoluciona al
   alcanzar +20 %, +60 % y +120 % de bonificación total de daño; puede volver
   a una apariencia anterior si se reduce ese bono. Los objetos equipados se
-  muestran primero en el inventario. Desmantela objetos no equipados con
+  muestran primero en el inventario; dentro de los equipados y los no
+  equipados se ordenan de mayor a menor rareza. Sus fondos reflejan la rareza.
+  Desmantela objetos no equipados con
   dos pulsaciones: dan 2, 5, 12, 25, 40, 65 o 100 fragmentos según su rareza. El inventario
   se puede filtrar por tipo y estado y muestra hasta 12 objetos por página.
   Puedes usar fragmentos para mejorar un objeto sin un máximo de nivel; cada mejora añade un 1 %
@@ -119,7 +121,12 @@ eliminarla.
   actuales se muestran antes de comprar.
   Cada objeto de una rareza tiene igual probabilidad. Un duplicado devuelve
   el 25 % del precio. La compra se guarda inmediatamente, antes de mostrar la
-  animación, que respeta la preferencia del sistema de reducir movimiento.
+  animación de explosión, más intensa según la rareza, que respeta la
+  preferencia del sistema de reducir movimiento. La **ruleta de daño** permite
+  elegir cualquiera de los sobres con las mismas probabilidades, precio y
+  devolución de duplicados, pero solo entrega espadas, brazos y anillos de
+  daño. Las tiradas de la ruleta también cuentan como sobres abiertos. El
+  resultado se guarda antes de comenzar la animación.
 - **Autobatalla:** siempre está activa y recorre 16 tipos de monstruos.
   Los élites y jefes de la arena son únicamente visuales: su vida y botín
   siguen la misma progresión que los demás enemigos de arena.
@@ -163,11 +170,16 @@ eliminarla.
 - **Mazmorras por nivel:** ocho expediciones adicionales se desbloquean
   automáticamente entre los niveles 5 y 75 sin consumir llaves. Comparten el
   límite de una expedición iniciada al día y el encuentro activo con las
-  mazmorras anteriores; tienen las mismas reglas de combate y recompensas.
-  Los nuevos progresos empiezan desde cero al actualizar una partida existente,
-  sin alterar las mazmorras, llaves o expediciones anteriores.
-- **Tormento global:** en la pestaña **Tormento**, abre «Elegir tormento» para
-  comparar los efectos y seleccionar un rango disponible. El santuario muestra
+  mazmorras anteriores. Cada una enfrenta a un único boss automáticamente:
+  un golpe de 12 de daño base cada 10 segundos con los bonos generales, incluso
+  con el juego cerrado y sin límite de tiempo sin conexión. Al vencer se
+  reciben las monedas y XP de tres enemigos y 5 fragmentos, con los bonos y el
+  tormento fijado. Las expediciones por nivel que ya estaban en curso pasan al
+  boss conservando la proporción de vida restante y las recompensas pendientes;
+  el combate automático
+  comienza al cargar esta versión. Las mazmorras anteriores siguen manuales.
+- **Tormento global:** en la pestaña **Tormento**, todos los rangos están
+  visibles para comparar sus efectos y seleccionar uno disponible. El santuario muestra
   la dificultad activa; los rangos bloqueados indican el nivel necesario.
   Hay Normal y doce rangos,
   desbloqueados cada diez niveles desde el 10 hasta el 120. Los rangos I a XII

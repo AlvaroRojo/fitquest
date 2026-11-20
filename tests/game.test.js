@@ -255,6 +255,17 @@ test('equipped inventory items sort first without changing the saved order', () 
   })()`),true);
 });
 
+test('inventory sorts equipped items first and rarity descending within each group', () => {
+  const g=game();
+  assert.equal(g.run(`(() => {
+    S=fresh(); S.owned=['sword_0_0','shield_5_0','helmet_1_0','arms_4_0','ring_6_0'];
+    S.eq={sword:'sword_0_0',arms:'arms_4_0'};
+    const result=inventoryEquippedFirst(S.owned);
+    return JSON.stringify(result)===JSON.stringify(['arms_4_0','sword_0_0','ring_6_0','shield_5_0','helmet_1_0']) &&
+      S.owned[0]==='sword_0_0';
+  })()`),true);
+});
+
 test('hero appearance tiers follow total damage power and can decrease', () => {
   const g=game();
   assert.equal(g.run(`(() => {
@@ -787,19 +798,49 @@ test('level dungeons require level, use no keys and share the daily expedition l
   })()`),true);
 });
 
-test('level dungeon runs persist and use the existing combat flow', () => {
+test('level dungeon boss fights automatically offline and preserves progress', () => {
   const g=game();
   assert.equal(g.run(`(() => {
     S=fresh(); S.level=5; S.achievements=ACHIEVEMENTS.map(a=>a.id);
-    if(!startDungeon('level-5') || !attackDungeon()) return false;
+    if(!startDungeon('level-5',1000) || attackDungeon() ||
+      S.dungeonRun.stage!==2 || S.dungeonRun.hp!==100) return false;
+    settleLevelDungeon(11000);
+    if(S.dungeonRun.hp!==100-12*bonus('dmg')) return false;
     save(); return true;
   })()`),true);
   const restored=game(g.saved());
   assert.equal(restored.run(`(() => {
-    if(S.dungeonRun.id!=='level-5' || S.dungeonRun.hp>=LEVEL_DUNGEONS[0].hp) return false;
-    let attacks=0;
-    while(S.dungeonRun && attacks++<100) attackDungeon();
-    return !S.dungeonRun && S.dungeonClears===1 && S.kills===3;
+    if(S.dungeonRun.id!=='level-5' || S.dungeonRun.hp>=100) return false;
+    settleLevelDungeon(101000);
+    const snapshot=JSON.stringify([S.coins,S.xp,S.materials,S.kills,S.dungeonClears]);
+    settleLevelDungeon(9999999);
+    return !S.dungeonRun && S.dungeonClears===1 && S.kills===1 &&
+      snapshot===JSON.stringify([S.coins,S.xp,S.materials,S.kills,S.dungeonClears]);
+  })()`),true);
+});
+
+test('legacy level dungeon encounter migrates to boss without losing health proportion', () => {
+  const first=game();
+  first.run(`S=fresh(); S.level=10; S.dungeonRun={id:'level-5',stage:1,hp:25,torment:0}; save()`);
+  const restored=game(first.saved());
+  assert.equal(restored.run(`S.dungeonRun.stage===2 && S.dungeonRun.hp===50 &&
+    S.dungeonRun.rewardEnemies===2 && Number.isFinite(S.dungeonRun.autoUpdated)`),true);
+});
+
+test('level boss uses locked torment and grants pending rewards exactly once after long offline progress', () => {
+  const g=game();
+  assert.equal(g.run(`(() => {
+    S=fresh(); S.level=120; S.achievements=ACHIEVEMENTS.map(a=>a.id);
+    S.torment=12; S.battleUpdated=1000;
+    if(!startDungeon('level-5',1000)) return false;
+    const coin=3*Math.round(30*bonus('coin')*22.5),xp=3*Math.round(30*bonus('xp')*22.5);
+    selectTorment(0,1000);
+    if(S.dungeonRun.torment!==12 || S.dungeonRun.hp!==8500) return false;
+    settleLevelDungeon(1000+30*60*60*1000);
+    if(S.dungeonRun || S.coins!==coin || S.xp!==xp ||
+      S.materials!==Math.round(5*22.5) || S.kills!==1 || S.dungeonClears!==1) return false;
+    settleLevelDungeon(1000+60*60*60*1000);
+    return S.coins===coin && S.xp===xp && S.dungeonClears===1;
   })()`),true);
 });
 
@@ -823,7 +864,7 @@ test('torment unlocks by level and rejects locked or invalid selections', () => 
 
 test('torment sanctuary displays unlocks and saves the selected difficulty', () => {
   const elements=Object.fromEntries(['torment-current','torment-hp','torment-reward','torment-target',
-    'torment-options','torment-picker','torment-status','torment-summary'].map(id=>[id,{textContent:''}]));
+    'torment-options','torment-status'].map(id=>[id,{textContent:''}]));
   const box=elements['torment-options'];
   box.children=[];
   box.replaceChildren=()=>{box.children=[]};
@@ -831,7 +872,6 @@ test('torment sanctuary displays unlocks and saves the selected difficulty', () 
   box.contains=child=>box.children.includes(child);
   box.addEventListener=(type,handler)=>{box.handler=handler};
   box.querySelector=()=>null;
-  elements['torment-summary'].focus=()=>{elements['torment-summary'].focused=true};
   const state={level:10,torment:0};
   let saves=0;
   const context=vm.createContext({
@@ -854,18 +894,15 @@ test('torment sanctuary displays unlocks and saves the selected difficulty', () 
   const click=option=>box.handler({target:{closest:()=>option}});
   click(box.children[2]);
   assert.equal(saves,0);
-  elements['torment-picker'].open=true;
   click(box.children[1]);
   assert.equal(saves,1);
   assert.equal(state.torment,1);
-  assert.equal(elements['torment-picker'].open,false);
   assert.equal(elements['torment-current'].textContent,'Tormento I');
   assert.equal(elements['torment-hp'].textContent,'×1.75');
   assert.equal(elements['torment-reward'].textContent,'×1.4');
   assert.equal(elements['torment-target'].textContent,'+5%');
   assert.equal(box.children[1]['aria-pressed'],'true');
   assert.match(elements['torment-status'].textContent,/Tormento I seleccionado/);
-  assert.equal(elements['torment-summary'].focused,true);
 });
 
 test('torment scales expedition health and rewards and remains locked through stages', () => {
@@ -902,7 +939,7 @@ test('torment applies to level dungeons and preserves existing encounters', () =
     if(ordinary(0)!==ordinary(4)) return false;
     S=fresh(); S.level=40; selectTorment(4);
     if(!startDungeon('level-5')) return false;
-    return S.dungeonRun.torment===4 && S.dungeonRun.hp===LEVEL_DUNGEONS[0].hp*6;
+    return S.dungeonRun.torment===4 && S.dungeonRun.hp===LEVEL_DUNGEONS[0].hp*12;
   })()`),true);
 });
 
@@ -1325,5 +1362,20 @@ test('pack draws include high unlocked tiers and duplicates refund by pack price
     S.materials=0;
     if(!dismantle(S.owned[0]) || S.materials!==65) return false;
     return true;
+  })()`),true);
+});
+
+test('damage roulette uses pack costs and odds but awards only damage equipment', () => {
+  const g=game();
+  assert.equal(g.run(`(() => {
+    S=fresh(); S.level=40; S.coins=1000000; S.achievements=ACHIEVEMENTS.map(a=>a.id);
+    for(let i=0;i<100;i++){
+      const result=drawPack('arcane','dmg');
+      if(!result || result.item.stat!=='dmg' || result.item.tier!==result.tier || result.item.lvl>S.level) return false;
+    }
+    Math.random=()=>0;
+    S=fresh(); S.coins=200; S.achievements=ACHIEVEMENTS.map(a=>a.id);
+    const first=drawPack('basic','dmg'),second=drawPack('basic','dmg');
+    return first.item.stat==='dmg' && second.message.includes('duplicado') && S.coins===25 && S.packsOpened===2;
   })()`),true);
 });
