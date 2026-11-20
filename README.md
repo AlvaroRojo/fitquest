@@ -160,6 +160,18 @@ eliminarla.
   mazmorras anteriores; tienen las mismas reglas de combate y recompensas.
   Los nuevos progresos empiezan desde cero al actualizar una partida existente,
   sin alterar las mazmorras, llaves o expediciones anteriores.
+- **Tormento:** la dificultad se elige en el portal de desafíos y afecta solo
+  a las mazmorras, la torre y los bosses. Normal no cambia nada; Tormento I,
+  II, III y IV se desbloquean en los niveles 10, 20, 30 y 40. Multiplican la
+  vida por 1,75/2,5/4/6 y las recompensas de monedas, XP y fragmentos por
+  1,4/1,8/2,5/3,5, respectivamente. La vida y los fragmentos se redondean al
+  entero más próximo; las monedas y la XP se redondean tras aplicar también
+  sus bonos habituales.
+  La dificultad queda fijada al iniciar una expedición o al atacar por primera
+  vez cada planta o boss; cambiar el selector no modifica los encuentros en
+  curso. Una planta o boss que ya estaba dañado al actualizar y cualquier
+  expedición en curso permanecen en Normal hasta completarse. Los encuentros
+  sin iniciar usan la dificultad seleccionada al comenzar.
 - **Progresión a largo plazo:** hay logros por 7, 30, 90, 180 y 365 días
   distintos en los que se completa al menos una misión. Se cuentan a partir
   de esta actualización porque las partidas anteriores no guardaban ese
