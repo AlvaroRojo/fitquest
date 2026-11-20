@@ -25,6 +25,44 @@ function game(saved) {
   };
 }
 
+test('city destinations select one accessible tab and return to the city', () => {
+  const sections = ['city', 'adventure', 'character', 'store', 'achievements', 'packs', 'battle', 'dungeons'];
+  const panels = Object.fromEntries(sections.map(id => [id, { hidden: id !== 'city' }]));
+  const element = dataset => ({
+    dataset, attributes: {}, handlers: {},
+    addEventListener(type, handler) { this.handlers[type] = handler; },
+    setAttribute(name, value) { this.attributes[name] = value; },
+    focus() { focused = this; },
+  });
+  let focused;
+  const tabs = sections.map(section => element({ section }));
+  const pins = sections.slice(1).map(mapTarget => element({ mapTarget }));
+  const context = vm.createContext({
+    document: {
+      querySelectorAll: selector => selector === '.navigation [role="tab"]' ? tabs : pins,
+    },
+    $: id => panels[id],
+    render: () => {},
+  });
+  vm.runInContext(
+    script.slice(script.indexOf('const navigationButtons='), script.indexOf('function animateHit(')) +
+    script.slice(script.indexOf('for(const button of navigationButtons){', script.indexOf('function journeyMarkup(')), script.indexOf('function render(liveOnly=')),
+    context,
+  );
+  for (const pin of pins) {
+    pin.handlers.click();
+    assert.equal(focused.dataset.section, pin.dataset.mapTarget);
+    for (const tab of tabs) {
+      const selected = tab.dataset.section === pin.dataset.mapTarget;
+      assert.equal(tab.attributes['aria-selected'], String(selected));
+      assert.equal(tab.tabIndex, selected ? 0 : -1);
+      assert.equal(panels[tab.dataset.section].hidden, !selected);
+    }
+    tabs[0].handlers.click();
+    assert.equal(panels.city.hidden, false);
+  }
+});
+
 test('migrates existing saves without changing equipment or progress', () => {
   const old = {
     level: 5, xp: 20, coins: 77, owned: ['sword_0_0'],
