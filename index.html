@@ -59,6 +59,11 @@
   .danger{border-color:#f08493;color:#ffe1e7}
   .dungeon-card{border:1px solid #514475;border-radius:10px;padding:12px;margin:10px 0;background:#12162bdd}
   .chapter{font-size:.75em;color:#9be6d6;letter-spacing:.1em;text-transform:uppercase}
+  .key-gem{display:inline-grid;place-items:center;width:44px;height:44px;border:1px solid #e3c56d;border-radius:12px;background:linear-gradient(145deg,#665225,#251b3d);font-size:1.55rem;box-shadow:0 0 16px #f4d15d55;animation:float 3s ease-in-out infinite}
+  .week-card{border:1px solid #65cdb7;background:linear-gradient(120deg,#1c3b4b,#242447);border-radius:12px;padding:14px;margin:12px 0}
+  .milestones{display:flex;gap:8px;flex-wrap:wrap}
+  .milestone{padding:7px 10px;border:1px solid #746aaf;border-radius:8px;background:#1a2039}
+  .milestone.done{color:#a5f8df;border-color:#68cbb2}
   @keyframes float{50%{transform:translateY(-8px)}}
   @keyframes portal{50%{transform:scale(1.1);opacity:.55}}
   @keyframes pulse{50%{opacity:.45}}
@@ -103,8 +108,13 @@
 <div class="card">
   <h2>Misiones activas <small id="cnt"></small></h2>
   <div id="missions"></div>
-  <p class="notice"><small>Adapta los ejercicios a tu capacidad, descansa cuando lo necesites y detente si sientes dolor. No es asesoramiento médico.</small></p>
+  <p><small>Recompensa completa en las primeras 6 misiones del día. Desde la séptima, la XP, el daño y las monedas de misión bajan al 25 %. La primera misión diaria puede dar una llave; puedes seguir completando misiones sin límite.</small></p>
+  <p class="notice"><small>No hay límite de misiones, pero hacer más ejercicio no es necesario para conseguir los hitos de actividad. Adapta cada ejercicio a tu capacidad, descansa cuando lo necesites y detente si sientes dolor. No es asesoramiento médico.</small></p>
   <button id="rest">😴 Día de descanso (1 por semana, mantiene racha)</button>
+</div>
+<div class="card" id="journey">
+  <h2>🗺️ Travesía del héroe</h2>
+  <div id="weekly-progress"></div>
 </div>
 <div class="card"><h2>Registro</h2><div id="log"></div></div>
 <button id="reset">Reiniciar partida</button>
@@ -120,7 +130,7 @@
 <div class="card">
   <h2>🎒 Inventario y desmantelamiento</h2>
   <p id="materials"></p>
-  <p><small>Los fragmentos se guardan para un futuro sistema de fabricación; todavía no se pueden gastar. Los objetos equipados deben desequiparse antes de romperlos.</small></p>
+  <p><small>Usa fragmentos para mejorar objetos hasta +5; cada mejora añade un 1 % a su estadística. Al desmantelar un objeto también se pierde su mejora. Los objetos equipados deben desequiparse antes de romperlos.</small></p>
   <p id="inventory-status" role="status" aria-live="polite"></p>
   <div id="inventory"></div>
 </div>
@@ -128,16 +138,18 @@
 
 <section id="store" role="tabpanel" aria-labelledby="tab-store" hidden>
 <div class="card">
-  <h2>Tienda</h2>
-  <select id="filter"></select>
+  <h2>🛒 Armería arcana</h2>
+  <label for="filter">Tipo</label> <select id="filter"></select>
+  <label for="tier-filter">Rareza</label>
+  <select id="tier-filter"><option value="all">Todas</option><option value="0">Común</option><option value="1">Poco común</option><option value="2">Raro</option><option value="3">Legendario</option></select>
   <div id="shop"></div>
 </div>
 </section>
 
 <section id="achievements" role="tabpanel" aria-labelledby="tab-achievements" hidden>
 <div class="card">
-  <h2>🏆 Sala de logros</h2>
-  <p>Se desbloquean automáticamente y sus mejoras son permanentes.</p>
+  <h2>🏆 Sala de trofeos</h2>
+  <p>Más de 40 retos de misiones, caza, botín, mazmorras y travesía. Se desbloquean automáticamente; sus mejoras son permanentes.</p>
   <div id="achievement-list"></div>
 </div>
 </section>
@@ -169,8 +181,8 @@
 <div class="card">
   <h2>🔑 Mazmorras del vacío</h2>
   <p>Una expedición al día, con tres enemigos. Una llave y los días de actividad requeridos desbloquean cada mazmorra para siempre; el combate es independiente de las misiones y la arena.</p>
-  <p id="dungeon-keys"></p>
-  <p><small>Obtienes una llave con un 3 % de probabilidad al completar una misión, garantizada en la misión 30 sin llave. Solo se generan mientras queden mazmorras por desbloquear. Los días de actividad no tienen que ser consecutivos: descansa cuando lo necesites.</small></p>
+  <div class="row"><span class="key-gem" aria-hidden="true">🗝️</span><p id="dungeon-keys"></p></div>
+  <p><small>La primera misión de cada día tiene un 3 % de probabilidad de dar una llave, garantizada tras 13 días de actividad sin llave. Las misiones extra no generan llaves. Los días de actividad no tienen que ser consecutivos: descansa cuando lo necesites.</small></p>
   <div id="dungeon-run"></div>
   <div id="dungeon-list"></div>
 </div>
@@ -189,9 +201,20 @@ const EXERCISES = [
   {id:'climb', name:'Mountain climbers', unit:'reps', base:30, step:[10,20], value:0.5},
   {id:'bridge',name:'Puente de glúteos', unit:'reps', base:15, step:[5,10], value:1},
   {id:'wall',  name:'Sentadilla isométrica', unit:'seg', base:30, step:[10,30], value:0.3},
+  {id:'march', name:'Marcha en el sitio', unit:'seg', base:60, step:[10,30], value:0.12},
+  {id:'calf', name:'Elevaciones de talones', unit:'reps', base:15, step:[5,10], value:0.8},
+  {id:'chair', name:'Sentarse y levantarse de una silla', unit:'reps', base:10, step:[1,5], value:1},
+  {id:'wallpush', name:'Flexiones en la pared', unit:'reps', base:12, step:[2,6], value:1},
+  {id:'bird', name:'Bird dog', unit:'reps', base:10, step:[2,5], value:1},
+  {id:'deadbug', name:'Dead bug', unit:'reps', base:10, step:[2,5], value:1},
+  {id:'sideleg', name:'Elevaciones laterales de pierna', unit:'reps', base:12, step:[2,6], value:0.8},
+  {id:'step', name:'Pasos laterales', unit:'reps', base:20, step:[5,10], value:0.5},
+  {id:'knee', name:'Elevación de rodillas suave', unit:'reps', base:20, step:[5,10], value:0.5},
+  {id:'armcircle', name:'Círculos de brazos', unit:'seg', base:30, step:[10,15], value:0.25},
 ];
-const SLOTS = 3, MAX_DAILY = 6;   // misiones activas a la vez y completables por día
+const SLOTS = 3;
 const byId = id => EXERCISES.find(e=>e.id===id);
+const EXERCISE_ICONS={squat:'🏋️',push:'💪',plank:'🧘',abs:'🔥',jack:'⚡',lunge:'🦵',burpee:'🌪️',climb:'⛰️',bridge:'🌉',wall:'🛡️',march:'🚶',calf:'👣',chair:'🪑',wallpush:'🧱',bird:'🐦',deadbug:'🪲',sideleg:'🦵',step:'👟',knee:'🌀',armcircle:'🔄'};
 function randomMission(exclude){
   const pool = EXERCISES.filter(e=>!exclude.includes(e.id));
   return pool[Math.floor(Math.random()*pool.length)].id;
@@ -204,8 +227,9 @@ const KEY = 'fitquest-save';
 
 const today = () => { const d=new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; };
 const daysBetween = (a,b) => Math.round((new Date(b)-new Date(a))/864e5);
-const xpNeeded = l => Math.round(100*Math.pow(1.25,l-1));
-const monsterHp = n => Math.round(50*Math.pow(1.2,n));
+const xpNeeded = l => Math.round(100+20*(l-1)+6*(l-1)*(l-1));
+const monsterHp = n => Math.round(50+12*n+2*n*n);
+const missionMonsterHp = n => Math.round(50+4*Math.sqrt(n));
 
 const EQ_SLOTS=[
   {k:'helmet',g:'helmet'},{k:'necklace',g:'necklace'},{k:'earring1',g:'earring',n:1},
@@ -227,14 +251,22 @@ const GROUPS={
 };
 const TIER_PCT=[3,6,10,15], TIER_COST=[40,120,350,900], TIER_LVL=[1,5,10,15];
 const TIER_NAMES=['Común','Poco común','Raro','Legendario'];
+const TIER_ICONS=['⚪','🟢','🔷','🌟'];
 const STAT_TXT={dmg:'daño',xp:'XP',coin:'monedas'};
 const ITEMS=[];
 for(const [g,d] of Object.entries(GROUPS)) for(let t=0;t<4;t++){
   const names=Array.isArray(d.names[t])?d.names[t]:[d.names[t]];
   names.forEach((name,v)=>ITEMS.push({id:`${g}_${t}_${v}`,g,name,stat:d.stat,tier:t,
     pct:Math.round(TIER_PCT[t]*d.w),cost:Math.round(TIER_COST[t]*d.w),lvl:TIER_LVL[t]}));
+  ['del Alba','del Vacío'].forEach((suffix,v)=>ITEMS.push({
+    id:`${g}_${t}_${names.length+v}`,g,name:`${d.label} ${TIER_NAMES[t].toLowerCase()} ${suffix}`,
+    stat:d.stat,tier:t,pct:Math.round(TIER_PCT[t]*d.w),cost:Math.round(TIER_COST[t]*d.w),lvl:TIER_LVL[t]
+  }));
 }
 const ITEM=Object.fromEntries(ITEMS.map(i=>[i.id,i]));
+const upgradeLevel=id=>S.upgrades[id]||0;
+const itemPercent=it=>it.pct+upgradeLevel(it.id);
+const upgradeCost=it=>5+3*upgradeLevel(it.id)+2*it.tier;
 const ACHIEVEMENTS=[
   {id:'mission1',name:'Primer paso',description:'Completa 1 misión',stat:'xp',pct:2,goal:1,value:s=>s.totalMissions},
   {id:'mission10',name:'Aventurero constante',description:'Completa 10 misiones',stat:'dmg',pct:3,goal:10,value:s=>s.totalMissions},
@@ -245,11 +277,31 @@ const ACHIEVEMENTS=[
   {id:'level15',name:'Héroe veterano',description:'Alcanza el nivel 15',stat:'dmg',pct:5,goal:15,value:s=>s.level},
   {id:'pack10',name:'Coleccionista',description:'Abre 10 sobres',stat:'xp',pct:3,goal:10,value:s=>s.packsOpened},
   ...[7,30,90,180,365].map((days,i)=>({id:`days${days}`,name:['Recluta','Viajero','Veterano','Guardián','Leyenda anual'][i],description:`Entrena en ${days} días diferentes`,stat:['xp','coin','dmg','xp','dmg'][i],pct:[2,3,4,5,8][i],goal:days,value:s=>s.activeDays})),
-  {id:'dungeon5',name:'Explorador del vacío',description:'Completa 5 expediciones',stat:'dmg',pct:3,goal:5,value:s=>s.dungeonClears}
+  {id:'dungeon5',name:'Explorador del vacío',description:'Completa 5 expediciones',stat:'dmg',pct:3,goal:5,value:s=>s.dungeonClears},
+  ...[3,14,21,42,63,105,156,240,300].map((days,i)=>({
+    id:`days${days}`,name:`Sendero del héroe ${i+1}`,description:`Completa misiones en ${days} días diferentes`,
+    stat:['xp','coin','dmg'][i%3],pct:1,goal:days,value:s=>s.activeDays
+  })),
+  ...[25,100,250,500,1000].map((count,i)=>({
+    id:`missions-extra-${count}`,name:`Crónicas ${i+1}`,description:`Completa ${count} misiones`,
+    stat:['coin','xp','dmg'][i%3],pct:1,goal:count,value:s=>s.totalMissions
+  })),
+  ...[5,10,50,100,250,500].map((count,i)=>({
+    id:`kills-extra-${count}`,name:`Cazador ${i+1}`,description:`Derrota ${count} monstruos`,
+    stat:['dmg','xp','coin'][i%3],pct:1,goal:count,value:s=>s.kills
+  })),
+  ...[1,10,25,50,100].map((count,i)=>({
+    id:`dungeons-extra-${count}`,name:`Expedicionario ${i+1}`,description:`Completa ${count} expediciones`,
+    stat:['coin','dmg','xp'][i%3],pct:1,goal:count,value:s=>s.dungeonClears
+  })),
+  ...[1,5,20,50].map((count,i)=>({
+    id:`packs-extra-${count}`,name:`Buscatesoros ${i+1}`,description:`Abre ${count} sobres`,
+    stat:['xp','coin','dmg'][i%3],pct:1,goal:count,value:s=>s.packsOpened
+  }))
 ];
 const bonus=stat=>{
   let t=0;
-  for(const id of Object.values(S.eq)){const it=ITEM[id];if(it&&it.stat===stat)t+=it.pct}
+  for(const id of Object.values(S.eq)){const it=ITEM[id];if(it&&it.stat===stat)t+=itemPercent(it)}
   for(const a of ACHIEVEMENTS) if(S.achievements.includes(a.id)&&a.stat===stat)t+=a.pct;
   return 1+t/100;
 };
@@ -257,17 +309,27 @@ const target = (ex,l) => Math.max(ex.base, Math.round(ex.base*Math.min(2,1+0.05*
 const BATTLE_INTERVAL=10000, OFFLINE_LIMIT=8*60*60*1000, PACK_COST=100;
 const DUNGEONS=[
   {id:'crypt',name:'Cripta de las Sombras',description:'Los ecos de la primera expedición.',hp:36,reward:20,days:0},
+  {id:'mire',name:'Pantano de las Almas',description:'Voces bajo el agua oscura.',hp:42,reward:23,days:7},
+  {id:'tower',name:'Torre del Espejo Roto',description:'Sombras que imitan a los héroes.',hp:48,reward:26,days:14},
+  {id:'forge',name:'Forja Espectral',description:'Antiguos guardianes de metal.',hp:54,reward:30,days:21},
   {id:'forest',name:'Bosque Maldito',description:'Raíces y colmillos acechan en la oscuridad.',hp:60,reward:35,days:30},
+  {id:'catacombs',name:'Catacumbas del Eco',description:'Susurros en piedra antigua.',hp:75,reward:42,days:45},
   {id:'abyss',name:'Abismo Carmesí',description:'Un portal abierto hacia enemigos más fuertes.',hp:90,reward:50,days:60},
-  {id:'citadel',name:'Ciudadela de Ceniza',description:'Los centinelas custodian las ruinas.',hp:135,reward:70,days:120},
-  {id:'throne',name:'Trono del Eclipse',description:'Un desafío para héroes veteranos.',hp:200,reward:95,days:180}
+  {id:'observatory',name:'Observatorio Roto',description:'Un cielo repleto de ojos.',hp:110,reward:60,days:75},
+  {id:'citadel',name:'Ciudadela de Ceniza',description:'Los centinelas custodian las ruinas.',hp:135,reward:70,days:90},
+  {id:'throne',name:'Trono del Eclipse',description:'Un desafío para héroes veteranos.',hp:200,reward:95,days:105},
+  {id:'rift',name:'Grieta del Infinito',description:'Las reglas del mundo ya no se aplican.',hp:270,reward:120,days:120},
+  {id:'crown',name:'Corona del Vacío',description:'El desafío de los antiguos.',hp:360,reward:155,days:138},
+  {id:'eternity',name:'Umbral de la Eternidad',description:'La última puerta de la travesía.',hp:480,reward:200,days:156}
 ];
-const KEY_CHANCE=.03, KEY_PITY=30, DUNGEON_ENEMIES=3;
+const KEY_CHANCE=.03, KEY_PITY=13, DUNGEON_ENEMIES=3;
+const FULL_REWARD_MISSIONS=6, WEEKLY_DAYS=3, JOURNEY_CHAPTERS=52;
 
 const fresh = () => ({level:1,xp:0,coins:0,owned:[],eq:{},streak:0,kills:0,
   day:today(),done:{},bonus:{},lastActive:null,lastRest:null,monsterHp:monsterHp(0),log:[],active:pickMissions(),completedToday:0,
   targets:{},totalMissions:0,packsOpened:0,achievements:[],missionKills:0,autoKills:0,autoMonsterHp:monsterHp(0),battleUpdated:Date.now(),
-  keys:0,keyPity:0,unlockedDungeons:['crypt'],dungeonRun:null,lastDungeonDay:null,dungeonClears:0,materials:0,activeDays:0,lastActivityDay:null});
+  keys:0,keyPity:0,unlockedDungeons:['crypt'],dungeonRun:null,lastDungeonDay:null,dungeonClears:0,materials:0,activeDays:0,lastActivityDay:null,
+  weeklyRewards:0,balanceVersion:1,unlimitedMissionsVersion:1,upgrades:{}});
 let S;
 try{S=JSON.parse(localStorage.getItem(KEY)||'null') || fresh()}
 catch(error){alert('No se puede leer la partida guardada. No se ha borrado; revisa los datos del navegador.');throw error}
@@ -287,6 +349,8 @@ S.dungeonClears ??= 0;
 S.materials ??= 0;
 S.activeDays ??= 0;
 S.lastActivityDay ??= null;
+S.weeklyRewards ??= 0;
+S.upgrades ??= {};
 let legacyTicks=0;
 if(S.missionKills==null){
   if(S.autoBattle===true && Number.isFinite(S.battleUpdated)){
@@ -298,8 +362,36 @@ if(S.missionKills==null){
   S.battleUpdated=Date.now();
   delete S.autoBattle;
 }
+if(!S.balanceVersion){
+  const oldXpNeeded=Math.round(100*Math.pow(1.25,S.level-1));
+  if(Number.isFinite(oldXpNeeded) && oldXpNeeded>0) S.xp=Math.min(xpNeeded(S.level)-1,Math.round(S.xp/oldXpNeeded*xpNeeded(S.level)));
+  for(const [hp,kills] of [['monsterHp','missionKills'],['autoMonsterHp','autoKills']]){
+    const oldMax=Math.round(50*Math.pow(1.2,S[kills]));
+    const newMax=hp==='monsterHp'?missionMonsterHp(S[kills]):monsterHp(S[kills]);
+    if(Number.isFinite(oldMax) && oldMax>0) S[hp]=Math.max(0.01,Math.min(newMax,S[hp]/oldMax*newMax));
+  }
+  S.balanceVersion=1;
+}
+if(!S.unlimitedMissionsVersion){
+  for(const id of [...S.active]){
+    if(!S.bonus[id]) continue;
+    const next=randomMission(S.active);
+    S.active[S.active.indexOf(id)]=next;
+    delete S.done[id];delete S.bonus[id];delete S.targets[id];
+  }
+  S.unlimitedMissionsVersion=1;
+}
 
 function log(t){S.log.unshift(t);S.log=S.log.slice(0,40)}
+function claimJourneyRewards(){
+  const reached=Math.min(JOURNEY_CHAPTERS,Math.floor(S.activeDays/WEEKLY_DAYS));
+  while(S.weeklyRewards<reached){
+    const chapter=++S.weeklyRewards;
+    const coins=35+3*chapter,materials=3+Math.min(chapter,20);
+    S.coins+=coins;S.materials+=materials;
+    log(`🌟 Travesía ${chapter}/${JOURNEY_CHAPTERS}: +${coins} monedas y +${materials} fragmentos`);
+  }
+}
 function unlockAchievements(){
   for(const a of ACHIEVEMENTS){
     if(!S.achievements.includes(a.id)&&a.value(S)>=a.goal){
@@ -337,7 +429,7 @@ function hit(dmg,arena='mission'){
     const monster=MONSTERS[S[kills]%MONSTERS.length];
     S[kills]++;S.kills++;
     log(`💀 ${automatic?'Arena':'Misión'}: derrotaste a ${monster} (+${reward} 🪙)`);
-    S[hp]+=monsterHp(S[kills]);
+    S[hp]+=(automatic?monsterHp:missionMonsterHp)(S[kills]);
     unlockAchievements();
   }
 }
@@ -406,9 +498,19 @@ function dismantle(id){
   const item=ITEM[id];
   if(!item || !S.owned.includes(id) || Object.values(S.eq).includes(id)) return false;
   S.owned=S.owned.filter(owned=>owned!==id);
+  delete S.upgrades[id];
   const fragments=[2,5,12,25][item.tier];
   S.materials+=fragments;
   log(`🔨 ${item.name} desmantelado: +${fragments} fragmentos`);
+  return true;
+}
+function upgradeItem(id){
+  const item=ITEM[id];
+  if(!item || !S.owned.includes(id) || upgradeLevel(id)>=5) return false;
+  const cost=upgradeCost(item);
+  if(S.materials<cost) return false;
+  S.materials-=cost;S.upgrades[id]=upgradeLevel(id)+1;
+  log(`✨ ${item.name} mejorado a +${S.upgrades[id]}`);
   return true;
 }
 function placeItem(id,slotKey){
@@ -421,26 +523,25 @@ function placeItem(id,slotKey){
 function completeMission(ex){
   settleBattle();
   rollDay();
-  if(S.completedToday>=MAX_DAILY || !S.active.includes(ex.id) || S.bonus[ex.id]){save();render();return}
+  if(!S.active.includes(ex.id) || S.bonus[ex.id]){save();render();return}
   const tgt=missionTarget(ex), before=S.done[ex.id]||0;
   const units=Math.max(0,tgt-before);
   S.done[ex.id]=tgt;
-  const mult=streakMult();
+  const mult=streakMult()*(S.completedToday<FULL_REWARD_MISSIONS?1:0.25);
   gain(Math.round(units*ex.value*mult*bonus('xp')));
   hit(units*ex.value*bonus('dmg')*mult);
-  S.bonus[ex.id]=1;gain(Math.round(30*mult*bonus('xp')));S.coins+=Math.round(10*bonus('coin'));
+  S.bonus[ex.id]=1;gain(Math.round(30*mult*bonus('xp')));S.coins+=Math.round(10*bonus('coin')*(S.completedToday<FULL_REWARD_MISSIONS?1:0.25));
   log(`✅ Misión completada: ${ex.name} (+bonus)`);
   S.completedToday++;
   S.totalMissions++;
-  awardKey();
+  if(S.completedToday===1) awardKey();
   if(S.lastActivityDay!==today()){S.activeDays++;S.lastActivityDay=today()}
+  claimJourneyRewards();
   unlockAchievements();
-  if(S.completedToday<MAX_DAILY){
-    const next=randomMission(S.active);
-    S.active[S.active.indexOf(ex.id)]=next;
-    delete S.done[ex.id];delete S.bonus[ex.id];delete S.targets[ex.id];
-    log(`🎲 Nueva misión: ${byId(next).name}`);
-  } else log('🛑 Límite diario de misiones alcanzado. ¡Descansa y vuelve mañana!');
+  const next=randomMission(S.active);
+  S.active[S.active.indexOf(ex.id)]=next;
+  delete S.done[ex.id];delete S.bonus[ex.id];delete S.targets[ex.id];
+  log(`🎲 Nueva misión: ${byId(next).name}`);
   if(S.lastActive!==today()){
     S.streak=S.streak+1;
     S.lastActive=today();
@@ -509,6 +610,20 @@ function animateHit(id){
   icon.classList.add('flash');
   setTimeout(()=>icon.classList.remove('flash'),500);
 }
+function journeyMarkup(){
+  const completed=Math.min(JOURNEY_CHAPTERS,S.weeklyRewards);
+  const progress=completed===JOURNEY_CHAPTERS?WEEKLY_DAYS:S.activeDays%WEEKLY_DAYS;
+  const percent=100*progress/WEEKLY_DAYS;
+  const next=completed+1;
+  const reward=completed===JOURNEY_CHAPTERS?'¡Has completado toda la travesía!':
+    `Próximo capítulo: +${35+3*next} monedas y +${3+Math.min(next,20)} fragmentos`;
+  return `<div class="week-card"><div class="chapter">🌌 Crónicas del héroe · ${completed}/${JOURNEY_CHAPTERS}</div>
+    <h3>${completed===JOURNEY_CHAPTERS?'🏆 Leyenda de la travesía':`✨ Camino al capítulo ${next}`}</h3>
+    <p>${completed===JOURNEY_CHAPTERS?'Puedes seguir jugando a tu ritmo.':`${progress}/${WEEKLY_DAYS} días de actividad para avanzar`}</p>
+    <div class="bar mis"><div style="width:${percent}%"></div></div>
+    <p class="reward">${reward}</p><small>Un día cuenta al completar una misión. Los días no tienen que ser consecutivos; los descansos no borran el progreso.</small></div>
+    <div class="milestones"><span class="milestone ${S.activeDays>=7?'done':''}">🌱 7 días</span><span class="milestone ${S.activeDays>=30?'done':''}">⚔️ 30 días</span><span class="milestone ${S.activeDays>=90?'done':''}">💎 90 días</span><span class="milestone ${S.activeDays>=180?'done':''}">👑 180 días</span><span class="milestone ${S.activeDays>=365?'done':''}">🏆 365 días</span></div>`;
+}
 for(const button of navigationButtons){
   button.addEventListener('click',()=>selectSection(button));
   button.addEventListener('keydown',event=>{
@@ -534,7 +649,7 @@ function render(liveOnly=false){
   $('xptxt').textContent=`XP ${S.xp}/${xpNeeded(S.level)}`;
   const mn=MONSTERS[S.missionKills%MONSTERS.length].split(' ');
   $('mIcon').innerHTML=monsterArt(S.missionKills);$('mName').textContent=mn.slice(1).join(' ');
-  const max=monsterHp(S.missionKills);
+  const max=missionMonsterHp(S.missionKills);
   $('mHp').textContent=`${Math.max(0,Math.ceil(S.monsterHp))}/${max} HP`;
   $('hpbar').style.width=Math.min(100,100*S.monsterHp/max)+'%';
   const autoMonster=MONSTERS[S.autoKills%MONSTERS.length].split(' ');
@@ -551,22 +666,21 @@ function render(liveOnly=false){
   for(const ex of S.active.map(byId)){
     const tgt=missionTarget(ex),d=S.done[ex.id]||0;
     const el=document.createElement('div');el.className='mission';
-    el.innerHTML=`<div class="row"><strong>🎯 ${ex.name}</strong><span>Objetivo: ${tgt} ${ex.unit}</span></div>
+    el.innerHTML=`<div class="row"><strong>${EXERCISE_ICONS[ex.id]} ${ex.name}</strong><span>Objetivo: ${tgt} ${ex.unit}</span></div>
       ${d>0?`<p><small>Progreso anterior: ${d}/${tgt} ${ex.unit}. Completa lo que falta y confirma.</small></p><div class="bar mis"><div style="width:${Math.min(100,100*d/tgt)}%"></div></div>`:''}`;
     const actions=document.createElement('div');actions.className='mission-actions';
     const complete=document.createElement('button');
     complete.type='button';complete.className='complete';complete.textContent='✓ Completado';
     complete.setAttribute('aria-label',`Completar misión de ${ex.name}`);
-    complete.disabled=S.completedToday>=MAX_DAILY || !!S.bonus[ex.id];
+    complete.disabled=!!S.bonus[ex.id];
     complete.onclick=()=>{completeMission(ex);animateHit('mIcon')};
     actions.appendChild(complete);
     const skip=document.createElement('button');
     skip.textContent='Cambiar misión';
     skip.setAttribute('aria-label',`Cambiar misión de ${ex.name}; perderás el progreso de esta misión`);
-    skip.disabled=S.completedToday>=MAX_DAILY;
     skip.onclick=()=>{
       settleBattle();rollDay();
-      if(S.completedToday>=MAX_DAILY || !S.active.includes(ex.id)){save();render();return}
+      if(!S.active.includes(ex.id)){save();render();return}
       const next=randomMission(S.active);
       S.active[S.active.indexOf(ex.id)]=next;
       delete S.done[ex.id];delete S.bonus[ex.id];delete S.targets[ex.id];
@@ -576,7 +690,8 @@ function render(liveOnly=false){
     actions.appendChild(skip);el.appendChild(actions);
     $('missions').appendChild(el);
   }
-  $('cnt').textContent=`(${S.completedToday}/${MAX_DAILY} hoy)`;
+  $('cnt').textContent=`(${S.completedToday} hoy · sin límite)`;
+  $('weekly-progress').innerHTML=journeyMarkup();
   $('rest').disabled=!!S.lastRest&&daysBetween(S.lastRest,today())<7;
   renderChar();renderShop();renderAchievements();renderDungeons();
   $('open-pack').disabled=S.coins<PACK_COST;
@@ -588,7 +703,7 @@ function renderChar(){
   for(const sl of EQ_SLOTS){
     const g=GROUPS[sl.g],it=ITEM[S.eq[sl.k]];
     const b=document.createElement('button');b.className='slot';
-    b.innerHTML=`<b>${g.icon}</b>${it?`${it.name}<br><span class="ok">+${it.pct}% ${STAT_TXT[it.stat]}</span>`:`${g.label}${sl.n?' '+sl.n:''}<br>vacío`}`;
+    b.innerHTML=`<b>${g.icon}</b>${it?`${it.name}${upgradeLevel(it.id)?` +${upgradeLevel(it.id)}`:''}<br><span class="ok">+${itemPercent(it)}% ${STAT_TXT[it.stat]}</span>`:`${g.label}${sl.n?' '+sl.n:''}<br>vacío`}`;
     if(selectedItem && ITEM[selectedItem]?.g===sl.g) b.classList.add('selected-target');
     b.title=selectedItem?'Pulsa para colocar el objeto seleccionado':it?'Pulsa para desequipar':'Selecciona un objeto del inventario';
     const put=id=>{
@@ -617,12 +732,16 @@ function renderChar(){
     row.draggable=!worn;
     row.ondragstart=event=>{event.dataTransfer.setData('application/x-fitquest-item',id);event.dataTransfer.effectAllowed='move'};
     row.ondragend=()=>render();
-    row.innerHTML=`<strong>${GROUPS[item.g].icon} ${item.name}</strong> <small>· ${TIER_NAMES[item.tier]} · +${item.pct}% ${STAT_TXT[item.stat]}${worn?' · equipado':''}</small>`;
+    row.innerHTML=`<strong>${GROUPS[item.g].icon} ${item.name}${upgradeLevel(id)?` +${upgradeLevel(id)}`:''}</strong> <small>· ${TIER_ICONS[item.tier]} ${TIER_NAMES[item.tier]} · +${itemPercent(item)}% ${STAT_TXT[item.stat]}${worn?' · equipado':''}</small>`;
     const actions=document.createElement('div');actions.className='item-actions';
     const select=document.createElement('button');select.textContent=selectedItem===id?'Cancelar selección':'Seleccionar para equipar';select.disabled=worn;
     select.onclick=()=>{selectedItem=selectedItem===id?null:id;dismantleConfirm=null;render()};
+    const upgrade=document.createElement('button');
+    upgrade.textContent=upgradeLevel(id)>=5?'✨ Mejora máxima':`✨ Mejorar (${upgradeCost(item)} 🔩)`;
+    upgrade.disabled=upgradeLevel(id)>=5 || S.materials<upgradeCost(item);
+    upgrade.onclick=()=>{settleBattle();if(upgradeItem(id)){dismantleConfirm=null;save();render()}else{$('inventory-status').textContent='No se puede mejorar este objeto.';save()}};
     const destroy=document.createElement('button');destroy.className='danger';
-    destroy.textContent=dismantleConfirm===id?'Confirmar desmantelamiento':`Desmantelar (+${[2,5,12,25][item.tier]})`;
+    destroy.textContent=dismantleConfirm===id?'Confirmar: perder objeto y mejoras':`Desmantelar (+${[2,5,12,25][item.tier]})`;
     destroy.disabled=worn;
     destroy.onclick=()=>{
       if(dismantleConfirm!==id){dismantleConfirm=id;selectedItem=null;render();return}
@@ -630,7 +749,7 @@ function renderChar(){
       if(!dismantle(id)){$('inventory-status').textContent='No se puede desmantelar este objeto.';save();return}
       selectedItem=null;dismantleConfirm=null;save();render();
     };
-    actions.append(select,destroy);row.appendChild(actions);inventory.appendChild(row);
+    actions.append(select,upgrade,destroy);row.appendChild(actions);inventory.appendChild(row);
   }
 }
 function equip(it){
@@ -645,12 +764,13 @@ function renderShop(){
   if(!sel.options.length){
     sel.innerHTML='<option value="all">Todo</option>'+Object.entries(GROUPS).map(([g,d])=>`<option value="${g}">${d.icon} ${d.label}</option>`).join('');
     sel.onchange=renderShop;
+    $('tier-filter').onchange=renderShop;
   }
   const box=$('shop');box.innerHTML='';
-  for(const it of ITEMS.filter(i=>sel.value==='all'||i.g===sel.value)){
+  for(const it of ITEMS.filter(i=>(sel.value==='all'||i.g===sel.value)&&($('tier-filter').value==='all'||String(i.tier)===$('tier-filter').value))){
     const owned=S.owned.includes(it.id),worn=Object.values(S.eq).includes(it.id);
     const row=document.createElement('div');row.className='item row';
-    row.innerHTML=`<span>${GROUPS[it.g].icon} <b>${it.name}</b><br><small>+${it.pct}% ${STAT_TXT[it.stat]} · nivel ${it.lvl}</small></span>`;
+    row.innerHTML=`<span>${GROUPS[it.g].icon} <b>${it.name}${upgradeLevel(it.id)?` +${upgradeLevel(it.id)}`:''}</b><br><small>${TIER_ICONS[it.tier]} ${TIER_NAMES[it.tier]} · +${itemPercent(it)}% ${STAT_TXT[it.stat]} · nivel ${it.lvl}</small></span>`;
     const b=document.createElement('button');
     if(worn){b.textContent='Equipado';b.disabled=true}
     else if(owned){b.textContent='Equipar';b.onclick=()=>equip(it)}
@@ -671,12 +791,12 @@ function renderAchievements(){
 }
 function renderDungeons(){
   const remaining=Math.max(0,KEY_PITY-S.keyPity);
-  $('dungeon-keys').textContent=`🔑 Llaves: ${S.keys} · días de actividad: ${S.activeDays} · ${S.unlockedDungeons.length}/${DUNGEONS.length} mazmorras abiertas${S.unlockedDungeons.length+S.keys<DUNGEONS.length?` · llave garantizada en ${remaining} misiones sin hallazgo`:''}`;
+  $('dungeon-keys').textContent=`🔑 Llaves: ${S.keys} · días de actividad: ${S.activeDays} · ${S.unlockedDungeons.length}/${DUNGEONS.length} mazmorras abiertas${S.unlockedDungeons.length+S.keys<DUNGEONS.length?` · llave garantizada en ${remaining} días de actividad sin hallazgo`:''}`;
   const list=$('dungeon-list');list.innerHTML='';
   for(const dungeon of DUNGEONS){
     const unlocked=S.unlockedDungeons.includes(dungeon.id);
     const card=document.createElement('div');card.className='dungeon-card';
-    card.innerHTML=`<div class="chapter">${unlocked?'Desbloqueada':`Cerrada · 1 llave · ${dungeon.days} días de actividad`}</div><h3>${dungeon.name}</h3><p>${dungeon.description}</p><small>Vida: ${dungeon.hp} · jefe: ${dungeon.hp*2} · botín por enemigo: ${dungeon.reward} monedas y XP antes de bonos</small><br>`;
+    card.innerHTML=`<div class="chapter">${unlocked?'🔓 Desbloqueada':`🔒 Cerrada · 🗝️ 1 llave · 📆 ${dungeon.days} días de actividad`}</div><h3>🏰 ${dungeon.name}</h3><p>${dungeon.description}</p><small>❤️ Vida: ${dungeon.hp} · 👹 jefe: ${dungeon.hp*2} · 🪙 botín por enemigo: ${dungeon.reward} monedas y XP antes de bonos</small><br>`;
     const button=document.createElement('button');
     if(unlocked){
       button.textContent='Iniciar expedición';
@@ -717,7 +837,7 @@ $('open-pack').onclick=()=>{
   if(duplicate) S.coins+=25;
   else S.owned.push(it.id);
   S.packsOpened++;
-  const message=`${TIER_NAMES[tier]}: ${it.name}${duplicate?' · duplicado, +25 monedas':' · añadido al inventario'}`;
+  const message=`${TIER_ICONS[tier]} ${TIER_NAMES[tier]}: ${it.name}${duplicate?' · duplicado, +25 monedas':' · añadido al inventario'}`;
   $('pack-result').textContent=message;
   log(`🎁 ${message}`);
   unlockAchievements();save();render();
@@ -738,6 +858,7 @@ $('reset').onclick=()=>{
 rollDay();
 unlockAchievements();
 settleBattle();
+claimJourneyRewards();
 render();
 save();
 setInterval(()=>{

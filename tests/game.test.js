@@ -39,7 +39,8 @@ test('migrates existing saves without changing equipment or progress', () => {
   assert.equal(saved.eq.sword, 'sword_0_0');
   assert.equal(saved.done.squat, 5);
   assert.equal(saved.missionKills, 2);
-  assert.equal(saved.monsterHp, 40);
+  assert.ok(Math.abs(saved.monsterHp / 56 - 40 / 72) < 1e-10);
+  assert.ok(Math.abs(saved.xp / 276 - 20 / 244) < .005);
   assert.equal(saved.autoKills, 0);
   assert.equal(saved.autoMonsterHp, 50);
   assert.equal(saved.totalMissions, 0);
@@ -94,14 +95,15 @@ test('offline battle applies newly unlocked bonuses just like live ticks', () =>
   })()`), true);
 });
 
-test('daily mission limit blocks further rewards and targets do not change mid-mission', () => {
+test('missions remain unlimited and targets do not change mid-mission', () => {
   const g = game();
   assert.equal(g.run(`(() => { S=fresh(); S.completedToday=5;
     const ex=byId(S.active[0]), original=missionTarget(ex);
     S.level=30; if(missionTarget(ex)!==original) return false;
-    S.done[ex.id]=original-1; completeMission(ex); const before=JSON.stringify(S);
+    S.done[ex.id]=original-1; completeMission(ex);
+    const first=S.totalMissions;
     completeMission(byId(S.active[1]));
-    return S.completedToday===6 && JSON.stringify(S)===before;
+    return S.completedToday===7 && S.totalMissions===first+1 && S.active.length===3;
   })()`), true);
 });
 
@@ -113,6 +115,39 @@ test('missions reward only the remaining legacy progress, once', () => {
     return S.xp===35 && S.monsterHp===45 && S.autoMonsterHp===50 &&
       S.completedToday===1 && S.totalMissions===1;
   })()`), true);
+});
+
+test('missions beyond six remain playable with reduced rewards and do not roll more keys', () => {
+  const g=game();
+  assert.equal(g.run(`(() => {
+    S=fresh(); S.active=['squat','push','plank']; S.completedToday=6;
+    S.battleUpdated=Date.now(); Math.random=()=>0;
+    completeMission(byId('squat'));
+    return S.completedToday===7 && S.totalMissions===1 &&
+      S.monsterHp===45 && S.coins===3 && S.keys===0 && S.keyPity===0;
+  })()`), true);
+});
+
+test('legacy completed mission at former limit is replaced without duplicate reward', () => {
+  const first=game();
+  first.run(`S=fresh(); S.active=['squat','push','plank']; S.done.squat=20;
+    S.bonus.squat=1; S.completedToday=6; S.coins=40;
+    delete S.unlimitedMissionsVersion; save();`);
+  const second=game(first.saved());
+  assert.equal(second.run(`S.active.includes('squat')`),false);
+  assert.equal(second.run('S.coins'),40);
+  assert.equal(second.run('S.completedToday'),6);
+});
+
+test('only the first daily mission can roll a dungeon key', () => {
+  const g=game();
+  assert.equal(g.run(`(() => {
+    S=fresh(); S.active=['squat','push','plank']; S.battleUpdated=Date.now();
+    Math.random=()=>0; completeMission(byId('squat'));
+    const keys=S.keys;
+    for(let i=0;i<8;i++) completeMission(byId(S.active[0]));
+    return keys===1 && S.keys===1 && S.keyPity===0 && S.completedToday===9;
+  })()`),true);
 });
 
 test('arena applies equipment and achievements and earns shared rewards', () => {
@@ -137,16 +172,16 @@ test('arena loot and experience use equipment and achievement bonuses', () => {
   })()`), true);
 });
 
-test('keys have a 3% chance, a 30-mission guarantee and no surplus', () => {
+test('keys have a 3% chance, a 13-day guarantee and no surplus', () => {
   const g = game();
   assert.equal(g.run(`(() => {
     S=fresh(); Math.random=()=>0.03; awardKey(); if(S.keys!==0||S.keyPity!==1)return false;
     Math.random=()=>0.029; awardKey(); if(S.keys!==1||S.keyPity!==0)return false;
-    Math.random=()=>1; for(let i=0;i<29;i++) awardKey();
-    if(S.keys!==1||S.keyPity!==29)return false;
+    Math.random=()=>1; for(let i=0;i<12;i++) awardKey();
+    if(S.keys!==1||S.keyPity!==12)return false;
     awardKey(); if(S.keys!==2||S.keyPity!==0)return false;
-    for(let i=0;i<100;i++) awardKey();
-    return S.keys===4 && S.keyPity===0;
+    for(let i=0;i<200;i++) awardKey();
+    return S.keys===DUNGEONS.length-1 && S.keyPity===0;
   })()`), true);
 });
 
@@ -191,6 +226,20 @@ test('equipment placement validates slots and dismantling only consumes unequipp
     return dismantle('ring_3_0') && S.materials===25 &&
       !S.owned.includes('ring_3_0') && !dismantle('ring_3_0');
   })()`), true);
+});
+
+test('upgrades consume fragments, apply to equipped stats, cap at five and are lost on dismantle', () => {
+  const g=game();
+  assert.equal(g.run(`(() => {
+    S=fresh(); S.owned=['sword_0_0']; S.materials=100;
+    if(!placeItem('sword_0_0','sword')) return false;
+    const before=bonus('dmg');
+    for(let i=0;i<5;i++) if(!upgradeItem('sword_0_0')) return false;
+    if(S.materials!==45 || upgradeItem('sword_0_0') || Math.abs(bonus('dmg')-before-.05)>1e-8) return false;
+    if(dismantle('sword_0_0')) return false;
+    delete S.eq.sword;
+    return dismantle('sword_0_0') && S.upgrades.sword_0_0===undefined && S.materials===47;
+  })()`),true);
 });
 
 test('new dungeon and material state survives reloading', () => {
@@ -256,4 +305,49 @@ test('365 simulated activity days produce the annual milestone and unlock all du
     return S.activeDays===365 && S.totalMissions===365 &&
       S.unlockedDungeons.length===DUNGEONS.length && S.achievements.includes('days365');
   })()`), true);
+});
+
+test('three activity days a week for a year produce 52 chapters and enough keys', () => {
+  const g=game();
+  assert.equal(g.run(`(() => {
+    const RealDate=Date; let clock=RealDate.UTC(2026,0,1,12);
+    Date=class extends RealDate {
+      constructor(...args){if(args.length) super(...args);else super(clock)}
+      static now(){return clock}
+    };
+    Math.random=()=>0.999; S=fresh();
+    let rewardChanges=0;
+    for(let day=0;day<364;day++){
+      if([0,2,4].includes(day%7)){
+        S.battleUpdated=clock;
+        const before=S.weeklyRewards;
+        completeMission(byId(S.active[0]));
+        if(S.weeklyRewards>before) rewardChanges++;
+        for(const dungeon of DUNGEONS) if(dungeon.days<=S.activeDays) unlockDungeon(dungeon.id);
+      }
+      clock+=86400000;
+    }
+    return S.activeDays===156 && S.weeklyRewards===52 && rewardChanges===52 &&
+      S.unlockedDungeons.length===DUNGEONS.length && S.materials>0;
+  })()`),true);
+});
+
+test('journey migration catches up old activity days once and persists', () => {
+  const first=game();
+  first.run(`S=fresh(); S.activeDays=12; S.weeklyRewards=0; claimJourneyRewards(); save();`);
+  const previous=first.saved();
+  assert.equal(previous.weeklyRewards,4);
+  const second=game(previous);
+  second.run('claimJourneyRewards(); save()');
+  assert.equal(second.saved().coins,previous.coins);
+  assert.equal(second.saved().materials,previous.materials);
+});
+
+test('catalog retains old ids and provides distinct options in each tier', () => {
+  const g=game();
+  assert.equal(g.run(`(() => {
+    return ITEMS.length===128 && ITEM['ring_3_1'].name==='Anillo legendario' &&
+      new Set(ITEMS.map(it=>it.id)).size===ITEMS.length &&
+      [0,1,2,3].every(t=>ITEMS.filter(it=>it.tier===t).length===32);
+  })()`),true);
 });

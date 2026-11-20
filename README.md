@@ -10,18 +10,28 @@ eliminarla.
 
 - **Misiones y monstruos:** pulsa **Completado** solo después de realizar el
   objetivo indicado. Hay tres misiones activas, puedes cambiar cualquiera perdiendo su progreso,
-  y se pueden completar hasta seis al día. Los objetivos se fijan al comenzar
+  y se pueden completar sin límite al día. Hay 20 tipos de ejercicios y el
+  objetivo se fija al comenzar
   cada misión; descansar y adaptar el ejercicio siempre es más importante
   que una recompensa. Los objetivos no son recomendaciones médicas. Si una
   partida anterior tenía progreso parcial, termina la parte restante antes
   de confirmar; únicamente se recompensará la parte que faltaba.
+  Las primeras seis misiones del día dan la recompensa completa; las
+  posteriores dan el 25 % de XP, daño y monedas de misión. Las recompensas
+  de monstruos derrotados siguen siendo las normales. Solo la primera misión
+  del día puede generar una llave. Esto evita que acumular ejercicio sea
+  necesario para progresar.
 - **Personaje y tienda:** compra equipo con monedas del juego y equípalo. Los
   objetos comprados y los obtenidos en sobres comparten inventario. En la
   pestaña de personaje arrastra un objeto a un hueco compatible, o selecciónalo
   y pulsa el hueco; también funciona con teclado y en móvil. Pulsa un hueco
   equipado sin selección para vaciarlo. Desmantela objetos no equipados con
-  dos pulsaciones: dan 2, 5, 12 o 25 fragmentos según su rareza. Los
-  fragmentos se conservan, pero aún no hay fabricación ni mejoras.
+  dos pulsaciones: dan 2, 5, 12 o 25 fragmentos según su rareza. Puedes
+  usar fragmentos para mejorar un objeto hasta +5; cada mejora añade un 1 %
+  a su estadística. El coste es 5 + 3 por nivel de mejora actual + 2 por
+  índice de rareza (común 0 a legendario 3). Desmantelar elimina el objeto y
+  sus mejoras; aún no hay fabricación.
+  Hay 128 objetos en cuatro rarezas, con filtros por tipo y rareza.
 - **Logros:** desbloquean mejoras permanentes al alcanzar sus objetivos. Las
   misiones se cuentan desde esta versión; los niveles y monstruos derrotados
   de partidas antiguas sí se reconocen.
@@ -37,11 +47,12 @@ eliminarla.
   misiones; comparten la experiencia, las monedas y los logros del personaje.
   Las partidas anteriores conservan su encuentro original y la arena nueva
   empieza en el primer monstruo.
-- **Mazmorras:** la cripta está abierta desde el principio. Hay cuatro más,
-  que requieren una llave y 30, 60, 120 o 180 días de actividad distintos,
-  respectivamente. Los días no tienen que ser consecutivos y descansar no
-  elimina el progreso. Cada misión completada tiene un 3 % de probabilidad
-  de otorgar una llave; si no sale ninguna, la misión número 30 la garantiza.
+- **Mazmorras:** la cripta está abierta desde el principio. Hay doce más,
+  que requieren una llave y entre 7 y 156 días de actividad distintos,
+  según la mazmorra. Los días no tienen que ser consecutivos y descansar no
+  elimina el progreso. La primera misión de cada día tiene un 3 % de
+  probabilidad de otorgar una llave; si no sale ninguna, el día de actividad
+  número 13 la garantiza. Las demás misiones del día no generan llaves.
   No se generan llaves sobrantes una vez que ya hay suficientes para abrir
   todas las mazmorras. Una llave abre una mazmorra de forma permanente.
   Se puede iniciar una expedición al día; tiene tres enemigos y un jefe al
@@ -54,6 +65,17 @@ eliminarla.
   de esta actualización porque las partidas anteriores no guardaban ese
   historial; no se pierde el resto de progreso. Son objetivos de juego,
   no una recomendación de entrenar cada día.
+- **Travesía:** cada tres días distintos de actividad se completa
+  automáticamente uno de 52 capítulos y se reciben monedas y fragmentos.
+  Los días no tienen que ser consecutivos. Con tres días de actividad
+  semanales se avanza aproximadamente un capítulo a la semana durante
+  un año. Los días que ya había registrados antes de esta versión cuentan:
+  sus recompensas se entregan automáticamente una sola vez.
+
+Esta versión suaviza la subida de vida de los monstruos y la experiencia
+necesaria para niveles superiores. Al actualizar, la vida restante de cada
+monstruo y la XP dentro del nivel se convierten proporcionalmente, sin
+perder niveles ni objetos.
 
 Los bonos de cada estadística se suman entre sí. Las misiones, el equipo y las
 recompensas son mecánicas de juego, no un plan de entrenamiento: adapta cada
