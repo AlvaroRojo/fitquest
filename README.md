@@ -53,14 +53,15 @@ eliminarla.
   bioma acorde, y los jefes cuentan con llamas animadas. Las animaciones
   respetan la preferencia del sistema de reducir movimiento. Estos encuentros
   son independientes de la arena.
-- **Armería:** cada día local, al abrir el juego o volver a él, se generan
+- **Tienda:** cada día local, al abrir el juego o volver a él, se generan
   diez ofertas únicas según el nivel actual; la selección permanece igual hasta
   medianoche incluso si subes de nivel o recargas. La rareza se sortea para
   cada objeto con pesos 60/25/12/3 (común/poco común/raro/legendario);
   se excluyen las rarezas aún no desbloqueadas y se redistribuyen sus pesos.
   Cuando se agotan los objetos de una rareza también se excluye esa rareza.
   Dentro de la rareza sorteada se priorizan objetos no poseídos. Una oferta
-  comprada no se puede volver a comprar ese día, incluso si desmantelas el objeto.
+  comprada se añade al inventario sin equiparse y no se puede volver a comprar
+  ese día, incluso si desmantelas el objeto.
   Al actualizar una partida, las ocho ofertas existentes se conservan y se
   añaden dos más del nivel con el que se generaron.
   La **forja permanente** permite comprar hasta diez mejoras en total cada semana natural

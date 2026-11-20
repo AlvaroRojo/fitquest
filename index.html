@@ -310,7 +310,7 @@
 <div class="navigation" role="tablist" aria-label="Secciones del juego">
   <button type="button" role="tab" id="tab-adventure" data-section="adventure" aria-controls="adventure" aria-selected="true">🍺 Posada y misiones</button>
   <button type="button" role="tab" id="tab-character" data-section="character" aria-controls="character" aria-selected="false" tabindex="-1">🧙 Personaje</button>
-  <button type="button" role="tab" id="tab-store" data-section="store" aria-controls="store" aria-selected="false" tabindex="-1">⚒️ Armería</button>
+  <button type="button" role="tab" id="tab-store" data-section="store" aria-controls="store" aria-selected="false" tabindex="-1">🛒 Tienda</button>
   <button type="button" role="tab" id="tab-achievements" data-section="achievements" aria-controls="achievements" aria-selected="false" tabindex="-1">🏆 Logros</button>
   <button type="button" role="tab" id="tab-packs" data-section="packs" aria-controls="packs" aria-selected="false" tabindex="-1">🎁 Sobres</button>
   <button type="button" role="tab" id="tab-battle" data-section="battle" aria-controls="battle" aria-selected="false" tabindex="-1">⚔️ Autobatalla</button>
@@ -413,7 +413,7 @@
 
 <section id="store" role="tabpanel" aria-labelledby="tab-store" hidden>
 <div class="card armory-card">
-  <div class="armory-header"><h2>⚒️ Armería arcana</h2><span class="armory-badge">✨ Equipo para tu aventura</span></div>
+  <div class="armory-header"><h2>🛒 Tienda arcana</h2><span class="armory-badge">✨ Equipo para tu aventura</span></div>
   <p class="armory-intro">Descubre tesoros diarios y fortalece tu equipo en la forja.</p>
   <section class="armory-section" aria-labelledby="daily-title">
     <div class="armory-header"><h3 id="daily-title">🛒 Objetos del día</h3><span class="armory-badge" id="shop-date"></span></div>
@@ -1310,6 +1310,7 @@ function equip(it){
 }
 function renderShop(){
   if(ensureShopStock()) save();
+  $('shop-status').textContent='';
   $('shop-date').textContent=`📅 ${S.shopStock.day} · nivel ${S.shopStock.level}`;
   const box=$('shop');box.innerHTML='';
   for(const id of S.shopStock.offers){
@@ -1326,7 +1327,7 @@ function renderShop(){
     else if(sold){b.textContent='Vendido';b.disabled=true}
     else if(S.level<it.lvl){b.textContent=`Nivel ${it.lvl}`;b.disabled=true}
     else{b.textContent=`Comprar ${it.cost} 🪙`;b.disabled=S.coins<it.cost;
-      b.onclick=()=>{settleBattle();const bought=buyDailyItem(it.id);if(bought){equip(it)}else{save();render();$('shop-status').textContent='No se puede comprar esta oferta.'}}}
+      b.onclick=()=>{settleBattle();const bought=buyDailyItem(it.id);save();render();if(!bought)$('shop-status').textContent='No se puede comprar esta oferta.'}}
     row.appendChild(b);box.appendChild(row);
   }
   const used=S.forgeWeek===weekStart(today())?S.forgeWeekPurchases:0;
@@ -1342,7 +1343,7 @@ function renderShop(){
     button.disabled=used>=FORGE_WEEKLY_LIMIT || S.coins<cost;
     button.onclick=()=>{
       settleBattle();const bought=buyForgeUpgrade(stat);save();render();
-      $('shop-status').textContent=bought?`${option.name} mejorado permanentemente a rango ${rank+1}.`:'No se puede comprar esta mejora.';
+      $('shop-status').textContent=bought?'':'No se puede comprar esta mejora.';
     };
     row.appendChild(button);forge.appendChild(row);
   }

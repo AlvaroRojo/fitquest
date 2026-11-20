@@ -142,7 +142,9 @@ test('daily stock respects level, remains stable through reload and records sold
     const offers=JSON.stringify(S.shopStock.offers);
     S.level=15; if(ensureShopStock() || JSON.stringify(S.shopStock.offers)!==offers)return false;
     const id=S.shopStock.offers[0];
+    const equipment=JSON.stringify(S.eq);
     if(!buyDailyItem(id) || buyDailyItem(id) || !S.shopStock.sold.includes(id))return false;
+    if(!S.owned.includes(id) || JSON.stringify(S.eq)!==equipment)return false;
     S.owned=S.owned.filter(item=>item!==id);
     if(buyDailyItem(id))return false;
     save(); return true;
@@ -153,6 +155,13 @@ test('daily stock respects level, remains stable through reload and records sold
   assert.equal(reloaded.run("ensureShopStock('2099-01-02')"),true);
   assert.equal(reloaded.run('S.shopStock.level'),15);
   assert.equal(reloaded.run('S.shopStock.sold.length'),0);
+});
+
+test('store uses the new name and only shows forge failure messages', () => {
+  assert.match(html, /data-section="store"[^>]*>🛒 Tienda<\/button>/);
+  assert.match(script, /\$\('shop-status'\)\.textContent=bought\?'':'No se puede comprar esta mejora\.'/);
+  assert.match(script, /const bought=buyDailyItem\(it\.id\);save\(\);render\(\);if\(!bought\)\$\('shop-status'\)\.textContent='No se puede comprar esta oferta\.'/);
+  assert.match(script, /function renderShop\(\)\{[\s\S]*?\$\('shop-status'\)\.textContent='';/);
 });
 
 test('daily shop uses weighted rarities among eligible tiers', () => {
