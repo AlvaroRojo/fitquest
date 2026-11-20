@@ -125,9 +125,9 @@
   .mission-difficulty[data-difficulty="hard"]{color:#ffc5cc;border-color:#c87987}
   .mission-difficulty[data-difficulty="legacy"]{color:#d5cdec;border-color:#9286ab}
   .quest-board .complete{align-self:stretch;margin:8px 0 0;margin-top:auto;min-height:44px}
-  .quest-board .quest-rewards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:5px;margin:0}
-  .quest-board .quest-rewards span{min-width:0;overflow-wrap:anywhere}
-  .quest-board .quest-rewards span:last-child{grid-column:1/-1}
+  .quest-board .quest-rewards{display:flex;flex-wrap:wrap;gap:5px;margin:0}
+  .quest-board .quest-rewards>span{flex:1 1 60px;min-width:max-content;max-width:100%;display:flex;align-items:center;justify-content:center;gap:3px;white-space:nowrap;font-variant-numeric:tabular-nums}
+  .quest-board .quest-rewards .reward-value{border:0;background:none;padding:0;min-width:0;white-space:normal;overflow-wrap:anywhere}
   .mission-status{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap;border:0}
   .encounter-card{--encounter-accent:#d9aa74;--encounter-glow:#be688d;display:flex;flex-direction:column;gap:12px;overflow:hidden;background:radial-gradient(ellipse at 50% 40%,#4c3047,#191b2b 68%);border-color:#a47b58}
   .encounter-card[data-kind="boss"]{--encounter-accent:#ff9c88;--encounter-glow:#e44358}
@@ -196,8 +196,6 @@
     .mission-title strong{min-height:2.6em}
     .mission-difficulty{padding:1px 7px}
     .quest-rewards span{padding:4px 5px;font-size:.85rem}
-    .quest-board .quest-rewards{grid-template-columns:repeat(3,minmax(0,1fr))}
-    .quest-board .quest-rewards span:last-child{grid-column:auto}
     .quest-board .complete{min-height:46px;margin-top:auto;padding:8px}
     .encounter-card{gap:10px}
     .encounter-stage{min-height:300px}
@@ -778,8 +776,8 @@ function missionEstimate(ex){
   const mult=streakMult()*scale;
   const reward=DIFFICULTIES[missionDifficulty(ex)].reward;
   return {
-    damage:units*ex.value*bonus('dmg')*mult,
-    xp:Math.round(units*ex.value*mult*bonus('xp'))+Math.round(30*mult*bonus('xp')*reward),
+    damage:units*ex.value*bonus('dmg')*mult*reward,
+    xp:Math.round(units*ex.value*mult*bonus('xp')*reward)+Math.round(30*mult*bonus('xp')*reward),
     coins:Math.round(10*bonus('coin')*scale*reward)
   };
 }
@@ -792,8 +790,8 @@ function completeMission(ex){
   const reward=DIFFICULTIES[missionDifficulty(ex)].reward;
   S.done[ex.id]=tgt;
   const mult=streakMult()*(S.completedToday<FULL_REWARD_MISSIONS?1:0.25);
-  gain(Math.round(units*ex.value*mult*bonus('xp')));
-  hit(units*ex.value*bonus('dmg')*mult);
+  gain(Math.round(units*ex.value*mult*bonus('xp')*reward));
+  hit(units*ex.value*bonus('dmg')*mult*reward);
   S.bonus[ex.id]=1;gain(Math.round(30*mult*bonus('xp')*reward));S.coins+=Math.round(10*bonus('coin')*(S.completedToday<FULL_REWARD_MISSIONS?1:0.25)*reward);
   log(`✅ Misión completada: ${ex.name} (+bonus)`);
   S.completedToday++;
@@ -993,7 +991,7 @@ function render(liveOnly=false){
     el.innerHTML=`<span class="mission-difficulty" data-difficulty="${difficulty}">${DIFFICULTIES[difficulty].label}</span>
       <div class="mission-title"><span class="mission-icon" aria-hidden="true">${EXERCISE_ICONS[ex.id]}</span><div><strong>${ex.name}</strong><div class="mission-target">Objetivo: ${tgt} ${ex.unit}</div></div></div>
       ${d>0?`<p><small>Progreso anterior: ${d}/${tgt} ${ex.unit}. Completa lo que falta y confirma.</small></p><div class="bar mis"><div style="width:${Math.min(100,100*d/tgt)}%"></div></div>`:''}
-      <div class="quest-rewards"><span aria-label="${Math.round(preview.damage*10)/10} de daño" title="Daño">⚔️ ${Math.round(preview.damage*10)/10}</span><span>✨ ~${preview.xp} XP</span><span aria-label="${preview.coins} monedas" title="Monedas">🪙 ${preview.coins}</span></div>`;
+      <div class="quest-rewards"><span aria-label="${Math.round(preview.damage*10)/10} de daño estimado" title="Daño estimado">⚔️ <span class="reward-value">${Math.round(preview.damage*10)/10}</span></span><span aria-label="${preview.xp} XP estimada" title="XP estimada">✨ <span class="reward-value">${preview.xp}</span> XP</span><span aria-label="${preview.coins} monedas estimadas" title="Oro estimado">🪙 <span class="reward-value">${preview.coins}</span> G</span></div>`;
     const complete=document.createElement('button');
     complete.type='button';complete.className='complete';complete.textContent='✓ Completado';
     complete.setAttribute('aria-label',`Completar misión de ${ex.name}`);

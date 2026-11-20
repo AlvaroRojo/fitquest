@@ -156,9 +156,27 @@ test('six mission slots have distinct targets and matching preview and rewards',
       results.push([difficulty,goal,preview.damage,preview.xp,preview.coins]);
     }
     return JSON.stringify(results)===JSON.stringify([
-      ['easy',20,20,50,10],['normal',25,25,63,13],['hard',30,30,75,15]
+      ['easy',20,20,50,10],['normal',25,31.25,69,13],['hard',30,45,90,15]
     ]);
   })()`),true);
+});
+
+test('difficulty multiplies remaining exercise rewards after daily reduction', () => {
+  const g=game();
+  assert.equal(g.run(`(() => {
+    S=fresh(); S.active=['push','plank','abs','jack','squat','burpee'];
+    S.completedToday=6; S.done.squat=10; S.battleUpdated=Date.now(); S.monsterHp=500;
+    const ex=byId('squat'), preview=missionEstimate(ex);
+    if(preview.damage!==7.5 || preview.xp!==19 || preview.coins!==4)return false;
+    completeMission(ex);
+    return S.monsterHp===500-preview.damage && S.xp===preview.xp && S.coins===preview.coins;
+  })()`),true);
+});
+
+test('mission rewards show XP without approximation mark and gold in G', () => {
+  assert.ok(script.includes('${preview.xp}</span> XP'));
+  assert.ok(script.includes('${preview.coins}</span> G'));
+  assert.ok(!script.includes('~${preview.xp}'));
 });
 
 test('old missions are retained and six unique slots survive reload', () => {

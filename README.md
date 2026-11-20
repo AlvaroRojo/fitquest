@@ -14,9 +14,12 @@ eliminarla.
   objetivo indicado. Hay seis misiones activas: dos suaves, dos intermedias y
   dos intensas. Al completar una aparece otra aleatoria del mismo nivel.
   Frente al mismo ejercicio suave, las intermedias piden un 25 % más y las
-  intensas un 50 % más (redondeado hacia arriba); el bono fijo de XP y las
-  monedas de misión aumentan en la misma proporción, además de la XP y el
-  daño derivados del objetivo. Son categorías de juego, no una valoración
+  intensas un 50 % más (redondeado hacia arriba). La XP, el daño y las
+  monedas de misión reciben además un multiplicador de dificultad: ×1 en
+  suave, ×1,25 en intermedia y ×1,5 en intensa. Así, para un mismo ejercicio,
+  el objetivo mayor también aumenta la XP y el daño antes de ese multiplicador.
+  Las recompensas de ejercicios diferentes pueden variar según su cantidad y
+  valor. Son categorías de juego, no una valoración
   médica: ejercicios distintos pueden tener dificultades reales diferentes.
   Las misiones antiguas mantienen sus condiciones hasta completarse.
   Se pueden completar sin límite al día. Hay 20 tipos de ejercicios y el
@@ -25,7 +28,7 @@ eliminarla.
   que una recompensa. Los objetivos no son recomendaciones médicas. Si una
   partida anterior tenía progreso parcial, termina la parte restante antes
   de confirmar; únicamente se recompensará la parte que faltaba.
-  El tablón muestra una estimación del daño, XP y monedas de cada encargo.
+  El tablón muestra una estimación del daño, XP y oro (G) de cada encargo.
   El daño incluye los bonos de equipo, atributos, logros y racha; la
   estimación no incluye el botín de monstruos ni los logros nuevos.
   Las primeras seis misiones del día dan la recompensa completa; las
