@@ -136,6 +136,30 @@
   .quest-help summary{display:inline-block;cursor:pointer;color:#ecd3a2;font-weight:600}
   .quest-help summary:focus-visible{outline:2px solid #8ce2ff;outline-offset:3px}
   .quest-help p{margin:8px 0}
+  .encounter-card{--encounter-accent:#d9aa74;--encounter-glow:#be688d;display:flex;flex-direction:column;gap:12px;overflow:hidden;background:radial-gradient(ellipse at 50% 40%,#4c3047,#191b2b 68%);border-color:#a47b58}
+  .encounter-card[data-kind="boss"]{--encounter-accent:#ff9c88;--encounter-glow:#e44358}
+  .encounter-card[data-kind="elite"]{--encounter-accent:#d6b1ff;--encounter-glow:#a45df2}
+  .encounter-card[data-kind="lucky"],.encounter-card[data-kind="event"]{--encounter-accent:#ffe28c;--encounter-glow:#e3a442}
+  .encounter-header{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;flex-wrap:wrap}
+  .encounter-header h2{margin:0}
+  .encounter-header .encounter-tag{margin:0}
+  .encounter-stage{position:relative;display:grid;place-items:center;min-height:290px;flex:1;overflow:hidden;isolation:isolate;border:1px solid var(--encounter-accent);border-radius:14px;background:radial-gradient(ellipse at 50% 55%,#a65c7866,transparent 35%),radial-gradient(ellipse at 50% 78%,#b9817355,transparent 45%),linear-gradient(180deg,#13152a,#242239 62%,#111424);box-shadow:inset 0 0 55px #070914bb}
+  .encounter-stage::before{content:"";position:absolute;width:min(78%,320px);aspect-ratio:1;border:2px solid var(--encounter-accent);border-radius:50%;box-shadow:0 0 28px var(--encounter-glow),inset 0 0 28px var(--encounter-glow);opacity:.65;animation:encounter-rune 12s linear infinite;pointer-events:none}
+  .encounter-stage::after{content:"";position:absolute;inset:auto 10% 12%;height:13%;border:1px solid var(--encounter-accent);border-radius:50%;background:radial-gradient(ellipse,#f7bd8755,transparent 70%);box-shadow:0 0 30px var(--encounter-glow);pointer-events:none}
+  .encounter-runes{position:absolute;width:min(68%,275px);aspect-ratio:1;border:1px dashed var(--encounter-accent);border-radius:50%;opacity:.55;animation:encounter-rune 20s linear infinite reverse;pointer-events:none}
+  .encounter-embers{position:absolute;inset:0;pointer-events:none;background:radial-gradient(circle at 17% 30%,#ffda9d 0 2px,transparent 3px),radial-gradient(circle at 81% 26%,#ffc9a2 0 2px,transparent 3px),radial-gradient(circle at 23% 69%,#eeb08b 0 2px,transparent 3px),radial-gradient(circle at 78% 72%,#ffe4a8 0 2px,transparent 3px);animation:pulse 3s ease-in-out infinite}
+  .encounter-stage .arena-label{position:absolute;top:15px;left:8px;right:8px;color:#ffe4bf}
+  .encounter-stage .big{position:relative;z-index:1;line-height:1;animation:float 3s ease-in-out infinite;filter:drop-shadow(0 10px 20px var(--encounter-glow))}
+  .encounter-stage .big.flash{animation:impact .45s ease-out}
+  .encounter-stage .creature{width:clamp(150px,17vw,235px);max-width:70vw}
+  .encounter-health{padding:13px;border:1px solid #8a6656;border-radius:12px;background:#141725e8}
+  .encounter-health .row{margin-bottom:8px;gap:10px}
+  .encounter-health #mName{font:700 clamp(1.05rem,2vw,1.35rem) Georgia,serif;color:#ffe2ae}
+  .encounter-health #mHp{font-size:.85rem;font-weight:700;color:#ffc1bc}
+  .encounter-health .bar{height:16px;border:1px solid #6f424c}
+  .encounter-info{margin:0;padding:9px 12px;border-left:2px solid var(--encounter-accent);background:#15192899}
+  .encounter-note{margin:0}
+  @keyframes encounter-rune{to{transform:rotate(360deg)}}
   .hero-stage{background:radial-gradient(ellipse at center,#a9749266,#14192c 72%);border-color:#9e7794}
   .slot{border-color:#806a67;background:linear-gradient(145deg,#292536,#141b2a)}
   .week-card{background:linear-gradient(120deg,#1d4544,#29243b);border-color:#599a8e}
@@ -145,7 +169,7 @@
   #shop .item,#achievement-list .achievement{border-color:#78604f;background:linear-gradient(135deg,#3b3033,#211f30)}
   @media(min-width:1000px){
     #adventure:not([hidden]),#character:not([hidden]){display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px;align-items:start}
-    #adventure:not([hidden]){grid-template-columns:minmax(0,2fr) minmax(0,3fr)}
+    #adventure:not([hidden]){grid-template-columns:minmax(0,2fr) minmax(0,3fr);align-items:stretch}
     #adventure>.card,#character>.card{margin-bottom:0}
     #journey{grid-column:1/-1}
     #adventure>button{justify-self:start}
@@ -156,7 +180,7 @@
   }
   @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none !important;transition:none !important}}
   @media(max-width:700px){.navigation{grid-template-columns:repeat(2,minmax(0,1fr))}}
-  @media(max-width:480px){body{padding:10px}.card{padding:15px}.game-header{padding:15px}.row{flex-wrap:wrap}.hero-layout{grid-template-columns:1fr}.hero-stage{min-height:170px}.hero-art{height:160px}}
+  @media(max-width:480px){body{padding:10px}.card{padding:15px}.game-header{padding:15px}.row{flex-wrap:wrap}.hero-layout{grid-template-columns:1fr}.hero-stage{min-height:170px}.hero-art{height:160px}.encounter-stage{min-height:245px}}
   [hidden]{display:none !important}
 </style>
 </head>
@@ -183,14 +207,18 @@
 
 <main>
 <section id="adventure" role="tabpanel" aria-labelledby="tab-adventure">
-<div class="card">
-  <h2>Monstruo</h2>
-  <div class="encounter-tag" id="encounter-tag"></div>
-  <div class="arena"><div class="arena-label">Encuentro de misiones</div><div class="big" id="mIcon"></div></div>
-  <div class="row"><b id="mName"></b><span id="mHp"></span></div>
-  <div class="bar hp"><div id="hpbar"></div></div>
+<div class="card encounter-card" id="mission-encounter">
+  <div class="encounter-header"><h2>⚔️ Monstruo</h2><div class="encounter-tag" id="encounter-tag"></div></div>
+  <div class="encounter-stage">
+    <div class="encounter-runes" aria-hidden="true"></div><div class="encounter-embers" aria-hidden="true"></div>
+    <div class="arena-label">Encuentro de misiones</div><div class="big" id="mIcon"></div>
+  </div>
+  <div class="encounter-health">
+    <div class="row"><b id="mName"></b><span id="mHp"></span></div>
+    <div class="bar hp"><div id="hpbar"></div></div>
+  </div>
   <p class="encounter-info" id="encounter-info"></p>
-  <p><small>Tu ejercicio real es el daño. El combate avanza solo cuando entrenas.</small></p>
+  <p class="encounter-note"><small>Tu ejercicio real es el daño. El combate avanza solo cuando entrenas.</small></p>
 </div>
 
 <div class="card">
@@ -517,11 +545,13 @@ if(!S.balanceVersion){
   S.balanceVersion=1;
 }
 S.encounter ??= {kind:'normal',species:S.missionKills%MONSTERS.length,maxHp:missionMonsterHp(S.missionKills),legacy:true};
+const migratedCompletedMissions=[];
 if(!S.unlimitedMissionsVersion){
   for(const id of [...S.active]){
     if(!S.bonus[id]) continue;
     const next=randomMission(S.active);
     S.active[S.active.indexOf(id)]=next;
+    migratedCompletedMissions.push(id);
     delete S.done[id];delete S.bonus[id];delete S.targets[id];
   }
   S.unlimitedMissionsVersion=1;
@@ -531,7 +561,7 @@ if(!S.missionDifficultyVersion){
   S.missionDifficultyVersion=1;
 }
 S.legacyMissions ??= {};
-while(S.active.length<SLOTS) S.active.push(randomMission(S.active));
+while(S.active.length<SLOTS) S.active.push(randomMission([...S.active,...migratedCompletedMissions]));
 
 function log(t){S.log.unshift(t);S.log=S.log.slice(0,40)}
 function claimJourneyRewards(){
@@ -856,6 +886,7 @@ function render(liveOnly=false){
   const encounter=S.encounter,type=ENCOUNTER_TYPES[encounter.kind];
   const mn=encounter.legacy?MONSTERS[S.missionKills%MONSTERS.length].split(' ').slice(1).join(' '):encounter.kind==='lucky'?'Goblin de la suerte':MISSION_MONSTERS[encounter.species].name;
   $('mIcon').innerHTML=missionMonsterArt(encounter);$('mName').textContent=mn;
+  $('mission-encounter').dataset.kind=encounter.kind;
   $('encounter-tag').textContent=type.label;$('encounter-tag').dataset.kind=encounter.kind;
   $('encounter-info').textContent=encounter.kind==='normal'?'Derrota al enemigo para obtener monedas y experiencia.':`Recompensa: x${type.coins} monedas · x${type.xp} XP${type.materials?` · ${type.materials} fragmentos`:''}.`;
   const max=encounter.maxHp;
