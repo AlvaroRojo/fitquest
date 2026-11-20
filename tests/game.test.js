@@ -128,6 +128,14 @@ test('stat breakdown matches gameplay bonuses from training, equipment and achie
   })()`),true);
 });
 
+test('character inventory marks equipped items and keeps compact filterable layout', () => {
+  assert.match(html, /class="inventory-summary"><p id="materials"><\/p><small>/);
+  assert.match(html, /#inventory\{display:grid;grid-template-columns:repeat\(auto-fill/);
+  assert.match(script, /row\.className=worn\?'inventory-item is-equipped':'inventory-item'/);
+  assert.match(script, /class="equipped-badge">✓ Equipado/);
+  assert.match(script, /b\.className=it\?'slot is-equipped':'slot'/);
+});
+
 test('training improves autobattle and dungeon damage without changing mission targets', () => {
   const g=game();
   assert.equal(g.run(`(() => {
