@@ -5,14 +5,17 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>FitQuest</title>
 <style>
-  body{font-family:system-ui,sans-serif;background:#14161f;color:#eee;max-width:640px;margin:0 auto;padding:12px}
-  h1{margin:.2em 0} h2{font-size:1.05em;margin:.8em 0 .4em;color:#9ad}
-  .card{background:#1f2331;border-radius:10px;padding:12px;margin-bottom:10px}
+  *{box-sizing:border-box}
+  body{font-family:system-ui,sans-serif;background:radial-gradient(ellipse at top,#252450,#0d101e 65%);color:#e9ecff;max-width:920px;margin:0 auto;padding:16px;min-height:100vh}
+  h1{margin:.2em 0;letter-spacing:.04em} h2{font-size:1.1em;margin:.4em 0 .7em;color:#b5caff}
+  .subtitle,small,.muted{color:#acb5d3}
+  .card{background:#1b2238;border:1px solid #343e60;border-radius:14px;padding:16px;margin-bottom:12px;box-shadow:0 6px 25px #05071344}
   .bar{background:#0c0d13;border-radius:6px;height:14px;overflow:hidden}
   .bar>div{height:100%;transition:width .3s}
   .xp>div{background:#4c8}.hp>div{background:#d54}.mis>div{background:#58f}
-  button{background:#3a4366;color:#fff;border:0;border-radius:6px;padding:6px 10px;margin:2px;cursor:pointer}
-  button:hover{background:#4a5586} button:disabled{opacity:.4;cursor:default}
+  button{background:#414d77;color:#fff;border:1px solid #596899;border-radius:8px;padding:8px 12px;margin:2px;cursor:pointer}
+  button:hover:not(:disabled){background:#596da4} button:disabled{opacity:.45;cursor:not-allowed}
+  button:focus-visible,select:focus-visible{outline:2px solid #8ce2ff;outline-offset:2px}
   .row{display:flex;justify-content:space-between;align-items:center;gap:8px}
   .big{font-size:3em;text-align:center}
   #log{font-size:.85em;color:#aab;max-height:120px;overflow:auto}
@@ -22,14 +25,23 @@
   .slot b{display:block;font-size:1.6em}
   .item{padding:6px 0;border-bottom:1px solid #2a3047}
   select{background:#0c0d13;color:#eee;border:1px solid #3a4366;border-radius:6px;padding:5px;margin-bottom:6px}
-  .navigation{display:flex;gap:6px;margin-bottom:10px}
-  .navigation button{flex:1;margin:0;padding:10px 4px}
-  .navigation button[aria-selected="true"]{background:#586ba3;outline:2px solid #9ad}
+  .navigation{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px}
+  .navigation button{margin:0;padding:10px 4px}
+  .navigation button[aria-selected="true"]{background:#6751ae;outline:2px solid #beaaff}
+  .notice{border-left:3px solid #7cc9ed;padding-left:10px}
+  .achievement{padding:10px 0;border-bottom:1px solid #343e60}
+  .achievement.locked{opacity:.8}
+  .reward{color:#97e6ba}
+  .pack-result{min-height:1.5em;color:#f9d784;font-weight:bold}
+  .mission{padding:10px 0;border-bottom:1px solid #343e60}
+  .battle-icon{font-size:4em;text-align:center;margin:10px 0}
+  @media(max-width:480px){body{padding:10px}.navigation{grid-template-columns:repeat(2,1fr)}.row{flex-wrap:wrap}}
   [hidden]{display:none !important}
 </style>
 </head>
 <body>
 <h1>⚔️ FitQuest</h1>
+<p class="subtitle">Entrena a tu ritmo. Equipa a tu héroe. Conquista la arena.</p>
 
 <div class="card">
   <div class="row"><b id="lvl"></b><span id="coins"></span><span id="streak"></span></div>
@@ -41,6 +53,9 @@
   <button type="button" role="tab" id="tab-adventure" data-section="adventure" aria-controls="adventure" aria-selected="true">Misiones y monstruos</button>
   <button type="button" role="tab" id="tab-character" data-section="character" aria-controls="character" aria-selected="false" tabindex="-1">Personaje</button>
   <button type="button" role="tab" id="tab-store" data-section="store" aria-controls="store" aria-selected="false" tabindex="-1">Tienda</button>
+  <button type="button" role="tab" id="tab-achievements" data-section="achievements" aria-controls="achievements" aria-selected="false" tabindex="-1">🏆 Logros</button>
+  <button type="button" role="tab" id="tab-packs" data-section="packs" aria-controls="packs" aria-selected="false" tabindex="-1">🎁 Sobres</button>
+  <button type="button" role="tab" id="tab-battle" data-section="battle" aria-controls="battle" aria-selected="false" tabindex="-1">⚔️ Autobatalla</button>
 </div>
 
 <main>
@@ -56,6 +71,7 @@
 <div class="card">
   <h2>Misiones activas <small id="cnt"></small></h2>
   <div id="missions"></div>
+  <p class="notice"><small>Adapta los ejercicios a tu capacidad, descansa cuando lo necesites y detente si sientes dolor. No es asesoramiento médico.</small></p>
   <button id="rest">😴 Día de descanso (1 por semana, mantiene racha)</button>
 </div>
 <div class="card"><h2>Registro</h2><div id="log"></div></div>
@@ -75,6 +91,38 @@
   <h2>Tienda</h2>
   <select id="filter"></select>
   <div id="shop"></div>
+</div>
+</section>
+
+<section id="achievements" role="tabpanel" aria-labelledby="tab-achievements" hidden>
+<div class="card">
+  <h2>🏆 Sala de logros</h2>
+  <p>Se desbloquean automáticamente y sus mejoras son permanentes.</p>
+  <div id="achievement-list"></div>
+</div>
+</section>
+
+<section id="packs" role="tabpanel" aria-labelledby="tab-packs" hidden>
+<div class="card">
+  <h2>🎁 Sobres de botín</h2>
+  <p>Un sobre cuesta <strong>100 monedas del juego</strong> y contiene un objeto aleatorio. No hay dinero real.</p>
+  <p>Probabilidades por objeto: común 60 %, poco común 25 %, raro 12 %, legendario 3 %. Los objetos de una misma rareza tienen la misma probabilidad.</p>
+  <p>Los objetos de cualquier nivel pueden salir y equiparse. Si ya tienes el objeto, recibes 25 monedas; los duplicados no se acumulan.</p>
+  <button id="open-pack" type="button">Abrir sobre · 100 🪙</button>
+  <p id="pack-result" class="pack-result" role="status" aria-live="polite"></p>
+</div>
+</section>
+
+<section id="battle" role="tabpanel" aria-labelledby="tab-battle" hidden>
+<div class="card">
+  <h2>⚔️ Arena automática</h2>
+  <p>Tu héroe ataca al mismo monstruo de las misiones cada 10 segundos. El equipo y los logros aumentan el daño.</p>
+  <div id="battle-icon" class="battle-icon"></div>
+  <div class="row"><strong id="battle-name"></strong><span id="battle-hp"></span></div>
+  <div class="bar hp"><div id="battle-bar"></div></div>
+  <p id="battle-status"></p>
+  <button id="battle-toggle" type="button"></button>
+  <p><small>Al volver se calcula hasta un máximo de 8 horas desde la última actualización; el tiempo adicional se pierde. También funciona en días de descanso.</small></p>
 </div>
 </section>
 </main>
@@ -129,31 +177,69 @@ const GROUPS={
   earring:{label:'Pendiente',icon:'🧿',stat:'xp',w:.8,names:[['Pendiente de cobre','Pendiente de bronce'],['Pendiente de plata','Pendiente de jade'],['Pendiente de oro','Pendiente de rubí'],['Pendiente de zafiro','Pendiente legendario']]},
 };
 const TIER_PCT=[3,6,10,15], TIER_COST=[40,120,350,900], TIER_LVL=[1,5,10,15];
+const TIER_NAMES=['Común','Poco común','Raro','Legendario'];
 const STAT_TXT={dmg:'daño',xp:'XP',coin:'monedas'};
 const ITEMS=[];
 for(const [g,d] of Object.entries(GROUPS)) for(let t=0;t<4;t++){
   const names=Array.isArray(d.names[t])?d.names[t]:[d.names[t]];
-  names.forEach((name,v)=>ITEMS.push({id:`${g}_${t}_${v}`,g,name,stat:d.stat,
+  names.forEach((name,v)=>ITEMS.push({id:`${g}_${t}_${v}`,g,name,stat:d.stat,tier:t,
     pct:Math.round(TIER_PCT[t]*d.w),cost:Math.round(TIER_COST[t]*d.w),lvl:TIER_LVL[t]}));
 }
 const ITEM=Object.fromEntries(ITEMS.map(i=>[i.id,i]));
-const bonus=stat=>{let t=0;for(const id of Object.values(S.eq)){const it=ITEM[id];if(it&&it.stat===stat)t+=it.pct}return 1+t/100};
+const ACHIEVEMENTS=[
+  {id:'mission1',name:'Primer paso',description:'Completa 1 misión',stat:'xp',pct:2,goal:1,value:s=>s.totalMissions},
+  {id:'mission10',name:'Aventurero constante',description:'Completa 10 misiones',stat:'dmg',pct:3,goal:10,value:s=>s.totalMissions},
+  {id:'mission50',name:'Leyenda del entrenamiento',description:'Completa 50 misiones',stat:'coin',pct:5,goal:50,value:s=>s.totalMissions},
+  {id:'kill1',name:'Primera victoria',description:'Derrota 1 monstruo',stat:'dmg',pct:2,goal:1,value:s=>s.kills},
+  {id:'kill25',name:'Cazador de élite',description:'Derrota 25 monstruos',stat:'xp',pct:4,goal:25,value:s=>s.kills},
+  {id:'level5',name:'Subiendo de rango',description:'Alcanza el nivel 5',stat:'coin',pct:3,goal:5,value:s=>s.level},
+  {id:'level15',name:'Héroe veterano',description:'Alcanza el nivel 15',stat:'dmg',pct:5,goal:15,value:s=>s.level},
+  {id:'pack10',name:'Coleccionista',description:'Abre 10 sobres',stat:'xp',pct:3,goal:10,value:s=>s.packsOpened}
+];
+const bonus=stat=>{
+  let t=0;
+  for(const id of Object.values(S.eq)){const it=ITEM[id];if(it&&it.stat===stat)t+=it.pct}
+  for(const a of ACHIEVEMENTS) if(S.achievements.includes(a.id)&&a.stat===stat)t+=a.pct;
+  return 1+t/100;
+};
 const target = (ex,l) => Math.max(ex.base, Math.round(ex.base*Math.min(2,1+0.05*(l-1))/ex.step[0])*ex.step[0]);
+const BATTLE_INTERVAL=10000, OFFLINE_LIMIT=8*60*60*1000, PACK_COST=100;
 
 const fresh = () => ({level:1,xp:0,coins:0,owned:[],eq:{},streak:0,kills:0,
-  day:today(),done:{},bonus:{},lastActive:null,lastRest:null,monsterHp:monsterHp(0),log:[],active:pickMissions(),completedToday:0});
-let S = JSON.parse(localStorage.getItem(KEY)||'null') || fresh();
+  day:today(),done:{},bonus:{},lastActive:null,lastRest:null,monsterHp:monsterHp(0),log:[],active:pickMissions(),completedToday:0,
+  targets:{},totalMissions:0,packsOpened:0,achievements:[],autoBattle:true,battleUpdated:Date.now()});
+let S;
+try{S=JSON.parse(localStorage.getItem(KEY)||'null') || fresh()}
+catch(error){alert('No se puede leer la partida guardada. No se ha borrado; revisa los datos del navegador.');throw error}
 if(!S.active){S.active=pickMissions();S.completedToday=0}
 if(!S.owned){S.owned=[];S.eq={}}
 if(S.weapon){for(let w=0;w<S.weapon;w++)S.coins+=Math.round(50*Math.pow(1.5,w));delete S.weapon}
+S.targets ??= {};
+S.totalMissions ??= 0;
+S.packsOpened ??= 0;
+S.achievements ??= [];
+S.autoBattle ??= true;
+S.battleUpdated ??= Date.now();
 
 function log(t){S.log.unshift(t);S.log=S.log.slice(0,40)}
+function unlockAchievements(){
+  for(const a of ACHIEVEMENTS){
+    if(!S.achievements.includes(a.id)&&a.value(S)>=a.goal){
+      S.achievements.push(a.id);
+      log(`🏆 Logro: ${a.name} (+${a.pct}% ${STAT_TXT[a.stat]})`);
+    }
+  }
+}
+function missionTarget(ex){
+  if(!S.targets[ex.id]) S.targets[ex.id]=target(ex,S.level);
+  return S.targets[ex.id];
+}
 function rollDay(){
   const t=today(); if(S.day===t) return;
   // la racha sobrevive si ayer hubo actividad o descanso
   const last=Math.max(S.lastActive?+new Date(S.lastActive):0,S.lastRest?+new Date(S.lastRest):0);
   if(!last || (new Date(t)-last)/864e5>1) S.streak=0;
-  S.day=t;S.done={};S.bonus={};S.completedToday=0;
+  S.day=t;S.done={};S.bonus={};S.targets={};S.completedToday=0;
 }
 const streakMult = () => 1+Math.min(0.3,S.streak*0.02);
 
@@ -168,11 +254,29 @@ function hit(dmg){
     S.coins+=reward;gain(Math.round((20+S.kills*3)*bonus('xp')));S.kills++;
     log(`💀 Derrotaste a ${MONSTERS[(S.kills-1)%MONSTERS.length]} (+${reward} 🪙)`);
     S.monsterHp+=monsterHp(S.kills);
+    unlockAchievements();
   }
 }
+function settleBattle(now=Date.now()){
+  if(!S.autoBattle){S.battleUpdated=now;return}
+  const elapsed=Math.max(0,now-S.battleUpdated);
+  const capped=Math.min(elapsed,OFFLINE_LIMIT);
+  const ticks=Math.floor(capped/BATTLE_INTERVAL);
+  if(ticks>0){
+    const killsBefore=S.kills,coinsBefore=S.coins;
+    for(let i=0;i<ticks;i++) hit(2*bonus('dmg'));
+    S.battleUpdated=elapsed>OFFLINE_LIMIT?now:now-(capped%BATTLE_INTERVAL);
+    unlockAchievements();
+    if(elapsed>=60000){
+      log(`⌛ Autobatalla: ${Math.floor(capped/60000)} min, ${S.kills-killsBefore} monstruos, +${S.coins-coinsBefore} monedas${elapsed>OFFLINE_LIMIT?' (límite de 8 h)':''}.`);
+    }
+  }else if(now<S.battleUpdated) S.battleUpdated=now;
+}
 function add(ex,amount){
+  settleBattle();
   rollDay();
-  const tgt=target(ex,S.level), before=S.done[ex.id]||0, after=before+amount;
+  if(S.completedToday>=MAX_DAILY || !S.active.includes(ex.id)) return;
+  const tgt=missionTarget(ex), before=S.done[ex.id]||0, after=before+amount;
   S.done[ex.id]=after;
   const full=Math.max(0,Math.min(after,tgt*OVERTRAIN)-before), extra=amount-full;
   const units=full+extra*0.25;
@@ -183,10 +287,12 @@ function add(ex,amount){
     S.bonus[ex.id]=1;gain(Math.round(30*mult*bonus('xp')));S.coins+=Math.round(10*bonus('coin'));
     log(`✅ Misión completada: ${ex.name} (+bonus)`);
     S.completedToday++;
+    S.totalMissions++;
+    unlockAchievements();
     if(S.completedToday<MAX_DAILY){
       const next=randomMission(S.active);
       S.active[S.active.indexOf(ex.id)]=next;
-      delete S.done[ex.id];delete S.bonus[ex.id];
+      delete S.done[ex.id];delete S.bonus[ex.id];delete S.targets[ex.id];
       log(`🎲 Nueva misión: ${byId(next).name}`);
     } else log('🛑 Límite diario de misiones alcanzado. ¡Descansa y vuelve mañana!');
     if(S.lastActive!==today()){
@@ -195,6 +301,7 @@ function add(ex,amount){
     }
   }
   if(extra>0) log(`⚠️ ${ex.name}: sobreentrenar rinde menos. Descansa y mantén la constancia.`);
+  unlockAchievements();
   save();render();
 }
 function save(){localStorage.setItem(KEY,JSON.stringify(S))}
@@ -226,6 +333,7 @@ for(const button of navigationButtons){
 }
 function render(){
   rollDay();
+  unlockAchievements();
   $('lvl').textContent=`Nivel ${S.level}`;
   $('coins').textContent=`🪙 ${S.coins}`;
   $('streak').textContent=`🔥 Racha ${S.streak} (x${streakMult().toFixed(2)})`;
@@ -236,18 +344,41 @@ function render(){
   const max=monsterHp(S.kills);
   $('mHp').textContent=`${Math.max(0,Math.ceil(S.monsterHp))}/${max} HP`;
   $('hpbar').style.width=Math.min(100,100*S.monsterHp/max)+'%';
+  $('battle-icon').textContent=mn[0];
+  $('battle-name').textContent=mn.slice(1).join(' ');
+  $('battle-hp').textContent=$('mHp').textContent;
+  $('battle-bar').style.width=$('hpbar').style.width;
+  $('battle-status').textContent=S.autoBattle
+    ? `Activa · ${Math.round(2*bonus('dmg')*100)/100} de daño cada 10 segundos`
+    : 'En pausa · no se acumula progreso.';
+  $('battle-toggle').textContent=S.autoBattle?'Pausar autobatalla':'Reanudar autobatalla';
   $('missions').innerHTML='';
   for(const ex of S.active.map(byId)){
-    const tgt=target(ex,S.level),d=S.done[ex.id]||0;
-    const el=document.createElement('div');el.style.marginBottom='8px';
+    const tgt=missionTarget(ex),d=S.done[ex.id]||0;
+    const el=document.createElement('div');el.className='mission';
     el.innerHTML=`<div class="row"><span class="${d>=tgt?'ok':''}">${d>=tgt?'✅':'🎯'} ${ex.name}</span><span>${d}/${tgt} ${ex.unit}</span></div>
       <div class="bar mis"><div style="width:${Math.min(100,100*d/tgt)}%"></div></div>`;
-    for(const s of ex.step){const b=document.createElement('button');b.textContent=`+${s}`;b.onclick=()=>add(ex,s);el.appendChild(b)}
+    for(const s of ex.step){const b=document.createElement('button');b.textContent=`+${s}`;b.disabled=S.completedToday>=MAX_DAILY;b.onclick=()=>add(ex,s);el.appendChild(b)}
+    const skip=document.createElement('button');
+    skip.textContent='Cambiar misión';
+    skip.setAttribute('aria-label',`Cambiar misión de ${ex.name}; perderás el progreso de esta misión`);
+    skip.disabled=S.completedToday>=MAX_DAILY;
+    skip.onclick=()=>{
+      settleBattle();rollDay();
+      if(S.completedToday>=MAX_DAILY || !S.active.includes(ex.id)){save();render();return}
+      const next=randomMission(S.active);
+      S.active[S.active.indexOf(ex.id)]=next;
+      delete S.done[ex.id];delete S.bonus[ex.id];delete S.targets[ex.id];
+      log(`🎲 Misión cambiada: ${byId(next).name}`);
+      save();render();
+    };
+    el.appendChild(skip);
     $('missions').appendChild(el);
   }
   $('cnt').textContent=`(${S.completedToday}/${MAX_DAILY} hoy)`;
   $('rest').disabled=!!S.lastRest&&daysBetween(S.lastRest,today())<7;
-  renderChar();renderShop();
+  renderChar();renderShop();renderAchievements();
+  $('open-pack').disabled=S.coins<PACK_COST;
   $('log').innerHTML=S.log.map(l=>`<div>${l}</div>`).join('');
 }
 function renderChar(){
@@ -257,13 +388,14 @@ function renderChar(){
     const b=document.createElement('button');b.className='slot';
     b.innerHTML=`<b>${g.icon}</b>${it?`${it.name}<br><span class="ok">+${it.pct}% ${STAT_TXT[it.stat]}</span>`:`${g.label}${sl.n?' '+sl.n:''}<br>vacío`}`;
     b.title=it?'Pulsa para desequipar':'Equipa un objeto desde la tienda';
-    b.onclick=()=>{if(it){delete S.eq[sl.k];save();render()}};
+    b.onclick=()=>{if(it){settleBattle();delete S.eq[sl.k];save();render()}};
     $('eq').appendChild(b);
   }
   const f=k=>Math.round((bonus(k)-1)*100);
   $('bonuses').textContent=`Bonos: daño +${f('dmg')}% · XP +${f('xp')}% · monedas +${f('coin')}%`;
 }
 function equip(it){
+  settleBattle();
   const slots=EQ_SLOTS.filter(x=>x.g===it.g);
   if(slots.some(x=>S.eq[x.k]===it.id)) return;
   const sl=slots.find(x=>!S.eq[x.k])||slots[0];
@@ -285,20 +417,75 @@ function renderShop(){
     else if(owned){b.textContent='Equipar';b.onclick=()=>equip(it)}
     else if(S.level<it.lvl){b.textContent=`Nivel ${it.lvl}`;b.disabled=true}
     else{b.textContent=`Comprar ${it.cost} 🪙`;b.disabled=S.coins<it.cost;
-      b.onclick=()=>{if(S.coins>=it.cost){S.coins-=it.cost;S.owned.push(it.id);log(`🛒 Comprado: ${it.name}`);equip(it)}}}
+      b.onclick=()=>{settleBattle();if(S.coins>=it.cost&&!S.owned.includes(it.id)){S.coins-=it.cost;S.owned.push(it.id);log(`🛒 Comprado: ${it.name}`);equip(it)}}}
     row.appendChild(b);box.appendChild(row);
   }
 }
-$('rest').onclick=()=>{S.lastRest=today();log('😴 Día de descanso: racha protegida');save();render()};
+function renderAchievements(){
+  const box=$('achievement-list');box.innerHTML='';
+  for(const a of ACHIEVEMENTS){
+    const unlocked=S.achievements.includes(a.id);
+    const el=document.createElement('div');el.className=`achievement${unlocked?'':' locked'}`;
+    el.innerHTML=`<strong>${unlocked?'🏆':'🔒'} ${a.name}</strong><br><span>${a.description} · ${Math.min(a.value(S),a.goal)}/${a.goal}</span><br><span class="reward">+${a.pct}% ${STAT_TXT[a.stat]}${unlocked?' · desbloqueado':''}</span>`;
+    box.appendChild(el);
+  }
+}
+$('open-pack').onclick=()=>{
+  settleBattle();
+  if(S.coins<PACK_COST){save();render();return}
+  S.coins-=PACK_COST;
+  const roll=Math.random();
+  const tier=roll<.60?0:roll<.85?1:roll<.97?2:3;
+  const pool=ITEMS.filter(it=>it.tier===tier);
+  const it=pool[Math.floor(Math.random()*pool.length)];
+  const duplicate=S.owned.includes(it.id);
+  if(duplicate) S.coins+=25;
+  else S.owned.push(it.id);
+  S.packsOpened++;
+  const message=`${TIER_NAMES[tier]}: ${it.name}${duplicate?' · duplicado, +25 monedas':' · añadido al inventario'}`;
+  $('pack-result').textContent=message;
+  log(`🎁 ${message}`);
+  unlockAchievements();save();render();
+};
+$('battle-toggle').onclick=()=>{
+  settleBattle();
+  S.autoBattle=!S.autoBattle;S.battleUpdated=Date.now();
+  log(S.autoBattle?'⚔️ Autobatalla reanudada':'⏸️ Autobatalla pausada');
+  save();render();
+};
+$('rest').onclick=()=>{
+  settleBattle();rollDay();
+  if(S.lastRest&&daysBetween(S.lastRest,today())<7){save();render();return}
+  S.lastRest=today();log('😴 Día de descanso: racha protegida');save();render();
+};
 let resetTimer;
 $('reset').onclick=()=>{
   const b=$('reset');
   if(b.dataset.armed){clearTimeout(resetTimer);delete b.dataset.armed;b.textContent='Reiniciar partida';
-    localStorage.removeItem(KEY);S=fresh();save();render();return}
+    S=fresh();$('pack-result').textContent='';save();render();return}
   b.dataset.armed=1;b.textContent='¿Seguro? Pulsa otra vez para borrar';
   resetTimer=setTimeout(()=>{delete b.dataset.armed;b.textContent='Reiniciar partida'},4000);
 };
+rollDay();
+unlockAchievements();
+settleBattle();
 render();
+save();
+setInterval(()=>{
+  if(!S.autoBattle) return;
+  const previous=S.battleUpdated;
+  settleBattle();
+  if(S.battleUpdated!==previous){save();render()}
+},10000);
+document.addEventListener('visibilitychange',()=>{
+  if(!document.hidden){settleBattle();rollDay();render();save()}
+});
+window.addEventListener('storage',event=>{
+  if(event.key!==KEY || event.newValue===null) return;
+  try{S=JSON.parse(event.newValue)}
+  catch(error){alert('No se puede leer la partida actualizada en otra pestaña.');throw error}
+  render();
+});
 </script>
 </body>
 </html>
