@@ -6,7 +6,7 @@
 <title>FitQuest</title>
 <style>
   *{box-sizing:border-box}
-  body{font-family:system-ui,sans-serif;background:radial-gradient(ellipse at 10% 0%,#302056,#10152b 48%,#080b19 100%);color:#e9ecff;max-width:920px;margin:0 auto;padding:16px;min-height:100vh}
+  body{font-family:system-ui,sans-serif;background:radial-gradient(ellipse at 10% 0%,#302056,#10152b 48%,#080b19 100%);color:#e9ecff;margin:0;padding:16px;min-height:100vh}
   body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:-1;background:repeating-linear-gradient(0deg,transparent 0 59px,#887aff0a 60px),repeating-linear-gradient(90deg,transparent 0 59px,#887aff0a 60px);mask-image:linear-gradient(transparent,#000)}
   h1{margin:.2em 0;letter-spacing:.1em;text-transform:uppercase;font-size:clamp(2rem,7vw,3rem);color:#fff;text-shadow:0 0 22px #9a6cffaa}
   h2{font-size:1.1em;margin:.4em 0 .7em;color:#b9d1ff;letter-spacing:.04em}
@@ -103,6 +103,16 @@
   @keyframes impact{40%{transform:scale(1.18);filter:drop-shadow(0 0 18px #ffcc80)}}
   @keyframes glow{50%{opacity:.5;filter:drop-shadow(0 0 7px red)}}
   @keyframes snarl{50%{transform:translateY(4px)}}
+  @media(min-width:1000px){
+    .game-layout{grid-template-columns:220px minmax(0,1fr)}
+    #adventure:not([hidden]),#character:not([hidden]){display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px;align-items:start}
+    #adventure>.card,#character>.card{margin-bottom:0}
+    #adventure>button{justify-self:start}
+    #character>.card:last-child{grid-column:1/-1}
+    #shop,#inventory,#achievement-list,#dungeon-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:10px}
+    #shop .item,#inventory .inventory-item,#dungeon-list .dungeon-card{margin:0}
+    #shop .item,#achievement-list .achievement{padding:10px;border:1px solid #514475;border-radius:10px;background:#12162bdd}
+  }
   @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none !important;transition:none !important}}
   @media(max-width:700px){.game-layout{grid-template-columns:1fr}.navigation{position:static;display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.navigation::before{grid-column:1/-1}.navigation button{text-align:center}}
   @media(max-width:480px){.city-map{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;padding:8px}.city-art{grid-column:1/-1;border-radius:8px}.city-pin,.city-pin:hover:not(:disabled),.city-pin:active:not(:disabled){position:static;transform:none;display:flex;justify-content:center;min-height:44px;font-size:.85rem}.city-pin span{font-size:1.2rem}}
