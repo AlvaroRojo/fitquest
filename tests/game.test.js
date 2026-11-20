@@ -137,7 +137,7 @@ test('global statistics use saved counters and all defeated monsters', () => {
     const stats=globalStats();
     return stats.missions===12 && stats.kills===27 && stats.days===8 &&
       stats.dungeons===2 && stats.packs===4 && stats.achievements===2 &&
-      stats.chapters===3 && stats.streak===5 && stats.items===2;
+      stats.chapters===3 && stats.streak===5 && Object.keys(stats).length===8;
   })()`),true);
 });
 

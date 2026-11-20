@@ -79,7 +79,7 @@ eliminarla.
   Bajo el entrenamiento se muestran las misiones, los monstruos derrotados
   (incluidos los de misión, arena y mazmorras), los días de actividad,
   las mazmorras completadas, los sobres, los logros y capítulos registrados,
-  la racha actual y los objetos del inventario.
+  y la racha actual.
 - **Logros:** desbloquean mejoras permanentes al alcanzar sus objetivos. Las
   misiones se cuentan desde esta versión; los niveles y monstruos derrotados
   de partidas antiguas sí se reconocen.
