@@ -68,11 +68,9 @@
   .game-header h1{font-family:Georgia,serif;color:#ffdf9a;text-shadow:0 3px #4e291d,0 0 22px #ffa95777}
   .game-header .subtitle{color:#d8b98d}
   .status-card{background:linear-gradient(120deg,#473126,#272137);border-color:#ad8051;box-shadow:inset 0 0 0 2px #241c22,0 8px 22px #0008}
-  .game-layout{display:grid;grid-template-columns:190px minmax(0,1fr);gap:14px;align-items:start}
   .game-layout main{min-width:0}
-  .navigation{display:flex;flex-direction:column;gap:7px;position:sticky;top:10px;padding:10px;border:1px solid #916941;border-radius:12px;background:linear-gradient(160deg,#493128,#221a28);box-shadow:inset 0 0 0 2px #251c21,0 10px 24px #0008}
-  .navigation::before{content:"🧭 MAPA DE AVENTURA";font:700 .72rem Georgia,serif;color:#eacb8d;letter-spacing:.08em;padding:8px 4px}
-  .navigation button{text-align:left;padding:11px 9px;border-color:#79593e;background:linear-gradient(110deg,#5b4130,#342638)}
+  .navigation{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:7px;padding:10px;border:1px solid #916941;border-radius:12px;background:linear-gradient(160deg,#493128,#221a28);box-shadow:inset 0 0 0 2px #251c21,0 10px 24px #0008}
+  .navigation button{text-align:center;padding:11px 9px;border-color:#79593e;background:linear-gradient(110deg,#5b4130,#342638)}
   .navigation button[aria-selected="true"]{background:linear-gradient(110deg,#a16e35,#683c38);outline:1px solid #f5cd7d;box-shadow:0 0 13px #dca15855}
   .card{border-color:#806348;background:linear-gradient(145deg,#2c2837,#171d2d);box-shadow:inset 0 0 0 1px #cfab6226,0 9px 24px #0008}
   h2{color:#f4d395;font-family:Georgia,serif;letter-spacing:.03em}
@@ -104,7 +102,6 @@
   @keyframes glow{50%{opacity:.5;filter:drop-shadow(0 0 7px red)}}
   @keyframes snarl{50%{transform:translateY(4px)}}
   @media(min-width:1000px){
-    .game-layout{grid-template-columns:220px minmax(0,1fr)}
     #adventure:not([hidden]),#character:not([hidden]){display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px;align-items:start}
     #adventure>.card,#character>.card{margin-bottom:0}
     #adventure>button{justify-self:start}
@@ -114,7 +111,7 @@
     #shop .item,#achievement-list .achievement{padding:10px;border:1px solid #514475;border-radius:10px;background:#12162bdd}
   }
   @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none !important;transition:none !important}}
-  @media(max-width:700px){.game-layout{grid-template-columns:1fr}.navigation{position:static;display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.navigation::before{grid-column:1/-1}.navigation button{text-align:center}}
+  @media(max-width:700px){.navigation{grid-template-columns:repeat(2,minmax(0,1fr))}}
   @media(max-width:480px){.city-map{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;padding:8px}.city-art{grid-column:1/-1;border-radius:8px}.city-pin,.city-pin:hover:not(:disabled),.city-pin:active:not(:disabled){position:static;transform:none;display:flex;justify-content:center;min-height:44px;font-size:.85rem}.city-pin span{font-size:1.2rem}}
   @media(max-width:480px){body{padding:10px}.row{flex-wrap:wrap}.hero-layout{grid-template-columns:1fr}.hero-stage{min-height:170px}.hero-art{height:160px}}
   [hidden]{display:none !important}
