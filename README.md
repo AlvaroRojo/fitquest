@@ -55,9 +55,11 @@ eliminarla.
   son independientes de la arena.
 - **Personaje y tienda:** compra equipo con monedas del juego y equípalo. Los
   objetos comprados y los obtenidos en sobres comparten inventario. En la
-  pestaña de personaje arrastra un objeto a un hueco compatible, o selecciónalo
-  y pulsa el hueco; también funciona con teclado y en móvil. Pulsa un hueco
-  equipado sin selección para vaciarlo. El aspecto del héroe evoluciona al
+  pestaña de personaje pulsa Equipar para colocarlo automáticamente en un hueco
+  compatible. Se usa el primer hueco libre o, si están ocupados, se sustituye
+  el primero; el objeto anterior permanece en el inventario. También puedes
+  arrastrar un objeto a un hueco concreto o pulsar un hueco equipado para
+  vaciarlo. La joyería se muestra por separado. El aspecto del héroe evoluciona al
   alcanzar +20 %, +60 % y +120 % de bonificación total de daño; puede volver
   a una apariencia anterior si se reduce ese bono. Los objetos equipados se
   muestran primero en el inventario. Desmantela objetos no equipados con

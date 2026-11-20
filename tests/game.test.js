@@ -547,6 +547,23 @@ test('equipment placement validates slots and dismantling only consumes unequipp
   })()`), true);
 });
 
+test('automatic equipment uses empty slots first and replaces first only when full', () => {
+  const g=game();
+  assert.equal(g.run(`(() => {
+    S=fresh(); S.owned=['ring_0_0','ring_0_1','ring_0_2','sword_0_0','sword_0_1'];
+    if(autoEquipItem('ring_0_3') || autoEquipItem('invalid'))return false;
+    if(!autoEquipItem('ring_0_0') || !autoEquipItem('ring_0_1'))return false;
+    if(S.eq.ring1!=='ring_0_0' || S.eq.ring2!=='ring_0_1' || autoEquipItem('ring_0_0'))return false;
+    if(!autoEquipItem('ring_0_2') || S.eq.ring1!=='ring_0_2' || S.eq.ring2!=='ring_0_1' || !S.owned.includes('ring_0_0'))return false;
+    if(!autoEquipItem('sword_0_0') || !autoEquipItem('sword_0_1'))return false;
+    save(); return S.eq.sword==='sword_0_1' && S.owned.includes('sword_0_0');
+  })()`),true);
+  const restored=game(g.saved());
+  assert.equal(restored.run('S.eq.ring1'),'ring_0_2');
+  assert.equal(restored.run('S.eq.ring2'),'ring_0_1');
+  assert.equal(restored.run('S.eq.sword'),'sword_0_1');
+});
+
 test('upgrades continue past five, consume fragments and are lost on dismantle', () => {
   const g=game();
   assert.equal(g.run(`(() => {
