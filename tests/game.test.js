@@ -208,9 +208,10 @@ test('mission board omits manual changes and the visible activity log', () => {
   assert.match(script, /const next=randomMission\(S\.active\)/);
 });
 
-test('reset control is at the bottom of the adventure section', () => {
-  assert.match(html, /id="journey">[\s\S]*?id="weekly-progress"><\/div>\s*<\/div>\s*<div class="reset-footer"><button id="reset"[^>]*>Reiniciar partida<\/button><\/div>\s*<\/section>/);
+test('journey places milestones under chapter progress and reset at the bottom', () => {
+  assert.match(html, /id="journey">[\s\S]*?id="weekly-progress"><\/div>\s*<div class="reset-footer"><button id="reset"[^>]*>Reiniciar partida<\/button><\/div>\s*<\/div>\s*<\/section>/);
   assert.equal((html.match(/id="reset"/g) || []).length, 1);
+  assert.match(script, /class="chapter-progress"><h3>[\s\S]*?class="bar mis"[\s\S]*?class="milestones"/);
 });
 
 test('all mission creatures have full-body artwork and a mapped biome', () => {

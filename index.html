@@ -60,6 +60,8 @@
   .chapter{font-size:.75em;color:#9be6d6;letter-spacing:.1em;text-transform:uppercase}
   .key-gem{display:inline-grid;place-items:center;width:44px;height:44px;border:1px solid #e3c56d;border-radius:12px;background:linear-gradient(145deg,#665225,#251b3d);font-size:1.55rem;box-shadow:0 0 16px #f4d15d55;animation:float 3s ease-in-out infinite}
   .week-card{border:1px solid #65cdb7;background:linear-gradient(120deg,#1c3b4b,#242447);border-radius:12px;padding:14px;margin:12px 0}
+  .chapter-progress{display:grid;gap:8px}
+  .chapter-progress h3{margin:0}
   .milestones{display:flex;gap:8px;flex-wrap:wrap}
   .milestone{padding:7px 10px;border:1px solid #746aaf;border-radius:8px;background:#1a2039}
   .milestone.done{color:#a5f8df;border-color:#68cbb2}
@@ -175,7 +177,7 @@
   .bar{background:#0b0e18;box-shadow:inset 0 1px 4px #0009}
   .bar>div{border-radius:inherit}
   .notice{border-color:#80cdbd}
-  .reset-footer{text-align:right;margin:14px 0 4px}
+  .reset-footer{text-align:right;margin-top:12px}
   #reset{border-color:#a66b70;background:linear-gradient(135deg,#59363d,#322432);color:#ffe0dc}
   #shop .item,#achievement-list .achievement{border-color:#78604f;background:linear-gradient(135deg,#3b3033,#211f30)}
   @media(min-width:1000px){
@@ -202,15 +204,12 @@
     .encounter-stage .full-creature{max-height:340px;width:clamp(220px,23vw,320px)}
     .encounter-health{padding:12px}
     .encounter-info{padding:8px 10px}
-    #journey{grid-column:1/-1;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+    #journey{grid-column:1/-1}
     #journey h2{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
-    #weekly-progress{flex:1;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
-    #weekly-progress .week-card{flex:1 1 420px;display:grid;grid-template-columns:minmax(150px,1fr) minmax(180px,1fr);gap:3px 12px;align-items:center;margin:0;padding:8px 12px}
+    #weekly-progress .week-card{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px;align-items:start;margin:0;padding:12px}
     #weekly-progress .week-card h3,#weekly-progress .week-card p{margin:0;font-size:.95rem}
-    #weekly-progress .week-card small{grid-column:1/-1}
     #weekly-progress .milestones{gap:5px}
     #weekly-progress .milestone{padding:5px 8px;font-size:.9rem}
-    #adventure .reset-footer{grid-column:1/-1;margin:2px 0 4px}
     #character>.card:last-child{grid-column:1/-1}
     #shop,#inventory,#achievement-list,#dungeon-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:10px}
     #shop .item,#inventory .inventory-item,#dungeon-list .dungeon-card{margin:0}
@@ -291,8 +290,8 @@
 <div class="card" id="journey">
   <h2>🗺️ Travesía del héroe</h2>
   <div id="weekly-progress"></div>
+  <div class="reset-footer"><button id="reset" type="button">Reiniciar partida</button></div>
 </div>
-<div class="reset-footer"><button id="reset" type="button">Reiniciar partida</button></div>
 </section>
 
 <section id="character" role="tabpanel" aria-labelledby="tab-character" hidden>
@@ -936,12 +935,12 @@ function journeyMarkup(){
   const next=completed+1;
   const reward=completed===JOURNEY_CHAPTERS?'¡Has completado toda la travesía!':
     `Próximo capítulo: +${35+3*next} monedas y +${3+Math.min(next,20)} fragmentos`;
-  return `<div class="week-card"><div class="chapter">🌌 Crónicas del héroe · ${completed}/${JOURNEY_CHAPTERS}</div>
-    <h3>${completed===JOURNEY_CHAPTERS?'🏆 Leyenda de la travesía':`✨ Camino al capítulo ${next}`}</h3>
+  return `<div class="week-card"><div class="journey-summary"><div class="chapter">🌌 Crónicas del héroe · ${completed}/${JOURNEY_CHAPTERS}</div>
     <p>${completed===JOURNEY_CHAPTERS?'Puedes seguir jugando a tu ritmo.':`${progress}/${WEEKLY_DAYS} días de actividad para avanzar`}</p>
-    <div class="bar mis"><div style="width:${percent}%"></div></div>
     <p class="reward">${reward}</p><small>Los días de actividad no tienen que ser consecutivos; descansar no borra el progreso.</small></div>
-    <div class="milestones"><span class="milestone ${S.activeDays>=7?'done':''}">🌱 7 días</span><span class="milestone ${S.activeDays>=30?'done':''}">⚔️ 30 días</span><span class="milestone ${S.activeDays>=90?'done':''}">💎 90 días</span><span class="milestone ${S.activeDays>=180?'done':''}">👑 180 días</span><span class="milestone ${S.activeDays>=365?'done':''}">🏆 365 días</span></div>`;
+    <div class="chapter-progress"><h3>${completed===JOURNEY_CHAPTERS?'🏆 Leyenda de la travesía':`✨ Camino al capítulo ${next}`}</h3>
+    <div class="bar mis"><div style="width:${percent}%"></div></div>
+    <div class="milestones"><span class="milestone ${S.activeDays>=7?'done':''}">🌱 7 días</span><span class="milestone ${S.activeDays>=30?'done':''}">⚔️ 30 días</span><span class="milestone ${S.activeDays>=90?'done':''}">💎 90 días</span><span class="milestone ${S.activeDays>=180?'done':''}">👑 180 días</span><span class="milestone ${S.activeDays>=365?'done':''}">🏆 365 días</span></div></div></div>`;
 }
 for(const button of navigationButtons){
   button.addEventListener('click',()=>selectSection(button));
