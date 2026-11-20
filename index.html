@@ -247,13 +247,13 @@
   .pack-offer{display:flex;flex-direction:column;gap:8px;padding:14px;border:1px solid #a87d4c;border-radius:12px;background:linear-gradient(145deg,#493931,#1d2130)}
   .pack-offer strong{color:#ffe0a2}.pack-offer button{margin:0;margin-top:auto}
   .pack-odds{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:3px 8px;color:#d8c6a9;font-size:.8rem}
-  .pack-stage{--loot-color:#c4c6cf;--loot-glow:#c4c6cf66;position:relative;display:grid;place-items:center;min-height:190px;margin:12px 0;border:1px solid var(--loot-color);border-radius:12px;background:radial-gradient(ellipse,var(--loot-glow),#171c2b 70%);overflow:hidden}
-  .pack-emblem{position:relative;z-index:2;font-size:4rem;line-height:1}
-  .pack-stage.opening .pack-emblem{animation:pack-open 1.6s ease-out forwards}
-  .pack-stage.opening::before,.pack-stage.opening::after{content:"";position:absolute;width:60px;height:60px;border:3px solid var(--loot-color);border-radius:50%;opacity:0;box-shadow:0 0 25px var(--loot-color);animation:pack-burst 1.6s ease-out}
-  .pack-stage.opening::after{animation-delay:.15s}
-  @keyframes pack-open{15%,35%{transform:rotate(-14deg) scale(1.12)}25%,45%{transform:rotate(14deg) scale(1.2)}55%{transform:scale(1.35);filter:drop-shadow(0 0 25px var(--loot-color))}72%,100%{transform:scale(2);opacity:0}}
-  @keyframes pack-burst{0%,50%{transform:scale(.3);opacity:0}60%{opacity:1}100%{transform:scale(var(--burst-size,3));opacity:0}}
+  .pack-stage{position:relative;height:180px;margin:12px 0;border:1px solid #a87d4c;border-radius:12px;background:radial-gradient(ellipse,#765274,#171c2b 70%);overflow:hidden}
+  .pack-stage::after{content:"▼";position:absolute;z-index:3;top:3px;left:50%;transform:translateX(-50%);color:#fff0c8;font-size:1.4rem;text-shadow:0 0 8px #f6a63f}
+  .pack-reel{position:absolute;top:28px;left:50%;display:flex;gap:8px;width:max-content;transform:translateX(-64px);transition:transform 4s cubic-bezier(.12,.72,.12,1)}
+  .pack-reel-card{width:128px;height:132px;display:grid;place-items:center;align-content:center;gap:5px;padding:8px;border:2px solid var(--loot-color);border-radius:10px;background:radial-gradient(ellipse,var(--loot-glow),#171c2b 78%);text-align:center;box-shadow:inset 0 0 18px var(--loot-glow)}
+  .pack-reel-card b{font-size:2rem}.pack-reel-card small{color:#fff0d4;font-size:.7rem;line-height:1.2;overflow-wrap:anywhere}
+  .pack-reel-card.winner{box-shadow:inset 0 0 18px var(--loot-glow),0 0 14px var(--loot-glow)}
+  @keyframes pack-burst{0%{transform:scale(.3);opacity:0}20%{opacity:1}100%{transform:scale(var(--burst-size,3));opacity:0}}
   .loot-tier[data-tier="0"]{--loot-color:#c4c6cf;--loot-glow:#aab1c733}
   .loot-tier[data-tier="1"]{--loot-color:#82c88d;--loot-glow:#3aa75a55}
   .loot-tier[data-tier="2"]{--loot-color:#75bff4;--loot-glow:#318cd966}
@@ -265,6 +265,11 @@
   #inventory .inventory-item.is-equipped{box-shadow:inset 0 0 18px var(--loot-glow),0 0 14px var(--loot-glow)}
   #character .slot.is-equipped.loot-tier{border-color:var(--loot-color);background:radial-gradient(ellipse at 50% 0%,var(--loot-glow),transparent 70%),linear-gradient(145deg,#352d3b,#171c2b);box-shadow:inset 0 0 14px var(--loot-glow)}
   .wheel-stage{position:relative;display:grid;place-items:center;min-height:210px;margin:12px 0}
+  .wheel-stage.burst::after{content:"";position:absolute;z-index:3;width:65px;height:65px;border:4px solid var(--loot-color);border-radius:50%;box-shadow:0 0 25px var(--loot-color),inset 0 0 20px var(--loot-color);pointer-events:none;animation:pack-burst 1.2s ease-out forwards}
+  .wheel-flare{position:absolute;z-index:2;width:220px;aspect-ratio:1;border-radius:50%;opacity:0;pointer-events:none;background:repeating-conic-gradient(from 0deg,transparent 0 13deg,var(--loot-color) 16deg,transparent 20deg 30deg);mask-image:radial-gradient(circle,transparent 15%,#000 38%,transparent 72%)}
+  .wheel-stage.burst .wheel-flare{animation:wheel-flare 1.2s ease-out forwards}
+  .wheel-stage.burst .loot-wheel{box-shadow:0 0 35px var(--loot-color),inset 0 0 20px var(--loot-glow)}
+  @keyframes wheel-flare{0%{opacity:0;transform:scale(.3) rotate(0)}25%{opacity:.9}100%{opacity:0;transform:scale(var(--flare-size,1)) rotate(35deg)}}
   .wheel-stage::before{content:"▼";position:absolute;top:0;z-index:2;color:#fff0c8;font-size:1.6rem;text-shadow:0 0 8px #f6a63f}
   .loot-wheel{display:grid;place-items:center;width:185px;aspect-ratio:1;border:6px solid #e7bb72;border-radius:50%;background:conic-gradient(#a7b3bd 0 51.4deg,#62a576 51.4deg 102.8deg,#4c98c5 102.8deg 154.2deg,#d9a64a 154.2deg 205.6deg,#9b64bf 205.6deg 257deg,#c65a58 257deg 308.4deg,#5ecabc 308.4deg);box-shadow:0 0 22px #e5a46477,inset 0 0 20px #0009;transition:transform 2.8s cubic-bezier(.15,.65,.1,1)}
   .loot-wheel span{display:grid;place-items:center;width:54px;height:54px;border:2px solid #e8bf7b;border-radius:50%;background:#27202e;font-size:1.6rem}
@@ -543,15 +548,15 @@
 <div class="card">
   <h2>🎁 Sobres de botín</h2>
   <p>Elige un sobre: los más caros y el tormento mejoran tus probabilidades. Solo aparecen rarezas disponibles para tu nivel. Las monedas son del juego, nunca dinero real.</p>
-  <p>Todos los objetos de una rareza tienen la misma probabilidad. Los duplicados devuelven el 25 % del precio del sobre.</p>
+  <p>Todos los objetos de una rareza tienen la misma probabilidad. Los duplicados también se guardan en el inventario.</p>
   <div id="pack-list" class="pack-list"></div>
-  <div id="pack-stage" class="pack-stage loot-tier" data-tier="0" aria-hidden="true"><span class="pack-emblem">🎁</span></div>
+  <div id="pack-stage" class="pack-stage" aria-hidden="true"><div class="pack-reel" id="pack-reel"><div class="pack-reel-card loot-tier" data-tier="3"><b>🎁</b><small>Abre un sobre</small></div></div></div>
   <p id="pack-result" class="pack-result" role="status" aria-live="polite"></p>
   <section class="armory-section" aria-labelledby="wheel-title">
     <h3 id="wheel-title">🎡 Ruleta de daño</h3>
-    <p>Solo otorga espadas, brazales y anillos de daño. Elige un sobre: usa el mismo precio, probabilidades, requisitos y devolución por duplicado.</p>
+    <p>Solo otorga espadas, brazales y anillos de daño. Elige un sobre: usa el mismo precio, probabilidades y requisitos; todos los objetos se guardan.</p>
     <div id="wheel-list" class="pack-list"></div>
-    <div class="wheel-stage" aria-hidden="true"><div class="loot-wheel" id="loot-wheel"><span>⚔️</span></div></div>
+    <div class="wheel-stage loot-tier" id="wheel-stage" data-tier="0" aria-hidden="true"><div class="loot-wheel" id="loot-wheel"><span>⚔️</span></div><div class="wheel-flare"></div></div>
     <p id="wheel-result" class="pack-result" role="status" aria-live="polite"></p>
   </section>
 </div>
@@ -765,6 +770,19 @@ for(const [g,d] of Object.entries(GROUPS)) for(let t=0;t<TIER_NAMES.length;t++){
   }));
 }
 const ITEM=Object.fromEntries(ITEMS.map(i=>[i.id,i]));
+const itemTypeId=id=>typeof id==='string'?id.split('#')[0]:'';
+const itemById=id=>{
+  const item=ITEM[itemTypeId(id)];
+  return item?(item.id===id?item:{...item,id}):null;
+};
+const ownsItemType=id=>S.owned.some(owned=>itemTypeId(owned)===id);
+function addItem(id){
+  if(!ITEM[id]) return null;
+  let instance=id,n=1;
+  while(S.owned.includes(instance)) instance=`${id}#${n++}`;
+  S.owned.push(instance);
+  return instance;
+}
 const SHOP_SIZE=10, FORGE_WEEKLY_LIMIT=10;
 const SHOP_WEIGHTS=[60,25,12,3,1,.4,.1];
 const FORGE={dmg:{name:'Filo eterno',icon:'⚔️'},xp:{name:'Sabiduría arcana',icon:'📘'},coin:{name:'Prosperidad dorada',icon:'🪙'}};
@@ -876,7 +894,7 @@ const ACHIEVEMENTS=[
 const statBreakdown=stat=>{
   const attributes=S.attributes[stat]||0;
   let equipment=0,achievements=0;
-  for(const id of Object.values(S.eq)){const it=ITEM[id];if(it&&it.stat===stat)equipment+=itemPercent(it)}
+  for(const id of Object.values(S.eq)){const it=itemById(id);if(it&&it.stat===stat)equipment+=itemPercent(it)}
   for(const a of ACHIEVEMENTS) if(S.achievements.includes(a.id)&&a.stat===stat)achievements+=a.pct;
   const forge=equipment>0?(S.forgeRanks[stat]||0):0;
   return {attributes,equipment,achievements,forge,total:attributes+equipment+achievements+forge};
@@ -890,7 +908,7 @@ const globalStats=()=>({
 });
 const inventoryEquippedFirst=ids=>{
   const equipped=new Set(Object.values(S.eq));
-  return [...ids].sort((a,b)=>Number(equipped.has(b))-Number(equipped.has(a)) || ITEM[b].tier-ITEM[a].tier);
+  return [...ids].sort((a,b)=>Number(equipped.has(b))-Number(equipped.has(a)) || itemById(b).tier-itemById(a).tier);
 };
 const target = (ex,l) => Math.max(ex.base, Math.round(ex.base*Math.min(2,1+0.05*(l-1))/ex.step[0])*ex.step[0]);
 const BATTLE_INTERVAL=10000, OFFLINE_LIMIT=8*60*60*1000;
@@ -918,9 +936,7 @@ function packOdds(pack,level,torment=0){
   const total=eligible.reduce((sum,weight)=>sum+weight,0);
   return eligible.map(weight=>weight/total);
 }
-function drawPack(id,stat=null){
-  const pack=PACKS.find(option=>option.id===id);
-  if(!pack||S.level<pack.level||S.coins<pack.cost) return null;
+function samplePackItem(pack,stat=null){
   const odds=packOdds(pack,S.level,S.torment);
   let roll=Math.random(),tier=0;
   for(let i=0;i<odds.length;i++){
@@ -930,15 +946,19 @@ function drawPack(id,stat=null){
   }
   const pool=ITEMS.filter(item=>item.tier===tier&&item.lvl<=S.level&&(!stat||item.stat===stat));
   const item=pool[Math.floor(Math.random()*pool.length)];
-  const duplicate=S.owned.includes(item.id),refund=duplicate?Math.floor(pack.cost/4):0;
+  return item;
+}
+function drawPack(id,stat=null){
+  const pack=PACKS.find(option=>option.id===id);
+  if(!pack||S.level<pack.level||S.coins<pack.cost) return null;
+  const item=samplePackItem(pack,stat),tier=item.tier;
   S.coins-=pack.cost;
-  if(duplicate) S.coins+=refund;
-  else S.owned.push(item.id);
+  const instance=addItem(item.id);
   S.packsOpened++;
-  const message=`${TIER_ICONS[tier]} ${TIER_NAMES[tier]}: ${item.name}${duplicate?` · duplicado, +${refund} monedas`:' · añadido al inventario'}`;
+  const message=`${TIER_ICONS[tier]} ${TIER_NAMES[tier]}: ${item.name} · añadido al inventario`;
   log(`${stat==='dmg'?'🎡 Ruleta de daño':'🎁 '+pack.name}: ${message}`);
   unlockAchievements();
-  return {message,tier,item};
+  return {message,tier,item:itemById(instance)};
 }
 function openPack(id){return drawPack(id)?.message??null}
 const DUNGEONS=[
@@ -1115,7 +1135,7 @@ function ensureShopStock(day=today()){
     let roll=Math.random()*total,tier=0;
     for(;tier<tiers.length-1;tier++){if(roll<tiers[tier]) break;roll-=tiers[tier]}
     const pool=remaining.filter(item=>item.tier===tier);
-    const unowned=pool.filter(item=>!S.owned.includes(item.id));
+    const unowned=pool.filter(item=>!ownsItemType(item.id));
     const choices=unowned.length?unowned:pool;
     S.shopStock.offers.push(choices[Math.floor(Math.random()*choices.length)].id);
   }
@@ -1125,8 +1145,8 @@ function buyDailyItem(id){
   ensureShopStock();
   const item=ITEM[id];
   if(!item || !S.shopStock.offers.includes(id) || S.shopStock.sold.includes(id) ||
-    S.owned.includes(id) || S.level<item.lvl || S.coins<item.cost) return false;
-  S.coins-=item.cost;S.owned.push(id);S.shopStock.sold.push(id);
+    S.level<item.lvl || S.coins<item.cost) return false;
+  S.coins-=item.cost;addItem(id);S.shopStock.sold.push(id);
   log(`🛒 Comprado: ${item.name}`);
   return true;
 }
@@ -1156,10 +1176,7 @@ function unlockAchievements(torment=S.torment){
       if(reward.coins) S.coins+=Math.round(reward.coins*TORMENTS[torment].reward);
       if(reward.materials) S.materials+=Math.round(reward.materials*TORMENTS[torment].reward);
       if(reward.keys) S.keys+=reward.keys;
-      if(reward.item&&ITEM[reward.item]){
-        if(S.owned.includes(reward.item)) S.materials+=TIER_FRAGMENTS[ITEM[reward.item].tier];
-        else S.owned.push(reward.item);
-      }
+      if(reward.item&&ITEM[reward.item]) addItem(reward.item);
       log(`🏆 Logro: ${a.name} · ${achievementRewardText(a,torment)}`);
     }
   }
@@ -1169,7 +1186,7 @@ function achievementRewardText(a,torment=0){
   if(reward.coins) parts.push(`+${Math.round(reward.coins*TORMENTS[torment].reward)} 🪙`);
   if(reward.materials) parts.push(`+${Math.round(reward.materials*TORMENTS[torment].reward)} 🔩`);
   if(reward.keys) parts.push(`+${reward.keys} 🔑`);
-  if(reward.item&&ITEM[reward.item]) parts.push(`🎁 ${ITEM[reward.item].name} (si ya lo tienes: ${TIER_FRAGMENTS[ITEM[reward.item].tier]} 🔩)`);
+  if(reward.item&&ITEM[reward.item]) parts.push(`🎁 ${ITEM[reward.item].name}`);
   return parts.join(' · ');
 }
 function missionDifficulty(ex){
@@ -1353,7 +1370,7 @@ function attackWeeklyBoss(day=today()){
   return true;
 }
 function dismantle(id){
-  const item=ITEM[id];
+  const item=itemById(id);
   if(!item || !S.owned.includes(id) || Object.values(S.eq).includes(id)) return false;
   S.owned=S.owned.filter(owned=>owned!==id);
   delete S.upgrades[id];
@@ -1363,7 +1380,7 @@ function dismantle(id){
   return true;
 }
 function upgradeItem(id){
-  const item=ITEM[id];
+  const item=itemById(id);
   if(!item || !S.owned.includes(id)) return false;
   const cost=upgradeCost(item);
   if(S.materials<cost) return false;
@@ -1372,14 +1389,14 @@ function upgradeItem(id){
   return true;
 }
 function placeItem(id,slotKey){
-  const item=ITEM[id],slot=EQ_SLOTS.find(s=>s.k===slotKey);
+  const item=itemById(id),slot=EQ_SLOTS.find(s=>s.k===slotKey);
   if(!item || !slot || item.g!==slot.g || !S.owned.includes(id) || Object.values(S.eq).includes(id)) return false;
   S.eq[slotKey]=id;
   log(`🎽 Equipado: ${item.name}`);
   return true;
 }
 function autoEquipItem(id){
-  const item=ITEM[id];
+  const item=itemById(id);
   if(!item || !S.owned.includes(id) || Object.values(S.eq).includes(id)) return false;
   const slots=EQ_SLOTS.filter(slot=>slot.g===item.g);
   const slot=slots.find(candidate=>!S.eq[candidate.k])||slots[0];
@@ -1731,14 +1748,22 @@ function renderPacks(){
       const result=drawPack(pack.id);
       save();render();
       if(!result){$('pack-result').textContent='No se puede abrir este sobre.';return}
-      const stage=$('pack-stage');
-      stage.dataset.tier=result.tier;
-      stage.style.setProperty('--burst-size',String(2+result.tier*.7));
-      stage.classList.remove('opening');
-      void stage.offsetWidth;
-      stage.classList.add('opening');
+      const reel=$('pack-reel'),winner=36;
+      reel.replaceChildren();
+      for(let i=0;i<40;i++){
+        const item=i===winner?result.item:samplePackItem(pack);
+        const card=document.createElement('div');card.className=`pack-reel-card loot-tier${i===winner?' winner':''}`;
+        card.dataset.tier=item.tier;
+        card.innerHTML=`<b>${GROUPS[item.g].icon}</b><small>${TIER_ICONS[item.tier]} ${TIER_NAMES[item.tier]}<br>${item.name}</small>`;
+        reel.appendChild(card);
+      }
+      reel.style.transition='none';reel.style.transform='translateX(-64px)';
+      void reel.offsetWidth;
+      reel.style.transition='';
+      reel.style.transform=`translateX(-${winner*136+64}px)`;
       $('pack-result').textContent='Abriendo sobre...';
-      lootTimer=setTimeout(()=>{lootTimer=null;$('pack-result').textContent=result.message;stage.classList.remove('opening');renderPacks()},1600);
+      const duration=matchMedia('(prefers-reduced-motion: reduce)').matches?50:4000;
+      lootTimer=setTimeout(()=>{lootTimer=null;$('pack-result').textContent=result.message;renderPacks()},duration);
       renderPacks();
     };
     card.appendChild(button);box.appendChild(card);
@@ -1753,11 +1778,18 @@ function renderPacks(){
       save();render();
       if(!result){$('wheel-result').textContent='No se puede girar la ruleta.';return}
       const wheel=$('loot-wheel');
+      const stage=$('wheel-stage');stage.classList.remove('burst');stage.dataset.tier=result.tier;
+      stage.style.setProperty('--burst-size',String(2+result.tier*.7));
+      stage.style.setProperty('--flare-size',String(.6+result.tier*.12));
       const target=(360-(result.tier+.5)*360/7)%360;
       wheelRotation+=1800+(target-wheelRotation%360+360)%360;
       wheel.style.transform=`rotate(${wheelRotation}deg)`;
       $('wheel-result').textContent='La ruleta está girando...';
-      lootTimer=setTimeout(()=>{lootTimer=null;$('wheel-result').textContent=result.message;renderPacks()},2800);
+      const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
+      lootTimer=setTimeout(()=>{
+        stage.classList.add('burst');$('wheel-result').textContent=result.message;
+        lootTimer=setTimeout(()=>{stage.classList.remove('burst');lootTimer=null;renderPacks()},reduced?50:1200);
+      },reduced?50:2800);
       renderPacks();
     };
     wheelCard.appendChild(spin);wheelBox.appendChild(wheelCard);
@@ -1792,7 +1824,7 @@ function renderChar(){
   $('eq').replaceChildren(hero);
   $('jewelry').replaceChildren();
   for(const sl of EQ_SLOTS){
-    const g=GROUPS[sl.g],it=ITEM[S.eq[sl.k]];
+    const g=GROUPS[sl.g],it=itemById(S.eq[sl.k]);
     const b=document.createElement('button');b.className=it?'slot is-equipped':'slot';
     if(it){b.classList.add('loot-tier');b.dataset.tier=it.tier}
     const jewelry=['ring','earring','necklace'].includes(sl.g);
@@ -1821,7 +1853,7 @@ function renderChar(){
   const inventory=$('inventory');inventory.innerHTML='';
   const type=$('inventory-type').value, equipped=$('inventory-equipped').value;
   const matches=inventoryEquippedFirst(S.owned.filter(id=>{
-    const item=ITEM[id],worn=Object.values(S.eq).includes(id);
+    const item=itemById(id),worn=Object.values(S.eq).includes(id);
     return item && (type==='all'||item.g===type) && (equipped==='all'||(equipped==='equipped'?worn:!worn));
   }));
   const pages=Math.max(1,Math.ceil(matches.length/INVENTORY_PAGE_SIZE));
@@ -1832,7 +1864,7 @@ function renderChar(){
   $('inventory-next').disabled=inventoryPage===pages-1;
   if(!matches.length){inventory.textContent=S.owned.length?'No hay objetos con estos filtros.':'Todavía no tienes objetos. Consigue uno en la tienda o en los sobres.';return}
   for(const id of matches.slice(inventoryPage*INVENTORY_PAGE_SIZE,(inventoryPage+1)*INVENTORY_PAGE_SIZE)){
-    const item=ITEM[id];if(!item) continue;
+    const item=itemById(id);if(!item) continue;
     const worn=Object.values(S.eq).includes(id);
     const row=document.createElement('div');row.className=worn?'inventory-item is-equipped':'inventory-item';
     row.classList.add('loot-tier');row.dataset.tier=item.tier;
@@ -1880,19 +1912,22 @@ function renderShop(){
   for(const id of S.shopStock.offers){
     const it=ITEM[id];
     if(!it){const row=document.createElement('div');row.className='shop-offer';row.textContent=`Oferta desconocida: ${id}`;box.appendChild(row);continue}
-    const owned=S.owned.includes(it.id),worn=Object.values(S.eq).includes(it.id);
+    const owned=S.owned.find(ownedId=>itemTypeId(ownedId)===it.id && !Object.values(S.eq).includes(ownedId));
     const sold=S.shopStock.sold.includes(it.id);
     const row=document.createElement('div');row.className='shop-offer loot-tier';
     row.dataset.tier=it.tier;
-    row.innerHTML=`<strong>${GROUPS[it.g].icon} ${it.name}${upgradeLevel(it.id)?` +${upgradeLevel(it.id)}`:''}</strong><small>${TIER_ICONS[it.tier]} ${TIER_NAMES[it.tier]} · +${itemPercent(it)}% ${STAT_TXT[it.stat]} · nivel ${it.lvl}</small>`;
+    row.innerHTML=`<strong>${GROUPS[it.g].icon} ${it.name}</strong><small>${TIER_ICONS[it.tier]} ${TIER_NAMES[it.tier]} · +${it.pct}% ${STAT_TXT[it.stat]} · nivel ${it.lvl}</small>`;
     const b=document.createElement('button');
-    if(worn){b.textContent='Equipado';b.disabled=true}
-    else if(owned){b.textContent='Equipar';b.onclick=()=>equip(it)}
-    else if(sold){b.textContent='Vendido';b.disabled=true}
+    if(sold){b.textContent='Vendido';b.disabled=true}
     else if(S.level<it.lvl){b.textContent=`Nivel ${it.lvl}`;b.disabled=true}
     else{b.textContent=`Comprar ${it.cost} 🪙`;b.disabled=S.coins<it.cost;
       b.onclick=()=>{settleBattle();const bought=buyDailyItem(it.id);save();render();if(!bought)$('shop-status').textContent='No se puede comprar esta oferta.'}}
-    row.appendChild(b);box.appendChild(row);
+    row.appendChild(b);
+    if(owned){
+      const equipButton=document.createElement('button');equipButton.textContent='Equipar copia';
+      equipButton.onclick=()=>equip(itemById(owned));row.appendChild(equipButton);
+    }
+    box.appendChild(row);
   }
   const used=S.forgeWeek===weekStart(today())?S.forgeWeekPurchases:0;
   $('forge-week').textContent=`🔥 ${used}/${FORGE_WEEKLY_LIMIT} mejoras esta semana`;
@@ -2080,7 +2115,7 @@ $('inventory-next').onclick=()=>{inventoryPage++;dismantleConfirm=null;renderCha
 $('reset').onclick=()=>{
   const b=$('reset');
   if(b.dataset.armed){clearTimeout(resetTimer);delete b.dataset.armed;b.textContent='Reiniciar partida';
-    clearTimeout(lootTimer);lootTimer=null;S=fresh();dismantleConfirm=null;inventoryPage=0;$('inventory-type').value='all';$('inventory-equipped').value='all';$('pack-result').textContent='';$('wheel-result').textContent='';$('pack-stage').classList.remove('opening');$('mission-status').textContent='';$('torment-status').textContent='';save();render();return}
+    clearTimeout(lootTimer);lootTimer=null;S=fresh();dismantleConfirm=null;inventoryPage=0;$('inventory-type').value='all';$('inventory-equipped').value='all';$('pack-result').textContent='';$('wheel-result').textContent='';$('wheel-stage').classList.remove('burst');$('pack-reel').replaceChildren();$('pack-reel').style.transform='translateX(-64px)';$('mission-status').textContent='';$('torment-status').textContent='';save();render();return}
   b.dataset.armed=1;b.textContent='¿Seguro? Pulsa otra vez para borrar';
   resetTimer=setTimeout(()=>{delete b.dataset.armed;b.textContent='Reiniciar partida'},4000);
 };

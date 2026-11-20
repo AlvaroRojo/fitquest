@@ -65,8 +65,8 @@ eliminarla.
   se excluyen las rarezas aún no desbloqueadas y se redistribuyen sus pesos.
   Cuando se agotan los objetos de una rareza también se excluye esa rareza.
   Dentro de la rareza sorteada se priorizan objetos no poseídos. Una oferta
-  comprada se añade al inventario sin equiparse y no se puede volver a comprar
-  ese día, incluso si desmantelas el objeto.
+  comprada se añade al inventario sin equiparse, incluso si ya posees otra
+  copia, y no se puede volver a comprar ese día, aunque desmanteles el objeto.
   Al actualizar una partida, las ocho ofertas existentes se conservan y se
   añaden dos más del nivel con el que se generaron.
   La **forja permanente** permite comprar hasta diez mejoras en total cada semana natural
@@ -89,6 +89,8 @@ eliminarla.
   a una apariencia anterior si se reduce ese bono. Los objetos equipados se
   muestran primero en el inventario; dentro de los equipados y los no
   equipados se ordenan de mayor a menor rareza. Sus fondos reflejan la rareza.
+  Las copias del mismo objeto son independientes: cada una se puede equipar,
+  mejorar o desmantelar por separado.
   Desmantela objetos no equipados con
   dos pulsaciones: dan 2, 5, 12, 25, 40, 65 o 100 fragmentos según su rareza. El inventario
   se puede filtrar por tipo y estado y muestra hasta 12 objetos por página.
@@ -119,14 +121,14 @@ eliminarla.
   rarezas altas. Los pesos de rarezas bloqueadas se excluyen y los restantes
   se normalizan; el tormento favorece las rarezas altas y las probabilidades
   actuales se muestran antes de comprar.
-  Cada objeto de una rareza tiene igual probabilidad. Un duplicado devuelve
-  el 25 % del precio. La compra se guarda inmediatamente, antes de mostrar la
-  animación de explosión, más intensa según la rareza, que respeta la
-  preferencia del sistema de reducir movimiento. La **ruleta de daño** permite
-  elegir cualquiera de los sobres con las mismas probabilidades, precio y
-  devolución de duplicados, pero solo entrega espadas, brazos y anillos de
-  daño. Las tiradas de la ruleta también cuentan como sobres abiertos. El
-  resultado se guarda antes de comenzar la animación.
+  Cada objeto de una rareza tiene igual probabilidad. Cada premio se añade al
+  inventario, incluso si es repetido, sin devolución de monedas. La compra se
+  guarda inmediatamente, antes de mostrar el carrusel animado. La **ruleta de
+  daño** permite elegir cualquiera de los sobres con las mismas probabilidades
+  y precio, pero solo entrega espadas, brazos y anillos de daño. Al detenerse,
+  muestra una explosión adaptada a la rareza. Las tiradas también cuentan como
+  sobres abiertos. Las animaciones respetan la preferencia del sistema de
+  reducir movimiento.
 - **Autobatalla:** siempre está activa y recorre 16 tipos de monstruos.
   Los élites y jefes de la arena son únicamente visuales: su vida y botín
   siguen la misma progresión que los demás enemigos de arena.
@@ -191,7 +193,7 @@ eliminarla.
   excluyendo las rarezas bloqueadas por nivel y normalizando después. La tienda
   conserva las ofertas y el tormento con que se generaron hasta el día siguiente.
   Las monedas y fragmentos de logros y capítulos también aumentan; las llaves,
-  los objetos, la compensación por objeto duplicado y los porcentajes
+  los objetos y los porcentajes
   permanentes de logros no cambian. Las recompensas de capítulo se calculan
   con el tormento de la misión que lo completa.
   La dificultad se fija al asignar una misión, al aparecer un monstruo, al

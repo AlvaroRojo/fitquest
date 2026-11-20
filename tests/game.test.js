@@ -1039,7 +1039,7 @@ test('a newly assigned mission and its torment are saved immediately', () => {
   assert.equal(game(saved).run(`S.missionTorments['${id}']`),12);
 });
 
-test('torment scales journey and achievement currency but not keys or item duplicates', () => {
+test('torment scales journey and achievement currency but not keys or item copies', () => {
   const g=game();
   assert.equal(g.run(`(() => {
     S=fresh(); S.level=120; S.activeDays=3;
@@ -1055,7 +1055,7 @@ test('torment scales journey and achievement currency but not keys or item dupli
       reward:{keys:2,item:'sword_0_0'}};
     ACHIEVEMENTS.push(b); S.owned.push('sword_0_0');
     const materials=S.materials; unlockAchievements(12); ACHIEVEMENTS.pop();
-    return S.keys===2 && S.materials-materials===TIER_FRAGMENTS[0];
+    return S.keys===2 && S.materials===materials && S.owned.includes('sword_0_0#1');
   })()`),true);
 });
 
@@ -1330,7 +1330,7 @@ test('pack odds exclude locked rarities, sum to one and improve with higher pack
   })()`),true);
 });
 
-test('packs enforce level and price, award items once and refund duplicates', () => {
+test('packs enforce level and price and retain duplicate items without refunds', () => {
   const g=game();
   assert.equal(g.run(`(() => {
     S=fresh(); S.coins=99; S.achievements=ACHIEVEMENTS.map(a=>a.id);
@@ -1340,23 +1340,24 @@ test('packs enforce level and price, award items once and refund duplicates', ()
     Math.random=()=>0;
     if(!openPack('basic') || S.coins!==900 || S.owned[0]!=='sword_0_0' || S.packsOpened!==1) return false;
     const message=openPack('basic');
-    if(!message.includes('duplicado, +25 monedas') || S.coins!==825 ||
-      S.owned.length!==1 || S.packsOpened!==2) return false;
+    if(!message.includes('añadido al inventario') || S.coins!==800 ||
+      S.owned.length!==2 || !S.owned.includes('sword_0_0#1') || S.packsOpened!==2) return false;
     save(); return true;
   })()`),true);
   const restored=game(g.saved());
   assert.equal(restored.run('S.packsOpened'),2);
-  assert.equal(restored.run('S.coins'),825);
+  assert.equal(restored.run('S.coins'),800);
   assert.equal(restored.run("S.owned.includes('sword_0_0')"),true);
+  assert.equal(restored.run("S.owned.includes('sword_0_0#1')"),true);
 });
 
-test('pack draws include high unlocked tiers and duplicates refund by pack price', () => {
+test('pack draws include high unlocked tiers and retain duplicate copies', () => {
   const g=game();
   assert.equal(g.run(`(() => {
     S=fresh(); S.level=40; S.coins=10000; S.achievements=ACHIEVEMENTS.map(a=>a.id);
     Math.random=()=>0.9999999999999999;
     if(!openPack('arcane') || ITEM[S.owned[0]].tier!==6 || S.coins!==8200) return false;
-    if(!openPack('arcane') || S.coins!==6850 || S.owned.length!==1) return false;
+    if(!openPack('arcane') || S.coins!==6400 || S.owned.length!==2 || itemById(S.owned[1]).tier!==6) return false;
     S.level=30; S.owned=[];
     if(!openPack('arcane') || ITEM[S.owned[0]].tier!==5) return false;
     S.materials=0;
@@ -1376,6 +1377,42 @@ test('damage roulette uses pack costs and odds but awards only damage equipment'
     Math.random=()=>0;
     S=fresh(); S.coins=200; S.achievements=ACHIEVEMENTS.map(a=>a.id);
     const first=drawPack('basic','dmg'),second=drawPack('basic','dmg');
-    return first.item.stat==='dmg' && second.message.includes('duplicado') && S.coins===25 && S.packsOpened===2;
+    return first.item.stat==='dmg' && second.item.id!==first.item.id && S.coins===0 && S.packsOpened===2;
+  })()`),true);
+});
+
+test('duplicate items equip, upgrade and dismantle independently and survive reload', () => {
+  const g=game();
+  assert.equal(g.run(`(() => {
+    S=fresh(); S.coins=1000; S.materials=100; S.achievements=ACHIEVEMENTS.map(a=>a.id);
+    Math.random=()=>0;
+    const first=drawPack('basic').item.id,second=drawPack('basic').item.id;
+    if(first!=='sword_0_0' || second!=='sword_0_0#1') return false;
+    if(!placeItem(first,'sword') || !upgradeItem(first) || !upgradeItem(second)) return false;
+    if(!upgradeItem(first) || upgradeLevel(first)!==2 || upgradeLevel(second)!==1 ||
+      itemPercent(itemById(first))!==ITEM.sword_0_0.pct+2) return false;
+    if(dismantle(first) || !dismantle(second) || upgradeLevel(first)!==2 ||
+      S.owned.includes(second) || !S.owned.includes(first)) return false;
+    const replacement=drawPack('basic').item.id;
+    if(replacement!==second || upgradeLevel(replacement)!==0) return false;
+    save(); return true;
+  })()`),true);
+  const restored=game(g.saved());
+  assert.equal(restored.run(`S.eq.sword==='sword_0_0' && upgradeLevel('sword_0_0')===2 &&
+    upgradeLevel('sword_0_0#1')===0 && S.owned.includes('sword_0_0#1')`),true);
+  assert.equal(restored.run(`dismantle('sword_0_0#1') && S.eq.sword==='sword_0_0' &&
+    statBreakdown('dmg').equipment===ITEM.sword_0_0.pct+2`),true);
+});
+
+test('identical rings are separately equippable and a store offer can sell another copy', () => {
+  const g=game();
+  assert.equal(g.run(`(() => {
+    S=fresh(); S.coins=1000; S.achievements=ACHIEVEMENTS.map(a=>a.id);
+    addItem('ring_0_0');addItem('ring_0_0');
+    if(!placeItem('ring_0_0','ring1') || !placeItem('ring_0_0#1','ring2') ||
+      statBreakdown('dmg').equipment!==2*ITEM.ring_0_0.pct) return false;
+    ensureShopStock();S.shopStock.offers[0]='ring_0_0';
+    if(!buyDailyItem('ring_0_0') || buyDailyItem('ring_0_0')) return false;
+    return S.owned.includes('ring_0_0#2') && S.eq.ring1==='ring_0_0' && S.eq.ring2==='ring_0_0#1';
   })()`),true);
 });
