@@ -116,6 +116,11 @@ test('attribute training validates type and cost and continues past the old cap'
   assert.equal(reloaded.run("bonus('dmg')"),1.21);
 });
 
+test('training does not show success notices but retains failure feedback', () => {
+  assert.match(script, /\$\('attribute-status'\)\.textContent=improved\?'':'No se puede mejorar este atributo\.'/);
+  assert.doesNotMatch(script, /aumentado a \$\{S\.attributes\[stat\]\}/);
+});
+
 test('stat breakdown matches gameplay bonuses from training, equipment and achievements', () => {
   const g=game();
   assert.equal(g.run(`(() => {

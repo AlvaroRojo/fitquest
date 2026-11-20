@@ -83,6 +83,7 @@
   .attributes{display:grid;gap:8px}
   .attribute{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;padding:9px 12px;border:1px solid #795f45;border-radius:9px;background:#1d1b2b}
   .attribute small{display:block}
+  #attribute-status:empty{display:none}
   .global-stats{margin-top:18px;padding-top:14px;border-top:1px solid #806346}
   .global-stats h3{margin:0 0 10px;color:#ffe0a2;font:700 1.05rem Georgia,serif}
   .global-stats table{width:100%;border-collapse:separate;border-spacing:0;border:1px solid #806346;border-radius:10px;overflow:hidden;background:#171c28}
@@ -1138,7 +1139,7 @@ function renderAttributes(){
       settleBattle();
       const improved=trainAttribute(stat);
       save();render();
-      $('attribute-status').textContent=improved?`${definition.name} aumentado a ${S.attributes[stat]}.`:'No se puede mejorar este atributo.';
+      $('attribute-status').textContent=improved?'':'No se puede mejorar este atributo.';
     };
     row.append(details,button);box.appendChild(row);
   }
