@@ -240,6 +240,7 @@
     .navigation{padding:7px;margin-bottom:10px}
     .navigation button{min-height:48px;padding:9px}
     #adventure:not([hidden]),#character:not([hidden]){display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px;align-items:start}
+    #character:not([hidden]){align-items:stretch}
     #adventure:not([hidden]){grid-template-columns:minmax(0,2fr) minmax(0,3fr);gap:10px;align-items:stretch}
     #adventure>.card,#character>.card{margin-bottom:0}
     #adventure>.card{padding:17px}
@@ -367,6 +368,9 @@
       <tr><th scope="row">🔑 Mazmorras completadas</th><td id="stat-dungeons"></td></tr>
       <tr><th scope="row">🎁 Sobres abiertos</th><td id="stat-packs"></td></tr>
       <tr><th scope="row">🏆 Logros desbloqueados</th><td id="stat-achievements"></td></tr>
+      <tr><th scope="row">🗺️ Capítulos completados</th><td id="stat-chapters"></td></tr>
+      <tr><th scope="row">🔥 Racha actual</th><td id="stat-streak"></td></tr>
+      <tr><th scope="row">🎒 Objetos en inventario</th><td id="stat-items"></td></tr>
     </tbody></table>
   </div>
 </div>
@@ -605,7 +609,8 @@ const bonus=stat=>1+statBreakdown(stat).total/100;
 const heroPowerTier=()=>{const power=statBreakdown('dmg').total;return power>=120?3:power>=60?2:power>=20?1:0};
 const globalStats=()=>({
   missions:S.totalMissions,kills:S.kills,days:S.activeDays,
-  dungeons:S.dungeonClears,packs:S.packsOpened,achievements:S.achievements.length
+  dungeons:S.dungeonClears,packs:S.packsOpened,achievements:S.achievements.length,
+  chapters:S.weeklyRewards,streak:S.streak,items:S.owned.length
 });
 const inventoryEquippedFirst=ids=>{
   const equipped=new Set(Object.values(S.eq));

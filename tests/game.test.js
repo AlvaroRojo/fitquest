@@ -133,9 +133,11 @@ test('global statistics use saved counters and all defeated monsters', () => {
   assert.equal(g.run(`(() => {
     S=fresh(); S.totalMissions=12; S.kills=27; S.missionKills=5; S.autoKills=18;
     S.activeDays=8; S.dungeonClears=2; S.packsOpened=4; S.achievements=['kill1','mission1'];
+    S.weeklyRewards=3; S.streak=5; S.owned=['sword_0_0','shield_0_0'];
     const stats=globalStats();
     return stats.missions===12 && stats.kills===27 && stats.days===8 &&
-      stats.dungeons===2 && stats.packs===4 && stats.achievements===2;
+      stats.dungeons===2 && stats.packs===4 && stats.achievements===2 &&
+      stats.chapters===3 && stats.streak===5 && stats.items===2;
   })()`),true);
 });
 
