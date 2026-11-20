@@ -195,10 +195,10 @@ test('active mission targets and partial progress persist across day changes', (
   assert.equal(restored.run('S.targets[S.active[4]]'),g.run('S.targets[S.active[4]]'));
 });
 
-test('mission board keeps guidance collapsed and removes weekly rest control', () => {
+test('mission board omits guidance text and weekly rest control', () => {
   const board = html.match(/<h2>📜 Tablón de encargos[\s\S]*?<\/div>\s*<div class="card" id="journey">/)[0];
-  assert.match(board, /<details class="quest-help">/);
-  assert.match(board, /<summary>ⓘ Reglas y bienestar<\/summary>/);
+  assert.doesNotMatch(board, /Reglas y bienestar|Elige una misión/);
+  assert.doesNotMatch(html, /Tu ejercicio real es el daño/);
   assert.doesNotMatch(html, /id="rest"|\$\('rest'\)/);
 });
 

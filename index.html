@@ -126,11 +126,7 @@
   .quest-board .quest-rewards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:5px;margin:0}
   .quest-board .quest-rewards span{min-width:0;overflow-wrap:anywhere}
   .quest-board .quest-rewards span:last-child{grid-column:1/-1}
-  .mission-status{min-height:3.9em;margin:12px 0 0;color:#a5f8df;font-size:.9rem;overflow-wrap:anywhere}
-  .quest-help{margin-top:14px;color:#c6bdd1;font-size:.85rem}
-  .quest-help summary{display:inline-block;cursor:pointer;color:#ecd3a2;font-weight:600}
-  .quest-help summary:focus-visible{outline:2px solid #8ce2ff;outline-offset:3px}
-  .quest-help p{margin:8px 0}
+  .mission-status{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap;border:0}
   .encounter-card{--encounter-accent:#d9aa74;--encounter-glow:#be688d;display:flex;flex-direction:column;gap:12px;overflow:hidden;background:radial-gradient(ellipse at 50% 40%,#4c3047,#191b2b 68%);border-color:#a47b58}
   .encounter-card[data-kind="boss"]{--encounter-accent:#ff9c88;--encounter-glow:#e44358}
   .encounter-card[data-kind="elite"]{--encounter-accent:#d6b1ff;--encounter-glow:#a45df2}
@@ -168,7 +164,6 @@
   .encounter-health #mHp{font-size:.85rem;font-weight:700;color:#ffc1bc}
   .encounter-health .bar{height:16px;border:1px solid #6f424c}
   .encounter-info{margin:0;padding:9px 12px;border-left:2px solid var(--encounter-accent);background:#15192899}
-  .encounter-note{margin:0}
   @keyframes encounter-rune{to{transform:rotate(360deg)}}
   @keyframes encounter-breathe{50%{opacity:.35}}
   .hero-stage{background:radial-gradient(ellipse at center,#a9749266,#14192c 72%);border-color:#9e7794}
@@ -179,10 +174,38 @@
   .notice{border-color:#80cdbd}
   #shop .item,#achievement-list .achievement{border-color:#78604f;background:linear-gradient(135deg,#3b3033,#211f30)}
   @media(min-width:1000px){
+    body{padding:7px}
+    .status-card{padding:5px 14px;margin-bottom:8px}
+    .status-card .row{margin-bottom:3px}
+    .navigation{padding:6px;margin-bottom:8px}
+    .navigation button{min-height:40px;padding:7px}
     #adventure:not([hidden]),#character:not([hidden]){display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px;align-items:start}
-    #adventure:not([hidden]){grid-template-columns:minmax(0,2fr) minmax(0,3fr);align-items:stretch}
+    #adventure:not([hidden]){grid-template-columns:minmax(0,2fr) minmax(0,3fr);gap:8px;align-items:stretch}
     #adventure>.card,#character>.card{margin-bottom:0}
-    #journey{grid-column:1/-1}
+    #adventure>.card{padding:12px}
+    #adventure .card h2{margin-bottom:8px}
+    .quest-board .mission{padding:9px;gap:4px;font-size:.88rem}
+    .mission-icon{width:32px;height:32px;font-size:1rem}
+    .mission-title strong{min-height:2.6em}
+    .mission-difficulty{padding:1px 7px}
+    .quest-rewards span{padding:2px 4px;font-size:.73rem}
+    .quest-board .quest-rewards{grid-template-columns:repeat(3,minmax(0,1fr))}
+    .quest-board .quest-rewards span:last-child{grid-column:auto}
+    .quest-board .complete{min-height:38px;margin-top:auto;padding:6px}
+    .encounter-card{gap:7px}
+    .encounter-stage{min-height:200px}
+    .encounter-stage .full-creature{max-height:200px;width:clamp(150px,15vw,205px)}
+    .encounter-health{padding:8px}
+    .encounter-info{padding:5px 8px}
+    #journey{grid-column:1/-1;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+    #journey h2{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+    #weekly-progress{flex:1;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+    #weekly-progress .week-card{flex:1 1 420px;display:grid;grid-template-columns:minmax(150px,1fr) minmax(180px,1fr);gap:3px 12px;align-items:center;margin:0;padding:8px 12px}
+    #weekly-progress .week-card h3,#weekly-progress .week-card p{margin:0;font-size:.85rem}
+    #weekly-progress .week-card small{grid-column:1/-1}
+    #weekly-progress .milestones{gap:5px}
+    #weekly-progress .milestone{padding:4px 7px;font-size:.8rem}
+    #journey #reset{flex:none}
     #adventure>button{justify-self:start}
     #character>.card:last-child{grid-column:1/-1}
     #shop,#inventory,#achievement-list,#dungeon-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:10px}
@@ -191,6 +214,12 @@
   }
   @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none !important;transition:none !important}}
   @media(max-width:700px){.navigation{grid-template-columns:repeat(2,minmax(0,1fr))}}
+  @media(min-width:360px) and (max-width:700px){
+    .quest-board{grid-template-columns:repeat(2,minmax(0,1fr))}
+    .quest-board .mission{padding:10px;font-size:.85rem}
+    .mission-icon{width:32px;height:32px;font-size:1rem}
+    .mission-title strong{min-height:5.2em}
+  }
   @media(max-width:480px){body{padding:10px}.card{padding:15px}.row{flex-wrap:wrap}.hero-layout{grid-template-columns:1fr}.hero-stage{min-height:170px}.hero-art{height:160px}.encounter-stage{min-height:245px}}
   [hidden]{display:none !important}
 </style>
@@ -248,27 +277,18 @@
     <div class="bar hp"><div id="hpbar"></div></div>
   </div>
   <p class="encounter-info" id="encounter-info"></p>
-  <p class="encounter-note"><small>Tu ejercicio real es el daño. El combate avanza solo cuando entrenas.</small></p>
 </div>
 
 <div class="card">
   <h2>📜 Tablón de encargos <small id="cnt"></small></h2>
-  <p>Elige una misión, realiza el ejercicio a tu ritmo y marca «Completado».</p>
   <div id="missions" class="quest-board"></div>
   <p id="mission-status" class="mission-status" role="status" aria-live="polite"></p>
-  <details class="quest-help">
-    <summary>ⓘ Reglas y bienestar</summary>
-    <p>Hay dos encargos de cada nivel. Para un mismo ejercicio, intermedia e intensa piden un 25 % y un 50 % más que suave, con un bono mayor. Son categorías de juego: el esfuerzo real varía según el ejercicio y la persona.</p>
-    <p>El daño incluye los bonos del personaje y la racha. La estimación no incluye el botín ni logros nuevos.</p>
-    <p>Las primeras 6 misiones del día dan recompensa completa; desde la séptima, daño, XP y monedas de misión bajan al 25 %. La primera puede dar una llave.</p>
-    <p>Adapta el ejercicio a tu capacidad, descansa cuando lo necesites y detente si sientes dolor. No es asesoramiento médico.</p>
-  </details>
 </div>
 <div class="card" id="journey">
   <h2>🗺️ Travesía del héroe</h2>
   <div id="weekly-progress"></div>
+  <button id="reset">Reiniciar partida</button>
 </div>
-<button id="reset">Reiniciar partida</button>
 </section>
 
 <section id="character" role="tabpanel" aria-labelledby="tab-character" hidden>
@@ -916,7 +936,7 @@ function journeyMarkup(){
     <h3>${completed===JOURNEY_CHAPTERS?'🏆 Leyenda de la travesía':`✨ Camino al capítulo ${next}`}</h3>
     <p>${completed===JOURNEY_CHAPTERS?'Puedes seguir jugando a tu ritmo.':`${progress}/${WEEKLY_DAYS} días de actividad para avanzar`}</p>
     <div class="bar mis"><div style="width:${percent}%"></div></div>
-    <p class="reward">${reward}</p><small>Un día cuenta al completar una misión. Los días no tienen que ser consecutivos; los descansos no borran el progreso.</small></div>
+    <p class="reward">${reward}</p><small>Los días de actividad no tienen que ser consecutivos; descansar no borra el progreso.</small></div>
     <div class="milestones"><span class="milestone ${S.activeDays>=7?'done':''}">🌱 7 días</span><span class="milestone ${S.activeDays>=30?'done':''}">⚔️ 30 días</span><span class="milestone ${S.activeDays>=90?'done':''}">💎 90 días</span><span class="milestone ${S.activeDays>=180?'done':''}">👑 180 días</span><span class="milestone ${S.activeDays>=365?'done':''}">🏆 365 días</span></div>`;
 }
 for(const button of navigationButtons){
@@ -970,7 +990,7 @@ function render(liveOnly=false){
     el.innerHTML=`<span class="mission-difficulty" data-difficulty="${difficulty}">${DIFFICULTIES[difficulty].label}</span>
       <div class="mission-title"><span class="mission-icon" aria-hidden="true">${EXERCISE_ICONS[ex.id]}</span><div><strong>${ex.name}</strong><div class="mission-target">Objetivo: ${tgt} ${ex.unit}</div></div></div>
       ${d>0?`<p><small>Progreso anterior: ${d}/${tgt} ${ex.unit}. Completa lo que falta y confirma.</small></p><div class="bar mis"><div style="width:${Math.min(100,100*d/tgt)}%"></div></div>`:''}
-      <div class="quest-rewards"><span>⚔️ ${Math.round(preview.damage*10)/10} daño</span><span>✨ ~${preview.xp} XP</span><span>🪙 ${preview.coins} monedas</span></div>`;
+      <div class="quest-rewards"><span aria-label="${Math.round(preview.damage*10)/10} de daño" title="Daño">⚔️ ${Math.round(preview.damage*10)/10}</span><span>✨ ~${preview.xp} XP</span><span aria-label="${preview.coins} monedas" title="Monedas">🪙 ${preview.coins}</span></div>`;
     const complete=document.createElement('button');
     complete.type='button';complete.className='complete';complete.textContent='✓ Completado';
     complete.setAttribute('aria-label',`Completar misión de ${ex.name}`);

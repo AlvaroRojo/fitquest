@@ -32,9 +32,8 @@ eliminarla.
   posteriores dan el 25 % de XP, daño y monedas de misión. El botín de
   monstruos no se reduce. Solo la primera misión del día puede generar una
   llave. Esto evita que acumular ejercicio sea necesario para progresar.
-  Las reglas y el aviso de bienestar también están disponibles bajo «Reglas
-  y bienestar» en el tablón. Ya no hay un botón de descanso semanal para
-  proteger la racha; los descansos registrados antes de esta versión se
+  Ya no hay un botón de descanso semanal para proteger la racha; los descansos
+  registrados antes de esta versión se
   respetan al actualizar. La racha puede reiniciarse tras un día sin actividad,
   pero descansar es siempre más importante que mantenerla.
 - **Encuentros de misiones:** cada enemigo tiene vida según su especie.
