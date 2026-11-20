@@ -142,6 +142,24 @@ eliminarla.
   logros. El botín es XP y monedas por enemigo y cinco fragmentos al
   terminar. El encuentro se conserva al cerrar el juego, pero no avanza
   automáticamente mientras está cerrado.
+- **Torre de 100 plantas:** la primera misión de cada día da una llave de
+  torre distinta de las llaves de mazmorra. Se pueden acumular y cada ataque
+  consume una; solo se permite un ataque al día para toda la torre. La vida
+  del enemigo se conserva entre días. Derrotarlo concede monedas, XP y
+  fragmentos y abre la siguiente planta; el daño sobrante no se traslada.
+  La planta 100 completa la torre. El ataque causa 24 de daño base, con los
+  bonos generales de daño.
+- **Bosses semanales:** hay ocho enemigos en orden. Se permite un único ataque
+  en total por semana natural (lunes a domingo, hora local); la vida se
+  conserva entre semanas. Al derrotar al boss se reciben monedas, XP y
+  fragmentos y se abre el siguiente. El ataque causa 40 de daño base con los
+  bonos generales. Vencer al último completa el desafío.
+- **Mazmorras por nivel:** ocho expediciones adicionales se desbloquean
+  automáticamente entre los niveles 5 y 75 sin consumir llaves. Comparten el
+  límite de una expedición iniciada al día y el encuentro activo con las
+  mazmorras anteriores; tienen las mismas reglas de combate y recompensas.
+  Los nuevos progresos empiezan desde cero al actualizar una partida existente,
+  sin alterar las mazmorras, llaves o expediciones anteriores.
 - **Progresión a largo plazo:** hay logros por 7, 30, 90, 180 y 365 días
   distintos en los que se completa al menos una misión. Se cuentan a partir
   de esta actualización porque las partidas anteriores no guardaban ese

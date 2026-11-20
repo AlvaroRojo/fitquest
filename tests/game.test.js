@@ -696,6 +696,113 @@ test('dungeons require a key and activity days and unlock permanently', () => {
   })()`), true);
 });
 
+test('old saves keep dungeon progress and initialize tower and weekly boss', () => {
+  const first=game();
+  first.run(`S=fresh(); S.keys=2; S.unlockedDungeons.push('mire');
+    S.dungeonRun={id:'mire',stage:1,hp:12}; S.lastDungeonDay='2026-01-01';
+    delete S.tower; delete S.weeklyBoss; save()`);
+  const restored=game(first.saved());
+  assert.equal(restored.run(`S.keys===2 && S.unlockedDungeons.includes('mire') &&
+    S.dungeonRun.id==='mire' && S.dungeonRun.hp===12 && S.tower.floor===1 &&
+    S.tower.hp===towerMaxHp(1) && S.tower.keys===0 &&
+    S.weeklyBoss.index===0 && S.weeklyBoss.hp===WEEKLY_BOSSES[0].hp`),true);
+});
+
+test('first mission each day awards one separate tower key', () => {
+  const g=game();
+  assert.equal(g.run(`(() => {
+    const RealDate=Date; let clock=RealDate.UTC(2026,0,5,12);
+    Date=class extends RealDate {
+      constructor(...args){if(args.length) super(...args);else super(clock)}
+      static now(){return clock}
+    };
+    S=fresh(); Math.random=()=>0.5;
+    completeMission(byId(S.active[0]));
+    if(S.tower.keys!==1) return false;
+    completeMission(byId(S.active[0]));
+    if(S.tower.keys!==1) return false;
+    clock+=86400000; S.battleUpdated=clock;
+    completeMission(byId(S.active[0]));
+    return S.tower.keys===2;
+  })()`),true);
+});
+
+test('tower requires a key, limits attacks by day and persists health and completion', () => {
+  const g=game();
+  assert.equal(g.run(`(() => {
+    S=fresh(); S.achievements=ACHIEVEMENTS.map(a=>a.id);
+    if(attackTower('2026-01-01')) return false;
+    S.tower.keys=2; S.tower.hp=24*bonus('dmg')+1;
+    if(!attackTower('2026-01-01') || Math.abs(S.tower.hp-1)>1e-8 ||
+      S.tower.keys!==1 || attackTower('2026-01-01')) return false;
+    save(); return true;
+  })()`),true);
+  const restored=game(g.saved());
+  assert.equal(restored.run(`(() => {
+    if(!attackTower('2026-01-02') || S.tower.floor!==2 || S.tower.hp!==towerMaxHp(2) ||
+      S.tower.keys!==0 || S.kills!==1) return false;
+    S.tower.floor=100; S.tower.hp=1; S.tower.keys=2; S.tower.lastAttack=null;
+    if(!attackTower('2026-01-03') || S.tower.floor!==101 || S.tower.hp!==0 ||
+      attackTower('2026-01-04') || S.tower.keys!==1) return false;
+    save(); return true;
+  })()`),true);
+  assert.equal(game(restored.saved()).run('S.tower.floor'),101);
+});
+
+test('weekly bosses retain health, enforce one attack per week and advance once', () => {
+  const g=game();
+  assert.equal(g.run(`(() => {
+    S=fresh(); S.achievements=ACHIEVEMENTS.map(a=>a.id);
+    S.weeklyBoss.hp=40*bonus('dmg')+1;
+    if(!attackWeeklyBoss('2026-01-05') || Math.abs(S.weeklyBoss.hp-1)>1e-8 ||
+      attackWeeklyBoss('2026-01-11')) return false;
+    save(); return true;
+  })()`),true);
+  const restored=game(g.saved());
+  assert.equal(restored.run(`(() => {
+    if(!attackWeeklyBoss('2026-01-12') || S.weeklyBoss.index!==1 ||
+      S.weeklyBoss.hp!==WEEKLY_BOSSES[1].hp || S.kills!==1 ||
+      attackWeeklyBoss('2026-01-12')) return false;
+    S.weeklyBoss.index=WEEKLY_BOSSES.length-1; S.weeklyBoss.hp=1;
+    if(!attackWeeklyBoss('2026-01-19') || S.weeklyBoss.index!==WEEKLY_BOSSES.length ||
+      S.weeklyBoss.hp!==0 || attackWeeklyBoss('2026-01-26')) return false;
+    save(); return true;
+  })()`),true);
+  assert.equal(game(restored.saved()).run('S.weeklyBoss.index'),8);
+});
+
+test('level dungeons require level, use no keys and share the daily expedition limit', () => {
+  const g=game();
+  assert.equal(g.run(`(() => {
+    S=fresh(); S.keys=2;
+    if(startDungeon('level-5') || S.keys!==2) return false;
+    S.level=5;
+    if(!startDungeon('level-5') || S.keys!==2 || startDungeon('crypt')) return false;
+    S.dungeonRun=null;
+    if(startDungeon('crypt') || startDungeon('level-5')) return false;
+    S.lastDungeonDay=null;
+    if(!startDungeon('crypt')) return false;
+    S.dungeonRun=null;
+    return !startDungeon('level-5');
+  })()`),true);
+});
+
+test('level dungeon runs persist and use the existing combat flow', () => {
+  const g=game();
+  assert.equal(g.run(`(() => {
+    S=fresh(); S.level=5; S.achievements=ACHIEVEMENTS.map(a=>a.id);
+    if(!startDungeon('level-5') || !attackDungeon()) return false;
+    save(); return true;
+  })()`),true);
+  const restored=game(g.saved());
+  assert.equal(restored.run(`(() => {
+    if(S.dungeonRun.id!=='level-5' || S.dungeonRun.hp>=LEVEL_DUNGEONS[0].hp) return false;
+    let attacks=0;
+    while(S.dungeonRun && attacks++<100) attackDungeon();
+    return !S.dungeonRun && S.dungeonClears===1 && S.kills===3;
+  })()`),true);
+});
+
 test('dungeon progress, victory rewards and daily limits persist independently', () => {
   const g = game();
   assert.equal(g.run(`(() => {
