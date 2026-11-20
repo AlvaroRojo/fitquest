@@ -795,8 +795,67 @@ test('journey migration catches up old activity days once and persists', () => {
 test('catalog retains old ids and provides distinct options in each tier', () => {
   const g=game();
   assert.equal(g.run(`(() => {
-    return ITEMS.length===128 && ITEM['ring_3_1'].name==='Anillo legendario' &&
+    return ITEMS.length===218 && ITEM['ring_3_1'].name==='Anillo legendario' &&
       new Set(ITEMS.map(it=>it.id)).size===ITEMS.length &&
-      [0,1,2,3].every(t=>ITEMS.filter(it=>it.tier===t).length===32);
+      [0,1,2,3].every(t=>ITEMS.filter(it=>it.tier===t).length===32) &&
+      [4,5,6].every(t=>ITEMS.filter(it=>it.tier===t).length===30);
+  })()`),true);
+});
+
+test('pack odds exclude locked rarities, sum to one and improve with higher packs', () => {
+  const g=game();
+  assert.equal(g.run(`(() => {
+    for(const level of [1,5,10,15,20,30,40]){
+      for(const pack of PACKS){
+        const odds=packOdds(pack,level);
+        if(Math.abs(odds.reduce((a,b)=>a+b,0)-1)>1e-12 ||
+          odds.some((chance,tier)=>chance<0 || (level<TIER_LVL[tier] && chance!==0))) return false;
+      }
+      const unlocked=PACKS.filter(pack=>pack.level<=level);
+      for(let i=1;i<unlocked.length;i++){
+        const lower=packOdds(unlocked[i-1],level),higher=packOdds(unlocked[i],level);
+        for(let tier=1;tier<TIER_NAMES.length;tier++){
+          if(higher.slice(tier).reduce((a,b)=>a+b,0)+1e-12<
+            lower.slice(tier).reduce((a,b)=>a+b,0)) return false;
+        }
+      }
+    }
+    return packOdds(PACKS[0],1)[0]===1 &&
+      packOdds(PACKS[0],39)[6]===0 && packOdds(PACKS[0],40)[6]>0;
+  })()`),true);
+});
+
+test('packs enforce level and price, award items once and refund duplicates', () => {
+  const g=game();
+  assert.equal(g.run(`(() => {
+    S=fresh(); S.coins=99; S.achievements=ACHIEVEMENTS.map(a=>a.id);
+    if(openPack('basic')!==null || openPack('missing')!==null || S.coins!==99) return false;
+    S.coins=1000;
+    if(openPack('silver')!==null || S.coins!==1000) return false;
+    Math.random=()=>0;
+    if(!openPack('basic') || S.coins!==900 || S.owned[0]!=='sword_0_0' || S.packsOpened!==1) return false;
+    const message=openPack('basic');
+    if(!message.includes('duplicado, +25 monedas') || S.coins!==825 ||
+      S.owned.length!==1 || S.packsOpened!==2) return false;
+    save(); return true;
+  })()`),true);
+  const restored=game(g.saved());
+  assert.equal(restored.run('S.packsOpened'),2);
+  assert.equal(restored.run('S.coins'),825);
+  assert.equal(restored.run("S.owned.includes('sword_0_0')"),true);
+});
+
+test('pack draws include high unlocked tiers and duplicates refund by pack price', () => {
+  const g=game();
+  assert.equal(g.run(`(() => {
+    S=fresh(); S.level=40; S.coins=10000; S.achievements=ACHIEVEMENTS.map(a=>a.id);
+    Math.random=()=>0.9999999999999999;
+    if(!openPack('arcane') || ITEM[S.owned[0]].tier!==6 || S.coins!==8200) return false;
+    if(!openPack('arcane') || S.coins!==6850 || S.owned.length!==1) return false;
+    S.level=30; S.owned=[];
+    if(!openPack('arcane') || ITEM[S.owned[0]].tier!==5) return false;
+    S.materials=0;
+    if(!dismantle(S.owned[0]) || S.materials!==65) return false;
+    return true;
   })()`),true);
 });

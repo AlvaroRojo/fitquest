@@ -56,7 +56,8 @@ eliminarla.
 - **Tienda:** cada día local, al abrir el juego o volver a él, se generan
   diez ofertas únicas según el nivel actual; la selección permanece igual hasta
   medianoche incluso si subes de nivel o recargas. La rareza se sortea para
-  cada objeto con pesos 60/25/12/3 (común/poco común/raro/legendario);
+  cada objeto con pesos 60/25/12/3/1/0,4/0,1
+  (común/poco común/raro/legendario/mítico/ancestral/divino);
   se excluyen las rarezas aún no desbloqueadas y se redistribuyen sus pesos.
   Cuando se agotan los objetos de una rareza también se excluye esa rareza.
   Dentro de la rareza sorteada se priorizan objetos no poseídos. Una oferta
@@ -83,13 +84,13 @@ eliminarla.
   alcanzar +20 %, +60 % y +120 % de bonificación total de daño; puede volver
   a una apariencia anterior si se reduce ese bono. Los objetos equipados se
   muestran primero en el inventario. Desmantela objetos no equipados con
-  dos pulsaciones: dan 2, 5, 12 o 25 fragmentos según su rareza. El inventario
+  dos pulsaciones: dan 2, 5, 12, 25, 40, 65 o 100 fragmentos según su rareza. El inventario
   se puede filtrar por tipo y estado y muestra hasta 12 objetos por página.
   Puedes usar fragmentos para mejorar un objeto sin un máximo de nivel; cada mejora añade un 1 %
   a su estadística. El coste es 5 + 3 por nivel de mejora actual + 2 por
-  índice de rareza (común 0 a legendario 3). Desmantelar elimina el objeto y
+  índice de rareza (común 0 a divino 6). Desmantelar elimina el objeto y
   sus mejoras; aún no hay fabricación.
-  Hay 128 objetos en cuatro rarezas; los sobres ofrecen otra forma de
+  Hay 218 objetos en siete rarezas; los sobres ofrecen otra forma de
   conseguirlos.
 - **Entrenamiento del héroe:** en la pestaña Personaje puedes comprar rangos
   sin límite de Poder, Sabiduría y Fortuna con monedas del juego. Cada rango
@@ -104,11 +105,16 @@ eliminarla.
 - **Logros:** desbloquean mejoras permanentes al alcanzar sus objetivos. Las
   misiones se cuentan desde esta versión; los niveles y monstruos derrotados
   de partidas antiguas sí se reconocen.
-- **Sobres:** cuestan 100 monedas virtuales, nunca dinero real. Obtienes un
-  objeto: común 60 %, poco común 25 %, raro 12 % o legendario 3 %. Dentro de
-  cada categoría todos los objetos tienen la misma probabilidad. Los
-  duplicados devuelven 25 monedas; los objetos de sobres se pueden equipar
-  aunque todavía no se haya alcanzado el nivel exigido en la tienda.
+- **Sobres:** hay cuatro tipos, comprados únicamente con monedas del juego:
+  aventurero (100, nivel 1), plata (300, nivel 5), dorado (800, nivel 15)
+  y arcano (1800, nivel 30). Las siete rarezas se desbloquean en los niveles
+  1, 5, 10, 15, 20, 30 y 40; solo pueden salir objetos disponibles al nivel
+  actual. Cada sobre tiene distintos pesos y los más caros favorecen las
+  rarezas altas. Los pesos de rarezas bloqueadas se excluyen y los restantes
+  se normalizan; las probabilidades actuales se muestran antes de comprar.
+  Cada objeto de una rareza tiene igual probabilidad. Un duplicado devuelve
+  el 25 % del precio. La compra se guarda inmediatamente, antes de mostrar la
+  animación, que respeta la preferencia del sistema de reducir movimiento.
 - **Autobatalla:** siempre está activa. El héroe causa 2 de daño cada 10 segundos,
   multiplicado por los bonos de daño de equipo y logros. Al volver se aplican
   como máximo ocho horas desde la última actualización; el resto se pierde.

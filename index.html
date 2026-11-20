@@ -243,12 +243,23 @@
   .armory-section{margin-top:16px;padding:16px;border:1px solid #806346;border-radius:14px;background:linear-gradient(135deg,#342d36,#171c2b)}
   .armory-section h3{margin:0;color:#ffe0a2;font:700 1.1rem Georgia,serif}
   .armory-section p{color:#cbb59b;margin:6px 0 12px}
+  .pack-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr));gap:10px}
+  .pack-offer{display:flex;flex-direction:column;gap:8px;padding:14px;border:1px solid #a87d4c;border-radius:12px;background:linear-gradient(145deg,#493931,#1d2130)}
+  .pack-offer strong{color:#ffe0a2}.pack-offer button{margin:0;margin-top:auto}
+  .pack-odds{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:3px 8px;color:#d8c6a9;font-size:.8rem}
+  .pack-stage{position:relative;display:grid;place-items:center;min-height:110px;margin:12px 0;border:1px solid #a87d4c;border-radius:12px;background:radial-gradient(ellipse,#765274,#171c2b 70%);overflow:hidden}
+  .pack-emblem{font-size:3.5rem;line-height:1}
+  .pack-stage.opening .pack-emblem{animation:pack-open 1s ease-out}
+  @keyframes pack-open{20%{transform:rotate(-12deg) scale(1.1)}40%{transform:rotate(12deg) scale(1.2)}65%{transform:scale(1.35);filter:drop-shadow(0 0 18px #ffda80)}100%{transform:scale(1)}}
   #shop{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,210px),1fr));gap:10px}
   .forge-options{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,210px),1fr));gap:10px}
   #shop .shop-offer,.forge-option{display:flex;flex-direction:column;gap:8px;min-width:0;padding:14px;border:1px solid #806346;border-radius:12px;background:linear-gradient(145deg,#493931,#1d2130);box-shadow:inset 0 1px #fff2,0 5px 14px #0003}
   #shop .shop-offer[data-tier="1"]{border-color:#6f9c79}
   #shop .shop-offer[data-tier="2"]{border-color:#69a5cf;box-shadow:inset 0 1px #fff2,0 0 12px #449dd133}
   #shop .shop-offer[data-tier="3"]{border-color:#e4ba65;box-shadow:inset 0 1px #fff3,0 0 16px #e2a84044}
+  #shop .shop-offer[data-tier="4"]{border-color:#bd89ec;box-shadow:inset 0 1px #fff3,0 0 16px #ac68ec55}
+  #shop .shop-offer[data-tier="5"]{border-color:#ef817a;box-shadow:inset 0 1px #fff3,0 0 16px #ed676055}
+  #shop .shop-offer[data-tier="6"]{border-color:#86e9dc;box-shadow:inset 0 1px #fff3,0 0 20px #65e9d966}
   .shop-offer strong,.forge-option strong{color:#ffe0a2;overflow-wrap:anywhere}
   .shop-offer small,.forge-option small{color:#cbb59b}
   .shop-offer button,.forge-option button{margin:0;margin-top:auto}
@@ -440,10 +451,10 @@
 <section id="packs" role="tabpanel" aria-labelledby="tab-packs" hidden>
 <div class="card">
   <h2>🎁 Sobres de botín</h2>
-  <p>Un sobre cuesta <strong>100 monedas del juego</strong> y contiene un objeto aleatorio. No hay dinero real.</p>
-  <p>Probabilidades por objeto: común 60 %, poco común 25 %, raro 12 %, legendario 3 %. Los objetos de una misma rareza tienen la misma probabilidad.</p>
-  <p>Los objetos de cualquier nivel pueden salir y equiparse. Si ya tienes el objeto, recibes 25 monedas; los duplicados no se acumulan.</p>
-  <button id="open-pack" type="button">Abrir sobre · 100 🪙</button>
+  <p>Elige un sobre: los más caros mejoran tus probabilidades y se desbloquean al subir de nivel. Solo aparecen rarezas disponibles para tu nivel. Las monedas son del juego, nunca dinero real.</p>
+  <p>Todos los objetos de una rareza tienen la misma probabilidad. Los duplicados devuelven el 25 % del precio del sobre.</p>
+  <div id="pack-list" class="pack-list"></div>
+  <div id="pack-stage" class="pack-stage" aria-hidden="true"><span class="pack-emblem">🎁</span></div>
   <p id="pack-result" class="pack-result" role="status" aria-live="polite"></p>
 </div>
 </section>
@@ -569,9 +580,10 @@ const GROUPS={
   ring:{label:'Anillo',icon:'💍',stat:'dmg',w:.8,names:[['Anillo de cobre','Anillo de bronce'],['Anillo de plata','Anillo de jade'],['Anillo de oro','Anillo de rubí'],['Anillo de zafiro','Anillo legendario']]},
   earring:{label:'Pendiente',icon:'🧿',stat:'xp',w:.8,names:[['Pendiente de cobre','Pendiente de bronce'],['Pendiente de plata','Pendiente de jade'],['Pendiente de oro','Pendiente de rubí'],['Pendiente de zafiro','Pendiente legendario']]},
 };
-const TIER_PCT=[3,6,10,15], TIER_COST=[40,120,350,900], TIER_LVL=[1,5,10,15];
-const TIER_NAMES=['Común','Poco común','Raro','Legendario'];
-const TIER_ICONS=['⚪','🟢','🔷','🌟'];
+const TIER_PCT=[3,6,10,15,20,27,35], TIER_COST=[40,120,350,900,1800,3500,6500], TIER_LVL=[1,5,10,15,20,30,40];
+const TIER_NAMES=['Común','Poco común','Raro','Legendario','Mítico','Ancestral','Divino'];
+const TIER_ICONS=['⚪','🟢','🔷','🌟','🟣','🔴','🌈'];
+const TIER_FRAGMENTS=[2,5,12,25,40,65,100];
 const STAT_TXT={dmg:'daño',xp:'XP',coin:'monedas'};
 const ATTRIBUTES={
   dmg:{name:'Poder',icon:'⚔️',description:'Aumenta el daño en misiones, arena y mazmorras.'},
@@ -580,8 +592,8 @@ const ATTRIBUTES={
 };
 const attributeCost=rank=>100+50*rank;
 const ITEMS=[];
-for(const [g,d] of Object.entries(GROUPS)) for(let t=0;t<4;t++){
-  const names=Array.isArray(d.names[t])?d.names[t]:[d.names[t]];
+for(const [g,d] of Object.entries(GROUPS)) for(let t=0;t<TIER_NAMES.length;t++){
+  const names=t<d.names.length?(Array.isArray(d.names[t])?d.names[t]:[d.names[t]]):[`${d.label} ${TIER_NAMES[t].toLowerCase()}`];
   names.forEach((name,v)=>ITEMS.push({id:`${g}_${t}_${v}`,g,name,stat:d.stat,tier:t,
     pct:Math.round(TIER_PCT[t]*d.w),cost:Math.round(TIER_COST[t]*d.w),lvl:TIER_LVL[t]}));
   ['del Alba','del Vacío'].forEach((suffix,v)=>ITEMS.push({
@@ -591,7 +603,7 @@ for(const [g,d] of Object.entries(GROUPS)) for(let t=0;t<4;t++){
 }
 const ITEM=Object.fromEntries(ITEMS.map(i=>[i.id,i]));
 const SHOP_SIZE=10, FORGE_WEEKLY_LIMIT=10;
-const SHOP_WEIGHTS=[60,25,12,3];
+const SHOP_WEIGHTS=[60,25,12,3,1,.4,.1];
 const FORGE={dmg:{name:'Filo eterno',icon:'⚔️'},xp:{name:'Sabiduría arcana',icon:'📘'},coin:{name:'Prosperidad dorada',icon:'🪙'}};
 const forgeCost=()=>150+100*Object.keys(FORGE).reduce((sum,stat)=>sum+(S.forgeRanks[stat]||0),0);
 function weekStart(day){
@@ -718,7 +730,40 @@ const inventoryEquippedFirst=ids=>{
   return [...ids.filter(id=>equipped.has(id)),...ids.filter(id=>!equipped.has(id))];
 };
 const target = (ex,l) => Math.max(ex.base, Math.round(ex.base*Math.min(2,1+0.05*(l-1))/ex.step[0])*ex.step[0]);
-const BATTLE_INTERVAL=10000, OFFLINE_LIMIT=8*60*60*1000, PACK_COST=100;
+const BATTLE_INTERVAL=10000, OFFLINE_LIMIT=8*60*60*1000;
+const PACKS=[
+  {id:'basic',name:'Sobre aventurero',icon:'📦',level:1,cost:100,weights:[60,25,12,3,1,.4,.1]},
+  {id:'silver',name:'Sobre de plata',icon:'🥈',level:5,cost:300,weights:[25,40,25,8,2,.8,.2]},
+  {id:'gold',name:'Sobre dorado',icon:'🥇',level:15,cost:800,weights:[5,15,35,30,10,4,1]},
+  {id:'arcane',name:'Sobre arcano',icon:'🔮',level:30,cost:1800,weights:[1,4,10,30,30,20,5]}
+];
+function packOdds(pack,level){
+  const eligible=pack.weights.map((weight,tier)=>level>=TIER_LVL[tier]?weight:0);
+  const total=eligible.reduce((sum,weight)=>sum+weight,0);
+  return eligible.map(weight=>weight/total);
+}
+function openPack(id){
+  const pack=PACKS.find(option=>option.id===id);
+  if(!pack||S.level<pack.level||S.coins<pack.cost) return null;
+  const odds=packOdds(pack,S.level);
+  let roll=Math.random(),tier=0;
+  for(let i=0;i<odds.length;i++){
+    if(odds[i]>0) tier=i;
+    if(roll<odds[i]){tier=i;break}
+    roll-=odds[i];
+  }
+  const pool=ITEMS.filter(item=>item.tier===tier&&item.lvl<=S.level);
+  const item=pool[Math.floor(Math.random()*pool.length)];
+  const duplicate=S.owned.includes(item.id),refund=duplicate?Math.floor(pack.cost/4):0;
+  S.coins-=pack.cost;
+  if(duplicate) S.coins+=refund;
+  else S.owned.push(item.id);
+  S.packsOpened++;
+  const message=`${TIER_ICONS[tier]} ${TIER_NAMES[tier]}: ${item.name}${duplicate?` · duplicado, +${refund} monedas`:' · añadido al inventario'}`;
+  log(`🎁 ${pack.name}: ${message}`);
+  unlockAchievements();
+  return message;
+}
 const DUNGEONS=[
   {id:'crypt',name:'Cripta de las Sombras',description:'Los ecos de la primera expedición.',hp:36,reward:20,days:0},
   {id:'mire',name:'Pantano de las Almas',description:'Voces bajo el agua oscura.',hp:42,reward:23,days:7},
@@ -866,7 +911,7 @@ function unlockAchievements(){
       if(reward.materials) S.materials+=reward.materials;
       if(reward.keys) S.keys+=reward.keys;
       if(reward.item&&ITEM[reward.item]){
-        if(S.owned.includes(reward.item)) S.materials+=[2,5,12,25][ITEM[reward.item].tier];
+        if(S.owned.includes(reward.item)) S.materials+=TIER_FRAGMENTS[ITEM[reward.item].tier];
         else S.owned.push(reward.item);
       }
       log(`🏆 Logro: ${a.name} · ${achievementRewardText(a)}`);
@@ -878,7 +923,7 @@ function achievementRewardText(a){
   if(reward.coins) parts.push(`+${reward.coins} 🪙`);
   if(reward.materials) parts.push(`+${reward.materials} 🔩`);
   if(reward.keys) parts.push(`+${reward.keys} 🔑`);
-  if(reward.item&&ITEM[reward.item]) parts.push(`🎁 ${ITEM[reward.item].name} (si ya lo tienes: ${[2,5,12,25][ITEM[reward.item].tier]} 🔩)`);
+  if(reward.item&&ITEM[reward.item]) parts.push(`🎁 ${ITEM[reward.item].name} (si ya lo tienes: ${TIER_FRAGMENTS[ITEM[reward.item].tier]} 🔩)`);
   return parts.join(' · ');
 }
 function missionDifficulty(ex){
@@ -989,7 +1034,7 @@ function dismantle(id){
   if(!item || !S.owned.includes(id) || Object.values(S.eq).includes(id)) return false;
   S.owned=S.owned.filter(owned=>owned!==id);
   delete S.upgrades[id];
-  const fragments=[2,5,12,25][item.tier];
+  const fragments=TIER_FRAGMENTS[item.tier];
   S.materials+=fragments;
   log(`🔨 ${item.name} desmantelado: +${fragments} fragmentos`);
   return true;
@@ -1241,7 +1286,7 @@ function render(liveOnly=false){
   $('battle-hp').textContent=`${Math.max(0,Math.ceil(S.autoMonsterHp))}/${autoMax} HP`;
   $('battle-bar').style.width=Math.min(100,100*S.autoMonsterHp/autoMax)+'%';
   $('battle-status').textContent=`Siempre activa · ${Math.round(2*bonus('dmg')*100)/100} de daño cada 10 segundos · ${S.autoKills} victorias`;
-  $('open-pack').disabled=S.coins<PACK_COST;
+  renderPacks();
   for(const [name,value] of Object.entries(globalStats())) $(`stat-${name}`).textContent=value.toLocaleString('es-ES');
   if(liveOnly && !dayChanged) return;
   $('missions').innerHTML='';
@@ -1280,7 +1325,34 @@ function render(liveOnly=false){
   $('cnt').textContent=`(${S.completedToday} hoy · sin límite)`;
   $('weekly-progress').innerHTML=journeyMarkup();
   renderChar();renderAttributes();renderShop();renderAchievements();renderDungeons();
-  $('open-pack').disabled=S.coins<PACK_COST;
+}
+function renderPacks(){
+  const box=$('pack-list');
+  const focused=document.activeElement?.dataset.pack;
+  box.replaceChildren();
+  for(const pack of PACKS){
+    const locked=S.level<pack.level,odds=packOdds(pack,S.level);
+    const card=document.createElement('div');card.className='pack-offer';
+    const probabilities=odds.map((chance,tier)=>`<span>${TIER_ICONS[tier]} ${TIER_NAMES[tier]}: ${(chance*100).toFixed(2)} %${S.level<TIER_LVL[tier]?` (nivel ${TIER_LVL[tier]})`:''}</span>`).join('');
+    card.innerHTML=`<strong>${pack.icon} ${pack.name}</strong><small>Desbloqueo: nivel ${pack.level} · ${pack.cost} monedas</small><div class="pack-odds" aria-label="Probabilidades actuales">${probabilities}</div>`;
+    const button=document.createElement('button');button.type='button';button.dataset.pack=pack.id;
+    button.textContent=locked?`Disponible al nivel ${pack.level}`:`Abrir · ${pack.cost} 🪙`;
+    button.setAttribute('aria-label',`${button.textContent} ${pack.name}`);
+    button.disabled=locked||S.coins<pack.cost;
+    button.onclick=()=>{
+      settleBattle();
+      const message=openPack(pack.id);
+      save();render();
+      if(!message){$('pack-result').textContent='No se puede abrir este sobre.';return}
+      $('pack-result').textContent=message;
+      const stage=$('pack-stage');
+      stage.classList.remove('opening');
+      void stage.offsetWidth;
+      stage.classList.add('opening');
+    };
+    card.appendChild(button);box.appendChild(card);
+  }
+  if(focused) box.querySelector(`[data-pack="${focused}"]:not(:disabled)`)?.focus({preventScroll:true});
 }
 function renderAttributes(){
   const box=$('attributes');box.innerHTML='';
@@ -1367,8 +1439,8 @@ function renderChar(){
     upgrade.title='Mejorar objeto';
     upgrade.onclick=()=>{settleBattle();if(upgradeItem(id)){dismantleConfirm=null;save();render()}else{$('inventory-status').textContent='No se puede mejorar este objeto.';save()}};
     const destroy=document.createElement('button');destroy.className='danger';
-    destroy.textContent=dismantleConfirm===id?'Confirmar':`🔨 +${[2,5,12,25][item.tier]}`;
-    destroy.setAttribute('aria-label',dismantleConfirm===id?`Confirmar desmantelar ${item.name} y perder sus mejoras`:`Desmantelar ${item.name} por ${[2,5,12,25][item.tier]} fragmentos`);
+    destroy.textContent=dismantleConfirm===id?'Confirmar':`🔨 +${TIER_FRAGMENTS[item.tier]}`;
+    destroy.setAttribute('aria-label',dismantleConfirm===id?`Confirmar desmantelar ${item.name} y perder sus mejoras`:`Desmantelar ${item.name} por ${TIER_FRAGMENTS[item.tier]} fragmentos`);
     destroy.title=dismantleConfirm===id?'Confirmar: perder objeto y mejoras':'Desmantelar objeto';
     destroy.disabled=worn;
     destroy.onclick=()=>{
@@ -1472,23 +1544,6 @@ function renderDungeons(){
   attack.onclick=()=>{settleBattle();if(attackDungeon()){save();render();if(S.dungeonRun) animateHit('dungeon-icon')}else{$('dungeon-keys').textContent='No hay un encuentro activo.';save()}};
   fighter.appendChild(attack);box.appendChild(fighter);
 }
-$('open-pack').onclick=()=>{
-  settleBattle();
-  if(S.coins<PACK_COST){save();render();return}
-  S.coins-=PACK_COST;
-  const roll=Math.random();
-  const tier=roll<.60?0:roll<.85?1:roll<.97?2:3;
-  const pool=ITEMS.filter(it=>it.tier===tier);
-  const it=pool[Math.floor(Math.random()*pool.length)];
-  const duplicate=S.owned.includes(it.id);
-  if(duplicate) S.coins+=25;
-  else S.owned.push(it.id);
-  S.packsOpened++;
-  const message=`${TIER_ICONS[tier]} ${TIER_NAMES[tier]}: ${it.name}${duplicate?' · duplicado, +25 monedas':' · añadido al inventario'}`;
-  $('pack-result').textContent=message;
-  log(`🎁 ${message}`);
-  unlockAchievements();save();render();
-};
 let resetTimer;
 for(const [id,group] of Object.entries(GROUPS)){
   const option=document.createElement('option');option.value=id;option.textContent=group.label;
@@ -1502,7 +1557,7 @@ $('inventory-next').onclick=()=>{inventoryPage++;dismantleConfirm=null;renderCha
 $('reset').onclick=()=>{
   const b=$('reset');
   if(b.dataset.armed){clearTimeout(resetTimer);delete b.dataset.armed;b.textContent='Reiniciar partida';
-    S=fresh();dismantleConfirm=null;inventoryPage=0;$('inventory-type').value='all';$('inventory-equipped').value='all';$('pack-result').textContent='';$('mission-status').textContent='';save();render();return}
+    S=fresh();dismantleConfirm=null;inventoryPage=0;$('inventory-type').value='all';$('inventory-equipped').value='all';$('pack-result').textContent='';$('pack-stage').classList.remove('opening');$('mission-status').textContent='';save();render();return}
   b.dataset.armed=1;b.textContent='¿Seguro? Pulsa otra vez para borrar';
   resetTimer=setTimeout(()=>{delete b.dataset.armed;b.textContent='Reiniciar partida'},4000);
 };
