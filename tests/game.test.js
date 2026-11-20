@@ -44,8 +44,54 @@ test('migrates existing saves without changing equipment or progress', () => {
   assert.equal(saved.autoKills, 0);
   assert.equal(saved.autoMonsterHp, 50);
   assert.equal(saved.totalMissions, 0);
+  assert.deepEqual(saved.attributes,{dmg:0,xp:0,coin:0});
   assert.ok(saved.achievements.includes('kill1'));
   assert.ok(saved.achievements.includes('level5'));
+});
+
+test('attribute training validates type, cost and cap and preserves stats on reload', () => {
+  const g=game();
+  assert.equal(g.run(`(() => {
+    S=fresh(); S.coins=99;
+    if(trainAttribute('dmg') || trainAttribute('toString')) return false;
+    S.coins=100;
+    if(!trainAttribute('dmg') || S.coins!==0 || bonus('dmg')!==1.01)return false;
+    S.coins=100000;
+    for(let i=1;i<20;i++) if(!trainAttribute('dmg'))return false;
+    const remaining=S.coins;
+    if(trainAttribute('dmg') || S.coins!==remaining || S.attributes.dmg!==20) return false;
+    save(); return true;
+  })()`),true);
+  const saved=g.saved();
+  const reloaded=game(saved);
+  assert.equal(reloaded.run('S.attributes.dmg'),20);
+  assert.equal(reloaded.run("bonus('dmg')"),1.2);
+});
+
+test('training improves autobattle and dungeon damage without changing mission targets', () => {
+  const g=game();
+  assert.equal(g.run(`(() => {
+    S=fresh(); S.coins=100; S.battleUpdated=1000;
+    const targetBefore=missionTarget(byId(S.active[0]));
+    if(!trainAttribute('dmg'))return false;
+    settleBattle(11000);
+    if(Math.abs(S.autoMonsterHp-47.98)>1e-8)return false;
+    if(!startDungeon('crypt'))return false;
+    attackDungeon();
+    return Math.abs(S.dungeonRun.hp-23.88)<1e-8 &&
+      missionTarget(byId(S.active[0]))===targetBefore;
+  })()`),true);
+});
+
+test('mission estimate includes partial progress and reduced rewards', () => {
+  const g=game();
+  assert.equal(g.run(`(() => {
+    S=fresh(); S.done.squat=15;
+    let p=missionEstimate(byId('squat'));
+    if(p.damage!==5 || p.xp!==35 || p.coins!==10)return false;
+    S.completedToday=6; p=missionEstimate(byId('squat'));
+    return p.damage===1.25 && p.xp===9 && p.coins===3;
+  })()`),true);
 });
 
 test('migration settles only active legacy battle time on the original monster', () => {

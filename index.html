@@ -64,6 +64,26 @@
   .milestones{display:flex;gap:8px;flex-wrap:wrap}
   .milestone{padding:7px 10px;border:1px solid #746aaf;border-radius:8px;background:#1a2039}
   .milestone.done{color:#a5f8df;border-color:#68cbb2}
+  .game-header{border-bottom:1px solid #9c784a;margin-bottom:16px;padding-bottom:10px}
+  .game-header h1{font-family:Georgia,serif;color:#ffdf9a;text-shadow:0 3px #4e291d,0 0 22px #ffa95777}
+  .game-header .subtitle{color:#d8b98d}
+  .status-card{background:linear-gradient(120deg,#473126,#272137);border-color:#ad8051;box-shadow:inset 0 0 0 2px #241c22,0 8px 22px #0008}
+  .game-layout{display:grid;grid-template-columns:190px minmax(0,1fr);gap:14px;align-items:start}
+  .game-layout main{min-width:0}
+  .navigation{display:flex;flex-direction:column;gap:7px;position:sticky;top:10px;padding:10px;border:1px solid #916941;border-radius:12px;background:linear-gradient(160deg,#493128,#221a28);box-shadow:inset 0 0 0 2px #251c21,0 10px 24px #0008}
+  .navigation::before{content:"🧭 MAPA DE AVENTURA";font:700 .72rem Georgia,serif;color:#eacb8d;letter-spacing:.08em;padding:8px 4px}
+  .navigation button{text-align:left;padding:11px 9px;border-color:#79593e;background:linear-gradient(110deg,#5b4130,#342638)}
+  .navigation button[aria-selected="true"]{background:linear-gradient(110deg,#a16e35,#683c38);outline:1px solid #f5cd7d;box-shadow:0 0 13px #dca15855}
+  .card{border-color:#806348;background:linear-gradient(145deg,#2c2837,#171d2d);box-shadow:inset 0 0 0 1px #cfab6226,0 9px 24px #0008}
+  h2{color:#f4d395;font-family:Georgia,serif;letter-spacing:.03em}
+  .quest-board{display:grid;gap:8px}
+  .quest-board .mission{background:linear-gradient(115deg,#493a32,#2a2734);border-color:#a47b50;margin:0}
+  .quest-rewards{display:flex;flex-wrap:wrap;gap:7px;margin:9px 0}
+  .quest-rewards span{padding:4px 8px;border-radius:5px;background:#1f1b28;color:#f5dc9e;font-size:.82rem}
+  .quest-rewards small{width:100%}
+  .attributes{display:grid;gap:8px}
+  .attribute{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;padding:9px 12px;border:1px solid #795f45;border-radius:9px;background:#1d1b2b}
+  .attribute small{display:block}
   @keyframes float{50%{transform:translateY(-8px)}}
   @keyframes portal{50%{transform:scale(1.1);opacity:.55}}
   @keyframes pulse{50%{opacity:.45}}
@@ -71,24 +91,26 @@
   @keyframes glow{50%{opacity:.5;filter:drop-shadow(0 0 7px red)}}
   @keyframes snarl{50%{transform:translateY(4px)}}
   @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none !important;transition:none !important}}
-  @media(max-width:480px){body{padding:10px}.navigation{grid-template-columns:repeat(2,1fr)}.row{flex-wrap:wrap}.hero-layout{grid-template-columns:1fr}.hero-stage{min-height:170px}.hero-art{height:160px}}
+  @media(max-width:700px){.game-layout{grid-template-columns:1fr}.navigation{position:static;display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.navigation::before{grid-column:1/-1}.navigation button{text-align:center}}
+  @media(max-width:480px){body{padding:10px}.row{flex-wrap:wrap}.hero-layout{grid-template-columns:1fr}.hero-stage{min-height:170px}.hero-art{height:160px}}
   [hidden]{display:none !important}
 </style>
 </head>
 <body>
-<h1>⚔️ FitQuest</h1>
-<p class="subtitle">Entrena a tu ritmo. Equipa a tu héroe. Conquista la arena.</p>
+<header class="game-header"><h1>⚔️ FitQuest</h1>
+<p class="subtitle">La posada de los héroes · cada aventura empieza a tu ritmo</p></header>
 
-<div class="card">
+<div class="card status-card">
   <div class="row"><b id="lvl"></b><span id="coins"></span><span id="streak"></span></div>
   <div class="bar xp"><div id="xpbar"></div></div>
   <small id="xptxt"></small>
 </div>
 
+<div class="game-layout">
 <div class="navigation" role="tablist" aria-label="Secciones del juego">
-  <button type="button" role="tab" id="tab-adventure" data-section="adventure" aria-controls="adventure" aria-selected="true">Misiones y monstruos</button>
-  <button type="button" role="tab" id="tab-character" data-section="character" aria-controls="character" aria-selected="false" tabindex="-1">Personaje</button>
-  <button type="button" role="tab" id="tab-store" data-section="store" aria-controls="store" aria-selected="false" tabindex="-1">Tienda</button>
+  <button type="button" role="tab" id="tab-adventure" data-section="adventure" aria-controls="adventure" aria-selected="true">🍺 Posada y misiones</button>
+  <button type="button" role="tab" id="tab-character" data-section="character" aria-controls="character" aria-selected="false" tabindex="-1">🧙 Personaje</button>
+  <button type="button" role="tab" id="tab-store" data-section="store" aria-controls="store" aria-selected="false" tabindex="-1">⚒️ Armería</button>
   <button type="button" role="tab" id="tab-achievements" data-section="achievements" aria-controls="achievements" aria-selected="false" tabindex="-1">🏆 Logros</button>
   <button type="button" role="tab" id="tab-packs" data-section="packs" aria-controls="packs" aria-selected="false" tabindex="-1">🎁 Sobres</button>
   <button type="button" role="tab" id="tab-battle" data-section="battle" aria-controls="battle" aria-selected="false" tabindex="-1">⚔️ Autobatalla</button>
@@ -106,8 +128,9 @@
 </div>
 
 <div class="card">
-  <h2>Misiones activas <small id="cnt"></small></h2>
-  <div id="missions"></div>
+  <h2>📜 Tablón de encargos <small id="cnt"></small></h2>
+  <p>Elige una misión, realiza el ejercicio a tu ritmo y marca «Completado».</p>
+  <div id="missions" class="quest-board"></div>
   <p><small>Recompensa completa en las primeras 6 misiones del día. Desde la séptima, la XP, el daño y las monedas de misión bajan al 25 %. La primera misión diaria puede dar una llave; puedes seguir completando misiones sin límite.</small></p>
   <p class="notice"><small>No hay límite de misiones, pero hacer más ejercicio no es necesario para conseguir los hitos de actividad. Adapta cada ejercicio a tu capacidad, descansa cuando lo necesites y detente si sientes dolor. No es asesoramiento médico.</small></p>
   <button id="rest">😴 Día de descanso (1 por semana, mantiene racha)</button>
@@ -126,6 +149,12 @@
   <p>Arrastra un objeto del inventario a su hueco o selecciónalo y pulsa el hueco. Pulsa un hueco equipado sin selección para vaciarlo.</p>
   <div class="hero-layout"><div class="hero-stage" id="hero"></div><div id="eq" class="grid"></div></div>
   <p><small id="bonuses"></small></p>
+</div>
+<div class="card">
+  <h2>📖 Entrenamiento del héroe</h2>
+  <p>Invierte monedas del juego para mejorar atributos permanentes. Los bonos se suman al equipo y los logros.</p>
+  <div id="attributes" class="attributes"></div>
+  <p id="attribute-status" role="status" aria-live="polite"></p>
 </div>
 <div class="card">
   <h2>🎒 Inventario y desmantelamiento</h2>
@@ -188,6 +217,7 @@
 </div>
 </section>
 </main>
+</div>
 
 <script>
 const EXERCISES = [
@@ -253,6 +283,13 @@ const TIER_PCT=[3,6,10,15], TIER_COST=[40,120,350,900], TIER_LVL=[1,5,10,15];
 const TIER_NAMES=['Común','Poco común','Raro','Legendario'];
 const TIER_ICONS=['⚪','🟢','🔷','🌟'];
 const STAT_TXT={dmg:'daño',xp:'XP',coin:'monedas'};
+const ATTRIBUTES={
+  dmg:{name:'Poder',icon:'⚔️',description:'Aumenta el daño en misiones, arena y mazmorras.'},
+  xp:{name:'Sabiduría',icon:'📘',description:'Aumenta la experiencia obtenida.'},
+  coin:{name:'Fortuna',icon:'🪙',description:'Aumenta las monedas de misiones y enemigos.'}
+};
+const ATTRIBUTE_LIMIT=20;
+const attributeCost=rank=>100+50*rank;
 const ITEMS=[];
 for(const [g,d] of Object.entries(GROUPS)) for(let t=0;t<4;t++){
   const names=Array.isArray(d.names[t])?d.names[t]:[d.names[t]];
@@ -300,7 +337,7 @@ const ACHIEVEMENTS=[
   }))
 ];
 const bonus=stat=>{
-  let t=0;
+  let t=S.attributes[stat]||0;
   for(const id of Object.values(S.eq)){const it=ITEM[id];if(it&&it.stat===stat)t+=itemPercent(it)}
   for(const a of ACHIEVEMENTS) if(S.achievements.includes(a.id)&&a.stat===stat)t+=a.pct;
   return 1+t/100;
@@ -329,7 +366,7 @@ const fresh = () => ({level:1,xp:0,coins:0,owned:[],eq:{},streak:0,kills:0,
   day:today(),done:{},bonus:{},lastActive:null,lastRest:null,monsterHp:monsterHp(0),log:[],active:pickMissions(),completedToday:0,
   targets:{},totalMissions:0,packsOpened:0,achievements:[],missionKills:0,autoKills:0,autoMonsterHp:monsterHp(0),battleUpdated:Date.now(),
   keys:0,keyPity:0,unlockedDungeons:['crypt'],dungeonRun:null,lastDungeonDay:null,dungeonClears:0,materials:0,activeDays:0,lastActivityDay:null,
-  weeklyRewards:0,balanceVersion:1,unlimitedMissionsVersion:1,upgrades:{}});
+  weeklyRewards:0,balanceVersion:1,unlimitedMissionsVersion:1,upgrades:{},attributes:{dmg:0,xp:0,coin:0}});
 let S;
 try{S=JSON.parse(localStorage.getItem(KEY)||'null') || fresh()}
 catch(error){alert('No se puede leer la partida guardada. No se ha borrado; revisa los datos del navegador.');throw error}
@@ -351,6 +388,7 @@ S.activeDays ??= 0;
 S.lastActivityDay ??= null;
 S.weeklyRewards ??= 0;
 S.upgrades ??= {};
+S.attributes ??= {dmg:0,xp:0,coin:0};
 let legacyTicks=0;
 if(S.missionKills==null){
   if(S.autoBattle===true && Number.isFinite(S.battleUpdated)){
@@ -520,6 +558,25 @@ function placeItem(id,slotKey){
   log(`🎽 Equipado: ${item.name}`);
   return true;
 }
+function trainAttribute(stat){
+  if(!Object.hasOwn(ATTRIBUTES,stat)) return false;
+  const rank=S.attributes[stat]||0;
+  if(rank>=ATTRIBUTE_LIMIT || S.coins<attributeCost(rank)) return false;
+  S.coins-=attributeCost(rank);
+  S.attributes[stat]=rank+1;
+  log(`📖 ${ATTRIBUTES[stat].name} mejorado a ${rank+1}`);
+  return true;
+}
+function missionEstimate(ex){
+  const units=Math.max(0,missionTarget(ex)-(S.done[ex.id]||0));
+  const scale=S.completedToday<FULL_REWARD_MISSIONS?1:0.25;
+  const mult=streakMult()*scale;
+  return {
+    damage:units*ex.value*bonus('dmg')*mult,
+    xp:Math.round(units*ex.value*mult*bonus('xp'))+Math.round(30*mult*bonus('xp')),
+    coins:Math.round(10*bonus('coin')*scale)
+  };
+}
 function completeMission(ex){
   settleBattle();
   rollDay();
@@ -665,9 +722,12 @@ function render(liveOnly=false){
   $('missions').innerHTML='';
   for(const ex of S.active.map(byId)){
     const tgt=missionTarget(ex),d=S.done[ex.id]||0;
+    const preview=missionEstimate(ex);
     const el=document.createElement('div');el.className='mission';
     el.innerHTML=`<div class="row"><strong>${EXERCISE_ICONS[ex.id]} ${ex.name}</strong><span>Objetivo: ${tgt} ${ex.unit}</span></div>
-      ${d>0?`<p><small>Progreso anterior: ${d}/${tgt} ${ex.unit}. Completa lo que falta y confirma.</small></p><div class="bar mis"><div style="width:${Math.min(100,100*d/tgt)}%"></div></div>`:''}`;
+      ${d>0?`<p><small>Progreso anterior: ${d}/${tgt} ${ex.unit}. Completa lo que falta y confirma.</small></p><div class="bar mis"><div style="width:${Math.min(100,100*d/tgt)}%"></div></div>`:''}
+      <div class="quest-rewards"><span>⚔️ ${Math.round(preview.damage*10)/10} daño</span><span>✨ ~${preview.xp} XP</span><span>🪙 ${preview.coins} monedas</span>
+      <small>Estimación actual; no incluye recompensas por vencer monstruos ni logros nuevos.</small></div>`;
     const actions=document.createElement('div');actions.className='mission-actions';
     const complete=document.createElement('button');
     complete.type='button';complete.className='complete';complete.textContent='✓ Completado';
@@ -693,9 +753,29 @@ function render(liveOnly=false){
   $('cnt').textContent=`(${S.completedToday} hoy · sin límite)`;
   $('weekly-progress').innerHTML=journeyMarkup();
   $('rest').disabled=!!S.lastRest&&daysBetween(S.lastRest,today())<7;
-  renderChar();renderShop();renderAchievements();renderDungeons();
+  renderChar();renderAttributes();renderShop();renderAchievements();renderDungeons();
   $('open-pack').disabled=S.coins<PACK_COST;
   $('log').innerHTML=S.log.map(l=>`<div>${l}</div>`).join('');
+}
+function renderAttributes(){
+  const box=$('attributes');box.innerHTML='';
+  for(const [stat,definition] of Object.entries(ATTRIBUTES)){
+    const rank=S.attributes[stat]||0;
+    const row=document.createElement('div');row.className='attribute';
+    const details=document.createElement('div');
+    details.innerHTML=`<strong>${definition.icon} ${definition.name} · ${rank}/${ATTRIBUTE_LIMIT}</strong><small>+${rank}% ${STAT_TXT[stat]} · ${definition.description}</small>`;
+    const button=document.createElement('button');button.type='button';
+    button.textContent=rank>=ATTRIBUTE_LIMIT?'Nivel máximo':`Mejorar · ${attributeCost(rank)} 🪙`;
+    button.disabled=rank>=ATTRIBUTE_LIMIT || S.coins<attributeCost(rank);
+    button.setAttribute('aria-label',`${button.textContent} ${definition.name}`);
+    button.onclick=()=>{
+      settleBattle();
+      const improved=trainAttribute(stat);
+      save();render();
+      $('attribute-status').textContent=improved?`${definition.name} aumentado a ${S.attributes[stat]}.`:'No se puede mejorar este atributo.';
+    };
+    row.append(details,button);box.appendChild(row);
+  }
 }
 function renderChar(){
   $('hero').innerHTML=heroArt();
@@ -868,6 +948,7 @@ setInterval(()=>{
   if(S.battleUpdated!==previous){
     save();render(true);
     if(!$('store').hidden && (S.coins!==previousCoins || S.level!==previousLevel)) renderShop();
+    if(!$('character').hidden && S.coins!==previousCoins) renderAttributes();
     if(!$('achievements').hidden && S.achievements.length!==previousAchievements) renderAchievements();
     if(!$('battle').hidden) animateHit('battle-icon');
   }

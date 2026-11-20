@@ -16,6 +16,8 @@ eliminarla.
   que una recompensa. Los objetivos no son recomendaciones médicas. Si una
   partida anterior tenía progreso parcial, termina la parte restante antes
   de confirmar; únicamente se recompensará la parte que faltaba.
+  El tablón muestra una estimación del daño, XP y monedas de cada encargo;
+  no incluye el botín de monstruos ni los logros desbloqueados durante él.
   Las primeras seis misiones del día dan la recompensa completa; las
   posteriores dan el 25 % de XP, daño y monedas de misión. Las recompensas
   de monstruos derrotados siguen siendo las normales. Solo la primera misión
@@ -32,6 +34,11 @@ eliminarla.
   índice de rareza (común 0 a legendario 3). Desmantelar elimina el objeto y
   sus mejoras; aún no hay fabricación.
   Hay 128 objetos en cuatro rarezas, con filtros por tipo y rareza.
+- **Entrenamiento del héroe:** en la pestaña Personaje puedes comprar hasta
+  20 rangos de Poder, Sabiduría y Fortuna con monedas del juego. Cada rango
+  añade un 1 % a daño, XP o monedas, respectivamente. El siguiente rango
+  cuesta 100 + 50 monedas por rango actual. Estos bonos se suman a los del
+  equipo y logros y se aplican también a la arena y las mazmorras.
 - **Logros:** desbloquean mejoras permanentes al alcanzar sus objetivos. Las
   misiones se cuentan desde esta versión; los niveles y monstruos derrotados
   de partidas antiguas sí se reconocen.
