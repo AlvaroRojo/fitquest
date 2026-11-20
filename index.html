@@ -110,9 +110,10 @@
   .inventory-summary #materials{flex:none;margin:0;padding:7px 11px;border:1px solid #a87d4c;border-radius:9px;background:#30272d;color:#ffe0a2;font-weight:700}
   .inventory-summary small{flex:1 1 350px}
   #inventory-status:empty{display:none}
+  #inventory-status:not(:empty){margin:12px 0 0}
   .inventory-pagination{justify-content:flex-end;margin-left:auto}
   .inventory-pagination span{color:#e9cfaa}
-  #inventory{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,260px),1fr));gap:10px}
+  #inventory{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,260px),1fr));gap:10px;margin-top:14px}
   .inventory-item{min-width:0;margin:0;overflow-wrap:anywhere}
   .inventory-item small{display:block;margin:4px 0}
   .inventory-item .item-actions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px}

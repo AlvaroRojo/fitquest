@@ -144,6 +144,7 @@ test('global statistics use saved counters and all defeated monsters', () => {
 test('character inventory marks equipped items and keeps compact filterable layout', () => {
   assert.match(html, /class="inventory-summary"><p id="materials"><\/p><small>/);
   assert.match(html, /#inventory\{display:grid;grid-template-columns:repeat\(auto-fill/);
+  assert.match(html, /#inventory\{[^}]*margin-top:14px/);
   assert.match(script, /row\.className=worn\?'inventory-item is-equipped':'inventory-item'/);
   assert.match(script, /class="equipped-badge">✓ Equipado/);
   assert.match(script, /b\.className=it\?'slot is-equipped':'slot'/);
