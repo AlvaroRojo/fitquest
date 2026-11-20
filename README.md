@@ -47,7 +47,10 @@ eliminarla.
   criatura astral da el doble de monedas, el triple de XP y 4 fragmentos.
   El equipo y los logros también mejoran monedas y XP. El encuentro y su
   vida restante se guardan al cerrar; al actualizar se conserva la vida
-  del enemigo anterior. Estos encuentros son independientes de la arena.
+  del enemigo anterior. Cada criatura se muestra de cuerpo completo en un
+  bioma acorde, y los jefes cuentan con llamas animadas. Las animaciones
+  respetan la preferencia del sistema de reducir movimiento. Estos encuentros
+  son independientes de la arena.
 - **Personaje y tienda:** compra equipo con monedas del juego y equípalo. Los
   objetos comprados y los obtenidos en sobres comparten inventario. En la
   pestaña de personaje arrastra un objeto a un hueco compatible, o selecciónalo

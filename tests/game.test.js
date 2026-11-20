@@ -208,6 +208,31 @@ test('mission board omits manual changes and the visible activity log', () => {
   assert.match(script, /const next=randomMission\(S\.active\)/);
 });
 
+test('all mission creatures have full-body artwork and a mapped biome', () => {
+  const species = script.slice(script.indexOf('const MISSION_MONSTERS ='), script.indexOf('const ENCOUNTER_TYPES ='));
+  const artwork = script.slice(script.indexOf('function missionMonsterArt('), script.indexOf('function heroArt('));
+  const context = vm.createContext({});
+  vm.runInContext(species + artwork, context);
+  const result = vm.runInContext(`(() => {
+    const biomes=new Set(), bodies=new Set();
+    for(let i=0;i<MISSION_MONSTERS.length;i++){
+      const e={kind:'normal',species:i};
+      const svg=missionMonsterArt(e);
+      if(svg.includes('undefined') || !svg.includes('class="creature-body"')) return false;
+      bodies.add(svg); biomes.add(encounterBiome(e));
+    }
+    return bodies.size===16 && biomes.size===5 &&
+      encounterBiome({kind:'lucky',species:0})==='forest' &&
+      encounterBiome({kind:'event',species:0})==='void' &&
+      !missionMonsterArt({kind:'lucky',species:0}).includes('undefined');
+  })()`, context);
+  assert.equal(result,true);
+  assert.match(html, /<title>FitQuest<\/title>/);
+  assert.match(html, /rel="icon" type="image\/svg\+xml" href="data:image\/svg\+xml,/);
+  assert.doesNotMatch(html, /class="game-header"/);
+  assert.match(html, /data-kind="boss"\] \.boss-flames\{display:block\}/);
+});
+
 test('previously recorded rest still protects streak during migration', () => {
   const g=game();
   assert.equal(g.run(`(() => {

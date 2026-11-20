@@ -4,11 +4,11 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>FitQuest</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='15' fill='%231a1b30'/%3E%3Cpath d='M13 11l38 39M51 11L13 50' stroke='%23f6d69c' stroke-width='6' stroke-linecap='round'/%3E%3Cpath d='M9 49l10 10M45 59l10-10' stroke='%23dc8c61' stroke-width='5'/%3E%3C/svg%3E">
 <style>
   *{box-sizing:border-box}
   body{font-family:system-ui,sans-serif;background:radial-gradient(ellipse at 10% 0%,#302056,#10152b 48%,#080b19 100%);color:#e9ecff;margin:0;padding:16px;min-height:100vh}
   body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:-1;background:repeating-linear-gradient(0deg,transparent 0 59px,#887aff0a 60px),repeating-linear-gradient(90deg,transparent 0 59px,#887aff0a 60px);mask-image:linear-gradient(transparent,#000)}
-  h1{margin:.2em 0;letter-spacing:.1em;text-transform:uppercase;font-size:clamp(2rem,7vw,3rem);color:#fff;text-shadow:0 0 22px #9a6cffaa}
   h2{font-size:1.1em;margin:.4em 0 .7em;color:#b9d1ff;letter-spacing:.04em}
   .subtitle,small,.muted{color:#acb5d3}
   .card{position:relative;background:linear-gradient(135deg,#222749f2,#10182df5);border:1px solid #55547d;border-radius:14px;padding:16px;margin-bottom:12px;box-shadow:0 12px 30px #03061388,inset 0 1px #ffffff12}
@@ -63,9 +63,6 @@
   .milestones{display:flex;gap:8px;flex-wrap:wrap}
   .milestone{padding:7px 10px;border:1px solid #746aaf;border-radius:8px;background:#1a2039}
   .milestone.done{color:#a5f8df;border-color:#68cbb2}
-  .game-header{border-bottom:1px solid #9c784a;margin-bottom:16px;padding-bottom:10px}
-  .game-header h1{font-family:Georgia,serif;color:#ffdf9a;text-shadow:0 3px #4e291d,0 0 22px #ffa95777}
-  .game-header .subtitle{color:#d8b98d}
   .status-card{background:linear-gradient(120deg,#473126,#272137);border-color:#ad8051;box-shadow:inset 0 0 0 2px #241c22,0 8px 22px #0008}
   .game-layout main{min-width:0}
   .navigation{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:7px;padding:10px;border:1px solid #916941;border-radius:12px;background:linear-gradient(160deg,#493128,#221a28);box-shadow:inset 0 0 0 2px #251c21,0 10px 24px #0008}
@@ -90,10 +87,6 @@
   @keyframes creature-breathe{50%{transform:scale(1.035,.97)}}
   body{background:radial-gradient(ellipse at 85% 0%,#503451 0,transparent 36%),radial-gradient(ellipse at 0% 40%,#1a3745 0,transparent 38%),#0b1020;color:#f3eee6;line-height:1.5}
   body::before{background:repeating-linear-gradient(45deg,transparent 0 78px,#ead7a505 79px,transparent 80px);mask-image:none}
-  .game-header{position:relative;overflow:hidden;padding:18px 24px;margin-bottom:12px;border:1px solid #a87d4c;border-radius:16px;background:radial-gradient(ellipse at 80% 10%,#a9744455,transparent 48%),linear-gradient(110deg,#3f2a2a,#1a1b30 72%);box-shadow:inset 0 1px #fff3,0 12px 30px #0006}
-  .game-header::after{content:"✦";position:absolute;right:5%;top:-.5em;color:#e4b46a18;font-size:8rem;pointer-events:none}
-  .game-header h1{margin:0;font-size:clamp(1.9rem,4vw,3rem);letter-spacing:.08em}
-  .game-header .subtitle{margin:2px 0 0;letter-spacing:.04em}
   .card{padding:20px;border:1px solid #8e704f;border-radius:16px;background:linear-gradient(145deg,#302b3a,#161c2b 82%);box-shadow:inset 0 1px #fff2,0 12px 28px #0006}
   .card h2{margin:0 0 12px;font-size:1.2rem;color:#ffe0a2}
   .status-card{padding:14px 20px;background:linear-gradient(105deg,#41302b,#232235 68%,#18313a);border-color:#b6905c}
@@ -147,6 +140,16 @@
   .encounter-header .encounter-tag{margin:0}
   .encounter-stage{position:relative;display:grid;place-items:center;min-height:290px;flex:1;overflow:hidden;isolation:isolate;border:1px solid var(--encounter-accent);border-radius:14px;background:radial-gradient(ellipse at 50% 55%,#a65c7866,transparent 35%),radial-gradient(ellipse at 50% 78%,#b9817355,transparent 45%),linear-gradient(180deg,#13152a,#242239 62%,#111424);box-shadow:inset 0 0 55px #070914bb}
   .encounter-landscape{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+  .encounter-card[data-biome="forest"] .encounter-landscape{filter:hue-rotate(95deg) saturate(.8)}
+  .encounter-card[data-biome="swamp"] .encounter-landscape{filter:hue-rotate(135deg) saturate(.8)}
+  .encounter-card[data-biome="crypt"] .encounter-landscape{filter:hue-rotate(220deg) saturate(.65)}
+  .encounter-card[data-biome="volcano"] .encounter-landscape{filter:hue-rotate(330deg) saturate(1.6)}
+  .encounter-card[data-biome="void"] .encounter-landscape{filter:hue-rotate(265deg) saturate(1.5)}
+  .biome-layer{display:none}
+  [data-biome="forest"] .biome-forest,[data-biome="swamp"] .biome-swamp,[data-biome="crypt"] .biome-crypt,[data-biome="volcano"] .biome-volcano,[data-biome="void"] .biome-void{display:block}
+  .boss-flames{display:none;position:absolute;z-index:3;inset:auto 0 0;width:100%;height:34%;pointer-events:none;transform-origin:bottom;animation:fire-dance 1.8s ease-in-out infinite alternate}
+  .encounter-card[data-kind="boss"] .boss-flames{display:block}
+  @keyframes fire-dance{to{transform:scaleY(.9);opacity:.72}}
   .encounter-light{position:absolute;inset:0;pointer-events:none;background:conic-gradient(from 25deg at 50% 50%,transparent 0deg,#ffdfa71a 20deg,transparent 42deg,transparent 115deg,#dda4fa18 145deg,transparent 170deg,transparent 245deg,#ffb8791a 275deg,transparent 300deg);animation:encounter-breathe 5s ease-in-out infinite}
   .encounter-stage::before{content:"";position:absolute;width:min(78%,320px);aspect-ratio:1;border:2px solid var(--encounter-accent);border-radius:50%;box-shadow:0 0 28px var(--encounter-glow),inset 0 0 28px var(--encounter-glow);opacity:.65;animation:encounter-rune 12s linear infinite;pointer-events:none}
   .encounter-stage::after{content:"";position:absolute;inset:auto 10% 12%;height:13%;border:1px solid var(--encounter-accent);border-radius:50%;background:radial-gradient(ellipse,#f7bd8755,transparent 70%);box-shadow:0 0 30px var(--encounter-glow);pointer-events:none}
@@ -157,6 +160,8 @@
   .encounter-stage .big{position:relative;z-index:2;line-height:1;animation:float 3s ease-in-out infinite;filter:drop-shadow(0 10px 20px var(--encounter-glow))}
   .encounter-stage .big.flash{animation:impact .45s ease-out}
   .encounter-stage .creature{width:clamp(150px,17vw,235px);max-width:70vw}
+  .encounter-stage .full-creature{width:clamp(180px,20vw,270px);max-width:70vw;max-height:min(65vh,330px)}
+  .full-creature .creature-body{transform-origin:100px 145px;animation:creature-breathe 2.6s ease-in-out infinite}
   .encounter-health{padding:13px;border:1px solid #8a6656;border-radius:12px;background:#141725e8}
   .encounter-health .row{margin-bottom:8px;gap:10px}
   .encounter-health #mName{font:700 clamp(1.05rem,2vw,1.35rem) Georgia,serif;color:#ffe2ae}
@@ -186,14 +191,11 @@
   }
   @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none !important;transition:none !important}}
   @media(max-width:700px){.navigation{grid-template-columns:repeat(2,minmax(0,1fr))}}
-  @media(max-width:480px){body{padding:10px}.card{padding:15px}.game-header{padding:15px}.row{flex-wrap:wrap}.hero-layout{grid-template-columns:1fr}.hero-stage{min-height:170px}.hero-art{height:160px}.encounter-stage{min-height:245px}}
+  @media(max-width:480px){body{padding:10px}.card{padding:15px}.row{flex-wrap:wrap}.hero-layout{grid-template-columns:1fr}.hero-stage{min-height:170px}.hero-art{height:160px}.encounter-stage{min-height:245px}}
   [hidden]{display:none !important}
 </style>
 </head>
 <body>
-<header class="game-header"><h1>⚔️ FitQuest</h1>
-<p class="subtitle">La posada de los héroes · cada aventura empieza a tu ritmo</p></header>
-
 <div class="card status-card">
   <div class="row"><b id="lvl"></b><span id="coins"></span><span id="streak"></span></div>
   <div class="bar xp"><div id="xpbar"></div></div>
@@ -230,10 +232,16 @@
       <path d="M0 405 Q100 351 200 390 T400 390 T600 405 V450 H0Z" fill="#111322"/>
       <path d="M0 426 Q160 381 300 416 T600 426 M75 448 Q165 405 260 445 M340 445 Q435 405 525 448" fill="none" stroke="#d09c88" stroke-opacity=".25" stroke-width="3"/>
       <g fill="#ffd7a3" opacity=".8"><circle cx="119" cy="76" r="2"/><circle cx="476" cy="98" r="2"/><circle cx="377" cy="45" r="2"/><circle cx="201" cy="110" r="1.5"/></g>
+      <g class="biome-layer biome-forest" fill="#0b211e"><path d="M0 400 V185 L55 105 93 194 138 120 175 235 135 400Z M600 400 V160 L550 85 510 185 470 115 430 245 465 400Z"/><path d="M45 320 L20 238 85 238Z M535 310 L500 215 580 215Z"/></g>
+      <g class="biome-layer biome-swamp"><path d="M0 410 Q100 370 200 412 T400 410 T600 410 V450 H0Z" fill="#305246"/><path d="M35 380 Q80 300 48 235 M565 380 Q520 310 553 235" fill="none" stroke="#1b302e" stroke-width="16"/><g fill="#b9f4ad"><circle cx="80" cy="320" r="3"/><circle cx="510" cy="285" r="4"/><circle cx="130" cy="360" r="3"/></g></g>
+      <g class="biome-layer biome-crypt" fill="#111322" stroke="#827783" stroke-width="3"><path d="M0 400 V160 H85 V400 M515 400 V160 H600 V400"/><path d="M70 360 V250 Q100 170 130 250 V360 M470 360 V250 Q500 170 530 250 V360" fill="#090d19"/><path d="M100 385 V305 M80 325 H120 M500 385 V305 M480 325 H520"/></g>
+      <g class="biome-layer biome-volcano"><path d="M0 450 V350 L120 255 170 320 210 284 300 375 410 280 450 320 510 245 600 350 V450Z" fill="#381c25"/><path d="M0 423 Q120 390 210 420 T420 415 T600 430" fill="none" stroke="#ff7544" stroke-width="9"/><g fill="#ffb05b"><circle cx="100" cy="170" r="3"/><circle cx="460" cy="190" r="4"/><circle cx="160" cy="250" r="3"/></g></g>
+      <g class="biome-layer biome-void" fill="none" stroke="#d4abff" stroke-width="3"><path d="M100 45 L80 85 115 99 90 140 M490 40 L520 76 490 96 535 128"/><circle cx="300" cy="145" r="95" stroke-dasharray="6 12"/><path d="M80 320 L110 280 140 320 110 355Z M460 300 L490 260 520 300 490 340Z"/></g>
     </svg>
     <div class="encounter-light" aria-hidden="true"></div>
     <div class="encounter-runes" aria-hidden="true"></div><div class="encounter-embers" aria-hidden="true"></div>
     <div class="arena-label">Encuentro de misiones</div><div class="big" id="mIcon"></div>
+    <svg class="boss-flames" viewBox="0 0 600 160" preserveAspectRatio="none" aria-hidden="true"><path d="M0 160 V88 Q20 103 34 39 Q44 97 70 66 Q72 119 95 78 Q112 114 125 46 Q141 108 163 90 Q185 125 208 59 Q218 112 241 88 Q261 125 278 72 Q300 118 322 62 Q336 116 357 85 Q381 120 394 47 Q412 112 433 82 Q455 116 475 57 Q490 111 510 76 Q532 110 548 35 Q561 102 580 70 L600 88 V160Z" fill="#e94b25" opacity=".82"/><path d="M0 160 Q25 112 48 125 Q70 83 92 139 Q120 103 143 133 Q164 90 185 140 Q220 104 245 139 Q272 95 300 140 Q327 103 355 137 Q386 94 409 138 Q437 102 462 135 Q491 88 515 139 Q550 100 570 133 Q590 111 600 122 V160Z" fill="#ffbd58" opacity=".9"/></svg>
   </div>
   <div class="encounter-health">
     <div class="row"><b id="mName"></b><span id="mHp"></span></div>
@@ -807,6 +815,25 @@ function monsterArt(index){
 }
 function missionMonsterArt(encounter){
   const art=encounter.kind==='lucky'?'goblin':MISSION_MONSTERS[encounter.species].art;
+  const bodies={
+    rat:`<path d="M92 152 Q145 120 152 155 Q157 190 135 201 L66 201 Q40 184 58 154Z" fill="#776271"/><path d="M140 172 Q188 140 180 190 Q175 205 164 203" fill="none" stroke="#cf9ca4" stroke-width="7"/><path d="M74 190 L67 219 52 219 M117 192 L127 219 142 219" fill="none" stroke="#aa909b" stroke-width="10" stroke-linecap="round"/>`,
+    bat:`<path d="M75 132 Q35 116 6 153 L10 210 Q31 180 49 197 Q61 174 76 189 M125 132 Q165 116 194 153 L190 210 Q169 180 151 197 Q139 174 124 189" fill="#5a456e"/><ellipse cx="100" cy="164" rx="26" ry="38" fill="#725a91"/><path d="M88 192 L81 213 90 207 M112 192 L119 213 110 207" fill="none" stroke="#d3a9bc" stroke-width="4"/>`,
+    wolf:`<path d="M59 159 Q88 127 129 146 Q157 161 143 191 L58 191Z" fill="#697384"/><path d="M56 172 L43 211 64 211 M133 174 L147 211 127 211" fill="#798493"/><path d="M138 154 Q175 120 169 169" fill="none" stroke="#9ba0a8" stroke-width="11"/>`,
+    orc:`<path d="M62 132 Q100 115 138 132 L146 185 128 195 72 195 54 185Z" fill="#627f69"/><path d="M60 142 L38 185 49 197 70 170 M140 142 L162 185 151 197 130 170" fill="#789d7e"/><path d="M78 187 L71 220 92 220 100 193 108 220 129 220 122 187Z" fill="#493b45"/><path d="M59 165 H141 V177 H59Z" fill="#9d7454"/>`,
+    zombie:`<path d="M67 130 L133 130 143 185 125 194 110 184 97 195 78 185 61 194Z" fill="#665b66"/><path d="M65 143 L39 172 26 167 M135 143 L161 172 174 167" fill="none" stroke="#819d7a" stroke-width="15" stroke-linecap="round"/><path d="M78 189 L69 219 90 219 99 192 108 219 130 219 121 189" fill="#4d4b5a"/>`,
+    dragon:`<path d="M65 141 L13 105 27 177 59 163 M135 141 L187 105 173 177 141 163" fill="#793c62"/><path d="M75 132 Q100 120 125 132 L139 183 122 204 78 204 61 183Z" fill="#a45b78"/><path d="M86 147 L100 155 114 147 119 182 100 194 81 182Z" fill="#e1a58d"/><path d="M75 196 L66 220 88 220 M125 196 L134 220 112 220 M136 175 Q180 166 171 207" fill="none" stroke="#a45b78" stroke-width="12"/>`,
+    ghost:`<path d="M65 118 Q44 143 49 204 L63 193 78 216 95 201 112 219 127 195 148 207 Q155 147 135 118Z" fill="#90b3bf" opacity=".8"/><path d="M52 150 L24 173 M148 150 L176 173" stroke="#bedbe0" stroke-width="8" stroke-linecap="round"/>`,
+    golem:`<path d="M63 131 L137 131 150 178 130 198 70 198 50 178Z" fill="#646b79"/><path d="M56 138 L30 151 27 188 52 198 67 172 M144 138 L170 151 173 188 148 198 133 172" fill="#7d8191"/><path d="M73 190 L66 220 94 220 100 196 106 220 134 220 127 190" fill="#68717d"/><path d="M100 145 L110 159 100 173 90 159Z" fill="#f3b26e"/>`,
+    spider:`<ellipse cx="100" cy="160" rx="45" ry="39" fill="#59465c"/><path d="M66 150 L28 133 12 160 M63 165 L24 168 12 198 M68 181 L30 195 26 219 M134 150 L172 133 188 160 M137 165 L176 168 188 198 M132 181 L170 195 174 219" fill="none" stroke="#a77c98" stroke-width="9" stroke-linecap="round"/>`,
+    slime:`<path d="M50 135 Q26 150 28 185 Q31 219 100 219 Q169 219 172 185 Q174 150 150 135Z" fill="#589e94" opacity=".92"/><path d="M60 187 Q100 202 140 187" fill="none" stroke="#c8fff0" stroke-width="4"/>`,
+    skull:`<path d="M74 128 L65 164 81 175 70 210 M126 128 L135 164 119 175 130 210 M100 128 V204 M74 147 H126 M76 160 H124 M80 172 H120" fill="none" stroke="#d2c1b6" stroke-width="7" stroke-linecap="round"/><path d="M83 196 L68 219 M117 196 L132 219" stroke="#d2c1b6" stroke-width="7"/>`,
+    knight:`<path d="M65 132 L135 132 145 184 125 198 75 198 55 184Z" fill="#68788b"/><path d="M65 142 L40 182 53 192 73 166 M135 142 L160 182 147 192 127 166" fill="#9ba4b1"/><path d="M77 190 L70 220 91 220 100 196 109 220 130 220 123 190Z" fill="#657181"/><path d="M100 140 L109 149 100 172 91 149Z" fill="#e2bb83"/><path d="M158 155 L180 104 M170 154 L190 164" stroke="#f3d9b3" stroke-width="5"/>`,
+    cultist:`<path d="M70 128 L130 128 153 220 125 210 100 220 75 210 47 220Z" fill="#55456c"/><path d="M67 143 L40 174 30 157 M133 143 L160 174 170 157" fill="none" stroke="#82729a" stroke-width="12"/><path d="M100 151 L110 165 100 181 90 165Z" fill="#eab879"/>`,
+    bird:`<path d="M70 137 Q44 116 10 151 L35 175 20 192 65 183 M130 137 Q156 116 190 151 L165 175 180 192 135 183" fill="#48576f"/><path d="M70 131 Q100 120 130 131 L122 186 100 204 78 186Z" fill="#647188"/><path d="M90 190 L82 215 M110 190 L118 215" stroke="#e3ad6d" stroke-width="5"/>`,
+    scorpion:`<ellipse cx="100" cy="159" rx="45" ry="35" fill="#9f665d"/><path d="M63 155 L22 130 10 146 30 161 M137 155 L178 130 190 146 170 161 M65 175 L33 195 M135 175 L167 195 M105 129 Q137 92 166 115 Q179 126 163 139" fill="none" stroke="#c27f67" stroke-width="9" stroke-linecap="round"/>`,
+    eye:`<path d="M48 151 Q100 105 152 151 Q100 199 48 151Z" fill="#634d7d" opacity=".8"/><path d="M65 171 Q48 200 42 217 M83 177 Q74 199 79 218 M117 177 Q126 199 121 218 M135 171 Q152 200 158 217" fill="none" stroke="#a284b6" stroke-width="7"/>`,
+    goblin:`<path d="M70 131 L130 131 136 179 124 194 76 194 64 179Z" fill="#617b50"/><path d="M68 142 L43 175 54 184 75 163 M132 142 L157 175 146 184 125 163" fill="#80b97a"/><path d="M79 188 L72 218 91 218 100 193 109 218 128 218 121 188Z" fill="#594b39"/><path d="M126 154 Q163 145 163 177 Q162 197 138 196Z" fill="#bd9252" stroke="#ffdf91"/>`
+  };
   const shapes={
     rat:`<path d="M37 45 Q8 13 14 54 L29 78 M103 45 Q132 13 126 54 L111 78" fill="#795c6c"/><ellipse cx="70" cy="80" rx="45" ry="38" fill="#8a7783"/><path d="M35 83 Q70 65 105 83 L70 118Z" fill="#ad919a"/><circle cx="70" cy="91" r="6" fill="#e88a97"/>`,
     bat:`<path d="M48 57 Q18 18 5 41 L10 93 Q21 73 32 91 Q42 70 53 89 M92 57 Q122 18 135 41 L130 93 Q119 73 108 91 Q98 70 87 89" fill="#725a91"/><path d="M42 55 L43 24 60 41 Q70 35 80 41 L97 24 98 55 Q112 106 70 116 Q28 106 42 55Z" fill="#987ca8"/>`,
@@ -828,7 +855,17 @@ function missionMonsterArt(encounter){
   };
   const eyes=art==='eye'?'':`<g class="eyes" fill="#ff778c"><path d="M43 63 L61 67 52 73Z M97 63 L79 67 88 73Z"/></g>`;
   const adornment=encounter.kind==='boss'?'<path d="M42 29 L39 8 55 17 70 3 85 17 101 8 98 29Z" fill="#e5b55e" stroke="#ffdf91" stroke-width="3"/>':encounter.kind==='elite'?'<path d="M70 4 L76 16 70 26 64 16Z" fill="#e6c6ff"/>':encounter.kind==='event'?'<path d="M12 20 L15 12 18 20 26 23 18 26 15 34 12 26 4 23Z M118 105 L121 97 124 105 132 108 124 111 121 119 118 111 110 108Z" fill="#ffe59e"/>':'';
-  return `<svg class="creature" viewBox="0 0 140 140" aria-hidden="true"><g stroke="#d4b5c5" stroke-width="2.5" stroke-linejoin="round">${shapes[art]}</g>${eyes}${adornment}</svg>`;
+  return `<svg class="creature full-creature" viewBox="0 0 200 225" aria-hidden="true"><g class="creature-body" stroke="#d4b5c5" stroke-width="2.5" stroke-linejoin="round">${bodies[art]}</g><g transform="translate(30 14)"><g stroke="#d4b5c5" stroke-width="2.5" stroke-linejoin="round">${shapes[art]}</g>${eyes}${adornment}</g></svg>`;
+}
+function encounterBiome(encounter){
+  if(encounter.kind==='event') return 'void';
+  if(encounter.kind==='lucky') return 'forest';
+  const art=MISSION_MONSTERS[encounter.species].art;
+  if(['rat','wolf','bird','goblin'].includes(art)) return 'forest';
+  if(['spider','slime'].includes(art)) return 'swamp';
+  if(['bat','zombie','ghost','skull','knight'].includes(art)) return 'crypt';
+  if(['orc','dragon','golem','scorpion'].includes(art)) return 'volcano';
+  return 'void';
 }
 function heroArt(){
   const equipped=key=>Boolean(S.eq[key]);
@@ -909,6 +946,7 @@ function render(liveOnly=false){
   const mn=encounter.legacy?MONSTERS[S.missionKills%MONSTERS.length].split(' ').slice(1).join(' '):encounter.kind==='lucky'?'Goblin de la suerte':MISSION_MONSTERS[encounter.species].name;
   $('mIcon').innerHTML=missionMonsterArt(encounter);$('mName').textContent=mn;
   $('mission-encounter').dataset.kind=encounter.kind;
+  $('mission-encounter').dataset.biome=encounterBiome(encounter);
   $('encounter-tag').textContent=type.label;$('encounter-tag').dataset.kind=encounter.kind;
   $('encounter-info').textContent=encounter.kind==='normal'?'Derrota al enemigo para obtener monedas y experiencia.':`Recompensa: x${type.coins} monedas · x${type.xp} XP${type.materials?` · ${type.materials} fragmentos`:''}.`;
   const max=encounter.maxHp;
