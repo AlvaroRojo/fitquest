@@ -85,9 +85,17 @@
   .character-stat strong,.character-stat small{display:block}
   .character-stat strong{color:#ffe0a2}
   .inventory-toolbar,.inventory-pagination{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-  .inventory-toolbar{padding:10px 12px;border:1px solid #806346;border-radius:12px;background:linear-gradient(110deg,#3b302f,#1a2030)}
-  .inventory-toolbar label{display:flex;align-items:center;gap:8px;color:#f4d395;font-size:.85rem;font-weight:700}
-  .inventory-toolbar select{margin:0;min-width:145px;padding:8px 30px 8px 10px;border:1px solid #957650;border-radius:8px;background:#171b2a;color:#fff0d4;font:inherit;cursor:pointer}
+  .inventory-toolbar{position:relative;overflow:hidden;padding:14px 16px;gap:12px;border:1px solid #a87d4c;border-radius:14px;background:radial-gradient(ellipse at 10% 0%,#a36e4144,transparent 45%),linear-gradient(115deg,#3b2e30,#1b2030 70%);box-shadow:inset 0 1px #ffe4b326,0 6px 18px #0004}
+  .inventory-filter-heading{display:flex;align-items:center;gap:10px;margin-right:8px;color:#ffe1a8}
+  .inventory-filter-heading .filter-emblem{display:grid;place-items:center;flex:none;width:40px;height:40px;border:1px solid #c59b67;border-radius:11px;background:linear-gradient(145deg,#6b4c39,#302738);box-shadow:0 0 14px #daa75c33;font-size:1.15rem}
+  .inventory-filter-heading strong,.inventory-filter-heading small{display:block}
+  .inventory-filter-heading strong{font:700 1rem Georgia,serif}
+  .inventory-filter-heading small{font-size:.72rem;color:#cbb59b}
+  .inventory-toolbar label{display:grid;gap:4px;flex:0 1 190px;min-width:0;color:#e3c9a1;font-size:.72rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase}
+  .inventory-toolbar select{appearance:none;width:100%;min-width:0;margin:0;padding:9px 34px 9px 12px;border:1px solid #957650;border-radius:9px;background-color:#171b2a;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='m3 6 5 5 5-5' fill='none' stroke='%23eac78f' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"),linear-gradient(135deg,#302a34,#171b2a);background-repeat:no-repeat;background-position:right 11px center,center;background-size:14px,auto;color:#fff0d4;font:600 .88rem system-ui,sans-serif;cursor:pointer;transition:border-color .2s,box-shadow .2s}
+  .inventory-toolbar select:hover{border-color:#edc37e;box-shadow:0 0 12px #dca15833}
+  .inventory-toolbar select option{background:#1b1d2b;color:#fff0d4}
+  @media(max-width:480px){.inventory-filter-heading{width:100%}.inventory-toolbar label{flex:1 1 130px}}
   .inventory-summary{display:flex;align-items:center;gap:8px 16px;flex-wrap:wrap;margin:0 0 12px}
   .inventory-summary #materials{flex:none;margin:0;padding:7px 11px;border:1px solid #a87d4c;border-radius:9px;background:#30272d;color:#ffe0a2;font-weight:700}
   .inventory-summary small{flex:1 1 350px}
@@ -341,8 +349,9 @@
   <h2>🎒 Inventario y desmantelamiento</h2>
   <div class="inventory-summary"><p id="materials"></p><small>Cada mejora añade un 1 % a la estadística del objeto. Al desmantelarlo se pierden sus mejoras; desequípalo primero.</small></div>
   <div class="inventory-toolbar">
-    <label for="inventory-type">Tipo <select id="inventory-type"><option value="all">Todos</option></select></label>
-    <label for="inventory-equipped">Estado <select id="inventory-equipped"><option value="all">Todos</option><option value="equipped">Equipados</option><option value="available">Sin equipar</option></select></label>
+    <div class="inventory-filter-heading"><span class="filter-emblem" aria-hidden="true">🔎</span><div><strong>Explorar inventario</strong><small>Encuentra tu equipo</small></div></div>
+    <label for="inventory-type">⚔️ Tipo de objeto <select id="inventory-type"><option value="all">Todos los tipos</option></select></label>
+    <label for="inventory-equipped">🛡️ Estado <select id="inventory-equipped"><option value="all">Todos los objetos</option><option value="equipped">Equipados</option><option value="available">Sin equipar</option></select></label>
   </div>
   <p id="inventory-status" role="status" aria-live="polite"></p>
   <div id="inventory"></div>
