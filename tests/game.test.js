@@ -128,6 +128,17 @@ test('stat breakdown matches gameplay bonuses from training, equipment and achie
   })()`),true);
 });
 
+test('global statistics use saved counters and all defeated monsters', () => {
+  const g=game();
+  assert.equal(g.run(`(() => {
+    S=fresh(); S.totalMissions=12; S.kills=27; S.missionKills=5; S.autoKills=18;
+    S.activeDays=8; S.dungeonClears=2; S.packsOpened=4; S.achievements=['kill1','mission1'];
+    const stats=globalStats();
+    return stats.missions===12 && stats.kills===27 && stats.days===8 &&
+      stats.dungeons===2 && stats.packs===4 && stats.achievements===2;
+  })()`),true);
+});
+
 test('character inventory marks equipped items and keeps compact filterable layout', () => {
   assert.match(html, /class="inventory-summary"><p id="materials"><\/p><small>/);
   assert.match(html, /#inventory\{display:grid;grid-template-columns:repeat\(auto-fill/);

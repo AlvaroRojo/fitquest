@@ -76,6 +76,9 @@ eliminarla.
   cuesta 100 + 50 monedas por rango actual. Estos bonos se suman a los del
   equipo y logros y se aplican también a la arena y las mazmorras. El panel
   de estadísticas muestra el total y el aporte de cada una de estas fuentes.
+  Bajo el entrenamiento se muestran las misiones, los monstruos derrotados
+  (incluidos los de misión, arena y mazmorras), los días de actividad,
+  las mazmorras completadas, los sobres y los logros registrados.
 - **Logros:** desbloquean mejoras permanentes al alcanzar sus objetivos. Las
   misiones se cuentan desde esta versión; los niveles y monstruos derrotados
   de partidas antiguas sí se reconocen.
