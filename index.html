@@ -131,6 +131,7 @@
   .encounter-card[data-kind="boss"]{--encounter-accent:#ff9c88;--encounter-glow:#e44358}
   .encounter-card[data-kind="elite"]{--encounter-accent:#d6b1ff;--encounter-glow:#a45df2}
   .encounter-card[data-kind="lucky"],.encounter-card[data-kind="event"]{--encounter-accent:#ffe28c;--encounter-glow:#e3a442}
+  .encounter-card[data-kind="boss"] .encounter-stage{box-shadow:inset 0 0 75px #d7353166,0 0 22px #d7353144}
   .encounter-header{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;flex-wrap:wrap}
   .encounter-header h2{margin:0}
   .encounter-header .encounter-tag{margin:0}
@@ -147,16 +148,18 @@
   .encounter-card[data-kind="boss"] .boss-flames{display:block}
   @keyframes fire-dance{to{transform:scaleY(.9);opacity:.72}}
   .encounter-light{position:absolute;inset:0;pointer-events:none;background:conic-gradient(from 25deg at 50% 50%,transparent 0deg,#ffdfa71a 20deg,transparent 42deg,transparent 115deg,#dda4fa18 145deg,transparent 170deg,transparent 245deg,#ffb8791a 275deg,transparent 300deg);animation:encounter-breathe 5s ease-in-out infinite}
+  .encounter-aura{position:absolute;width:min(90%,420px);aspect-ratio:1;pointer-events:none;border:1px solid var(--encounter-accent);border-radius:50%;background:repeating-conic-gradient(from 5deg,transparent 0deg 10deg,var(--encounter-glow) 11deg 12deg,transparent 13deg 30deg);mask-image:radial-gradient(circle,transparent 36%,#000 38%,#000 40%,transparent 42%,transparent 60%,#000 61%,#000 63%,transparent 65%);opacity:.75;animation:encounter-rune 36s linear infinite}
+  .encounter-card[data-kind="boss"] .encounter-aura{opacity:1;filter:drop-shadow(0 0 12px #ff5b32)}
   .encounter-stage::before{content:"";position:absolute;width:min(78%,320px);aspect-ratio:1;border:2px solid var(--encounter-accent);border-radius:50%;box-shadow:0 0 28px var(--encounter-glow),inset 0 0 28px var(--encounter-glow);opacity:.65;animation:encounter-rune 12s linear infinite;pointer-events:none}
   .encounter-stage::after{content:"";position:absolute;inset:auto 10% 12%;height:13%;border:1px solid var(--encounter-accent);border-radius:50%;background:radial-gradient(ellipse,#f7bd8755,transparent 70%);box-shadow:0 0 30px var(--encounter-glow);pointer-events:none}
   .encounter-stage::before,.encounter-stage::after,.encounter-runes,.encounter-embers{z-index:1}
   .encounter-runes{position:absolute;width:min(68%,275px);aspect-ratio:1;border:1px dashed var(--encounter-accent);border-radius:50%;opacity:.55;animation:encounter-rune 20s linear infinite reverse;pointer-events:none}
   .encounter-embers{position:absolute;inset:0;pointer-events:none;background:radial-gradient(circle at 17% 30%,#ffda9d 0 2px,transparent 3px),radial-gradient(circle at 81% 26%,#ffc9a2 0 2px,transparent 3px),radial-gradient(circle at 23% 69%,#eeb08b 0 2px,transparent 3px),radial-gradient(circle at 78% 72%,#ffe4a8 0 2px,transparent 3px);animation:pulse 3s ease-in-out infinite}
   .encounter-stage .arena-label{position:absolute;z-index:3;top:15px;left:8px;right:8px;color:#ffe4bf}
-  .encounter-stage .big{position:relative;z-index:2;line-height:1;animation:float 3s ease-in-out infinite;filter:drop-shadow(0 10px 20px var(--encounter-glow))}
+  .encounter-stage .big{position:relative;z-index:2;line-height:1;animation:float 3s ease-in-out infinite;filter:drop-shadow(0 0 12px var(--encounter-glow)) drop-shadow(0 16px 10px #000b)}
   .encounter-stage .big.flash{animation:impact .45s ease-out}
   .encounter-stage .creature{width:clamp(150px,17vw,235px);max-width:70vw}
-  .encounter-stage .full-creature{width:clamp(180px,20vw,270px);max-width:70vw;max-height:min(65vh,330px)}
+  .encounter-stage .full-creature{width:clamp(220px,24vw,330px);max-width:80vw;max-height:360px}
   .full-creature .creature-body{transform-origin:100px 145px;animation:creature-breathe 2.6s ease-in-out infinite}
   .encounter-health{padding:13px;border:1px solid #8a6656;border-radius:12px;background:#141725e8}
   .encounter-health .row{margin-bottom:8px;gap:10px}
@@ -172,41 +175,42 @@
   .bar{background:#0b0e18;box-shadow:inset 0 1px 4px #0009}
   .bar>div{border-radius:inherit}
   .notice{border-color:#80cdbd}
+  .reset-footer{text-align:right;margin:14px 0 4px}
+  #reset{border-color:#a66b70;background:linear-gradient(135deg,#59363d,#322432);color:#ffe0dc}
   #shop .item,#achievement-list .achievement{border-color:#78604f;background:linear-gradient(135deg,#3b3033,#211f30)}
   @media(min-width:1000px){
     body{padding:10px}
     .status-card{padding:8px 16px;margin-bottom:10px}
     .status-card .row{margin-bottom:5px}
     .navigation{padding:7px;margin-bottom:10px}
-    .navigation button{min-height:44px;padding:8px}
+    .navigation button{min-height:48px;padding:9px}
     #adventure:not([hidden]),#character:not([hidden]){display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px;align-items:start}
     #adventure:not([hidden]){grid-template-columns:minmax(0,2fr) minmax(0,3fr);gap:10px;align-items:stretch}
     #adventure>.card,#character>.card{margin-bottom:0}
-    #adventure>.card{padding:15px}
-    #adventure .card h2{margin-bottom:10px}
-    .quest-board .mission{padding:11px;gap:6px;font-size:.95rem}
-    .mission-icon{width:36px;height:36px;font-size:1.1rem}
+    #adventure>.card{padding:17px}
+    #adventure .card h2{margin-bottom:12px}
+    .quest-board .mission{padding:13px;gap:7px;font-size:1rem}
+    .mission-icon{width:40px;height:40px;font-size:1.2rem}
     .mission-title strong{min-height:2.6em}
     .mission-difficulty{padding:1px 7px}
-    .quest-rewards span{padding:3px 5px;font-size:.8rem}
+    .quest-rewards span{padding:4px 5px;font-size:.85rem}
     .quest-board .quest-rewards{grid-template-columns:repeat(3,minmax(0,1fr))}
     .quest-board .quest-rewards span:last-child{grid-column:auto}
-    .quest-board .complete{min-height:42px;margin-top:auto;padding:7px}
-    .encounter-card{gap:9px}
-    .encounter-stage{min-height:230px}
-    .encounter-stage .full-creature{max-height:230px;width:clamp(170px,17vw,235px)}
-    .encounter-health{padding:10px}
-    .encounter-info{padding:7px 10px}
+    .quest-board .complete{min-height:46px;margin-top:auto;padding:8px}
+    .encounter-card{gap:10px}
+    .encounter-stage{min-height:300px}
+    .encounter-stage .full-creature{max-height:340px;width:clamp(220px,23vw,320px)}
+    .encounter-health{padding:12px}
+    .encounter-info{padding:8px 10px}
     #journey{grid-column:1/-1;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
     #journey h2{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
     #weekly-progress{flex:1;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
     #weekly-progress .week-card{flex:1 1 420px;display:grid;grid-template-columns:minmax(150px,1fr) minmax(180px,1fr);gap:3px 12px;align-items:center;margin:0;padding:8px 12px}
-    #weekly-progress .week-card h3,#weekly-progress .week-card p{margin:0;font-size:.85rem}
+    #weekly-progress .week-card h3,#weekly-progress .week-card p{margin:0;font-size:.95rem}
     #weekly-progress .week-card small{grid-column:1/-1}
     #weekly-progress .milestones{gap:5px}
-    #weekly-progress .milestone{padding:4px 7px;font-size:.8rem}
-    #journey #reset{flex:none}
-    #adventure>button{justify-self:start}
+    #weekly-progress .milestone{padding:5px 8px;font-size:.9rem}
+    #adventure .reset-footer{grid-column:1/-1;margin:2px 0 4px}
     #character>.card:last-child{grid-column:1/-1}
     #shop,#inventory,#achievement-list,#dungeon-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:10px}
     #shop .item,#inventory .inventory-item,#dungeon-list .dungeon-card{margin:0}
@@ -216,8 +220,8 @@
   @media(max-width:700px){.navigation{grid-template-columns:repeat(2,minmax(0,1fr))}}
   @media(min-width:360px) and (max-width:700px){
     .quest-board{grid-template-columns:repeat(2,minmax(0,1fr))}
-    .quest-board .mission{padding:11px;font-size:.9rem}
-    .mission-icon{width:34px;height:34px;font-size:1.05rem}
+    .quest-board .mission{padding:12px;font-size:.95rem}
+    .mission-icon{width:36px;height:36px;font-size:1.1rem}
     .mission-title strong{min-height:5.2em}
   }
   @media(max-width:480px){body{padding:10px}.card{padding:15px}.row{flex-wrap:wrap}.hero-layout{grid-template-columns:1fr}.hero-stage{min-height:170px}.hero-art{height:160px}.encounter-stage{min-height:245px}}
@@ -267,7 +271,7 @@
       <g class="biome-layer biome-volcano"><path d="M0 450 V350 L120 255 170 320 210 284 300 375 410 280 450 320 510 245 600 350 V450Z" fill="#381c25"/><path d="M0 423 Q120 390 210 420 T420 415 T600 430" fill="none" stroke="#ff7544" stroke-width="9"/><g fill="#ffb05b"><circle cx="100" cy="170" r="3"/><circle cx="460" cy="190" r="4"/><circle cx="160" cy="250" r="3"/></g></g>
       <g class="biome-layer biome-void" fill="none" stroke="#d4abff" stroke-width="3"><path d="M100 45 L80 85 115 99 90 140 M490 40 L520 76 490 96 535 128"/><circle cx="300" cy="145" r="95" stroke-dasharray="6 12"/><path d="M80 320 L110 280 140 320 110 355Z M460 300 L490 260 520 300 490 340Z"/></g>
     </svg>
-    <div class="encounter-light" aria-hidden="true"></div>
+    <div class="encounter-light" aria-hidden="true"></div><div class="encounter-aura" aria-hidden="true"></div>
     <div class="encounter-runes" aria-hidden="true"></div><div class="encounter-embers" aria-hidden="true"></div>
     <div class="arena-label">Encuentro de misiones</div><div class="big" id="mIcon"></div>
     <svg class="boss-flames" viewBox="0 0 600 160" preserveAspectRatio="none" aria-hidden="true"><path d="M0 160 V88 Q20 103 34 39 Q44 97 70 66 Q72 119 95 78 Q112 114 125 46 Q141 108 163 90 Q185 125 208 59 Q218 112 241 88 Q261 125 278 72 Q300 118 322 62 Q336 116 357 85 Q381 120 394 47 Q412 112 433 82 Q455 116 475 57 Q490 111 510 76 Q532 110 548 35 Q561 102 580 70 L600 88 V160Z" fill="#e94b25" opacity=".82"/><path d="M0 160 Q25 112 48 125 Q70 83 92 139 Q120 103 143 133 Q164 90 185 140 Q220 104 245 139 Q272 95 300 140 Q327 103 355 137 Q386 94 409 138 Q437 102 462 135 Q491 88 515 139 Q550 100 570 133 Q590 111 600 122 V160Z" fill="#ffbd58" opacity=".9"/></svg>
@@ -287,8 +291,8 @@
 <div class="card" id="journey">
   <h2>🗺️ Travesía del héroe</h2>
   <div id="weekly-progress"></div>
-  <button id="reset">Reiniciar partida</button>
 </div>
+<div class="reset-footer"><button id="reset" type="button">Reiniciar partida</button></div>
 </section>
 
 <section id="character" role="tabpanel" aria-labelledby="tab-character" hidden>
