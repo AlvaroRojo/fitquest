@@ -110,20 +110,22 @@ test('migrates existing saves without changing equipment or progress', () => {
     active: ['squat', 'push', 'plank'], completedToday: 0,
   };
   const g = game(old);
-  g.run('unlockAchievements(); save()');
+  g.run('save()');
   const saved = g.saved();
   assert.equal(saved.coins, 77);
   assert.equal(saved.eq.sword, 'sword_0_0');
   assert.equal(saved.done.squat, 5);
   assert.equal(saved.missionKills, 2);
   assert.ok(Math.abs(saved.monsterHp / 56 - 40 / 72) < 1e-10);
-  assert.ok(Math.abs(saved.xp / 276 - 20 / 244) < .005);
+  assert.ok(Math.abs(saved.xp / g.run('xpNeeded(5)') - 20 / 244) < .005);
   assert.equal(saved.autoKills, 0);
   assert.equal(saved.autoMonsterHp, 50);
   assert.equal(saved.totalMissions, 0);
   assert.deepEqual(saved.attributes,{dmg:0,xp:0,coin:0});
-  assert.ok(saved.achievements.includes('kill1'));
-  assert.ok(saved.achievements.includes('level5'));
+  g.run('unlockAchievements(); save()');
+  assert.ok(g.saved().achievements.includes('kill1'));
+  assert.ok(g.saved().achievements.includes('level5'));
+  assert.ok(g.saved().coins > saved.coins);
 });
 
 test('attribute training validates type and cost and continues past the old cap', () => {
@@ -160,6 +162,53 @@ test('stat breakdown matches gameplay bonuses from training, equipment and achie
     return b.attributes===21 && b.equipment===itemPercent(ITEM.sword_0_0) &&
       b.achievements===2 && b.total===b.attributes+b.equipment+b.achievements &&
       bonus('dmg')===1+b.total/100;
+  })()`),true);
+});
+
+test('equipment, upgrades, achievements, skills and passives combine in every combat mode', () => {
+  const g=game();
+  assert.equal(g.run(`(() => {
+    const earned=['kill1','missions-1','missions-2','missions-3'];
+    const achievements=ACHIEVEMENTS.filter(a=>earned.includes(a.id));
+    ACHIEVEMENTS.splice(0,ACHIEVEMENTS.length,...achievements);
+    S=fresh();S.level=120;S.attributes={dmg:10,xp:20,coin:30};
+    S.owned=['sword_0_0','shield_0_0','boots_0_0'];
+    S.eq={sword:'sword_0_0',shield:'shield_0_0',boots:'boots_0_0'};
+    S.upgrades={sword_0_0:2,shield_0_0:1,boots_0_0:3};S.forgeRanks={dmg:3,xp:4,coin:5};
+    S.achievements=earned;S.skills={might:2,learning:3,fortune:4,prosperity:1,salvage:1,treasure:1,seeker:1};S.skillStyle='seeker';
+    S.passives={war1:2,sage1:2,wealth1:3,hunt1:5,hunt2:5,hunt3:3};S.subclass='champion';
+    S.battleUpgrades={damage:3,speed:0,loot:0};S.battleUpdated=Date.now();
+    Math.random=()=>.99;
+    if(!validateBackup({format:'fitquest-save',version:1,state:S})) return false;
+    if(Math.abs(bonus('dmg')-1.304)>1e-8 || Math.abs(bonus('xp')-1.692)>1e-8 || Math.abs(bonus('coin')-2.004)>1e-8) return false;
+    S.active=['squat','push','plank','abs','jack','lunge'];S.targets.squat=20;S.monsterHp=1000000;
+    const xp=S.xp,coins=S.coins;completeMission(byId('squat'));
+    if(Math.abs(S.monsterHp-(1000000-20*1.304))>1e-8 ||
+       S.xp-xp!==Math.round(20*1.692)+Math.round(30*1.692) || S.coins-coins!==Math.round(10*2.004)) return false;
+    S.autoMonsterHp=1000000;S.battleUpdated=1000;settleBattle(11000);
+    if(Math.abs(S.autoMonsterHp-(1000000-5*1.304))>1e-8) return false;
+    S.tower.floor=100;S.tower.keys=1;S.tower.hp=1000;S.tower.torment=0;
+    if(!attackTower('2026-01-05') || Math.abs(S.tower.hp-(1000-24*1.304))>1e-8) return false;
+    S.weeklyBoss.hp=180;S.weeklyBoss.torment=0;
+    return attackWeeklyBoss('2026-01-05') && Math.abs(S.weeklyBoss.hp-(180-40*1.304))<1e-8;
+  })()`),true);
+});
+
+test('every ranked skill and passive contributes its advertised effect', () => {
+  const g=game();
+  assert.equal(g.run(`(() => {
+    const value=stat=>stat==='crit'?criticalChance():stat==='critDamage'?criticalBonus():
+      stat==='materials'?materialReward(1000):(bonus(stat)-1)*100;
+    for(const [nodes,field] of [[SKILLS,'skills'],[PASSIVES,'passives']]){
+      for(const node of Object.values(nodes)){
+        if(node.style) continue;
+        S=fresh();const before=value(node.stat);
+        S[field][node.id]=2;
+        const expected=node.amount*2*(node.stat==='materials'?10:1);
+        if(Math.abs(value(node.stat)-before-expected)>1e-8) return false;
+      }
+    }
+    return true;
   })()`),true);
 });
 
@@ -295,8 +344,32 @@ test('character displays combat stats and global progress has its own menu', () 
   assert.match(html, /id="hero-stats"/);
   assert.match(html, /id="tab-statistics"/);
   assert.match(script, /\['Victorias de arena',S\.autoKills\]/);
-  assert.match(script, /function renderHeroStats\(\)[\s\S]*?bonus\(stat\)/);
+  assert.match(script, /function renderHeroStats\(\)[\s\S]*?effectiveStatLabel\(stat\)/);
   assert.doesNotMatch(html, /id="bonuses"/);
+});
+
+test('character and global stats display effective specialization bonuses and cycling bosses', () => {
+  const g=game();
+  g.run(`const outputs={};const $=id=>outputs[id]??={};
+    S=fresh();S.attributes={dmg:100,xp:10,coin:0};S.skillStyle='berserker';
+    S.weeklyBoss.index=12;`);
+  g.run(script.slice(script.indexOf('const statNumber='),script.indexOf('function journeyMarkup(){')));
+  const hero=g.run(`renderHeroStats();outputs['hero-stats'].innerHTML`);
+  const global=g.run(`renderStatistics();outputs['statistics-content'].innerHTML`);
+  assert.match(hero,/Poder<\/small><strong>\+160 %/);
+  assert.match(hero,/Sabiduría<\/small><strong>-12 %/);
+  assert.match(global,/Bonificación de daño<\/small><strong>\+160 %/);
+  assert.match(global,/Bonificación de experiencia<\/small><strong>-12 %/);
+  assert.match(global,/Bonificación de monedas<\/small><strong>-20 %/);
+  assert.match(global,/Boss actual<\/small><strong>Colmillo de la noche/);
+  g.run(`S.skillStyle='hunter';renderStatistics();renderHeroStats()`);
+  assert.match(g.run(`outputs['statistics-content'].innerHTML`),/Bonificación de daño<\/small><strong>\+70 %/);
+  assert.match(g.run(`outputs['hero-stats'].innerHTML`),/Crítico<\/small><strong>15 %/);
+  g.run(`S.skillStyle='seeker';renderStatistics()`);
+  const seeker=g.run(`outputs['statistics-content'].innerHTML`);
+  assert.match(seeker,/Bonificación de daño<\/small><strong>\+60 %/);
+  assert.match(seeker,/Bonificación de experiencia<\/small><strong>\+32 %/);
+  assert.match(seeker,/Bonificación de monedas<\/small><strong>\+20 %/);
 });
 
 test('inventory excludes equipped instances but retains unequipped copies and rarity order', () => {
@@ -387,6 +460,7 @@ test('mission estimate includes partial progress and reduced rewards', () => {
 test('six mission slots have distinct targets and matching preview and rewards', () => {
   const g=game();
   assert.equal(g.run(`(() => {
+    ACHIEVEMENTS.length=0;
     const results=[];
     for(const index of [0,2,4]){
       S=fresh(); S.active=['push','plank','abs','jack','lunge','burpee'];
@@ -406,6 +480,7 @@ test('six mission slots have distinct targets and matching preview and rewards',
 test('difficulty multiplies remaining exercise rewards after daily reduction', () => {
   const g=game();
   assert.equal(g.run(`(() => {
+    ACHIEVEMENTS.length=0;
     S=fresh(); S.active=['push','plank','abs','jack','squat','burpee'];
     S.completedToday=6; S.done.squat=10; S.battleUpdated=Date.now(); S.monsterHp=500;
     const ex=byId('squat'), preview=missionEstimate(ex);
@@ -561,8 +636,9 @@ test('encounter selection gives scheduled elite and boss and bounded random even
 test('special rewards and overflow damage use the defeated and next encounters', () => {
   const g=game();
   assert.equal(g.run(`(() => {
+    ACHIEVEMENTS.length=0;
     S=fresh(); S.missionKills=4; S.kills=4;
-    S.encounter={kind:'lucky',species:0,maxHp:40}; S.monsterHp=3;
+    S.encounter={kind:'lucky',species:0,maxHp:40,torment:0}; S.monsterHp=3;
     Math.random=()=>0; hit(5);
     const elite=S.encounter;
     return S.missionKills===5 && S.kills===5 && S.coins===90 && S.xp===48 &&
@@ -728,6 +804,7 @@ test('missions reward only the remaining legacy progress, once', () => {
 test('missions beyond six remain playable with reduced rewards and do not grant more tower keys', () => {
   const g=game();
   assert.equal(g.run(`(() => {
+    ACHIEVEMENTS.length=0;
     S=fresh(); S.active=['squat','push','plank']; S.completedToday=6;
     S.battleUpdated=Date.now(); Math.random=()=>0;
     completeMission(byId('squat'));
@@ -762,6 +839,8 @@ test('arena applies equipment and achievements and earns shared rewards', () => 
 test('arena loot and experience use equipment and achievement bonuses', () => {
   const g = game();
   assert.equal(g.run(`(() => {
+    for(let i=ACHIEVEMENTS.length-1;i>=0;i--)
+      if(!['mission50','kill25'].includes(ACHIEVEMENTS[i].id)) ACHIEVEMENTS.splice(i,1);
     S=fresh(); S.eq={pants:'pants_3_0',shield:'shield_3_0'};
     S.achievements=['mission50','kill25'];
     S.autoMonsterHp=1; S.battleUpdated=1000; settleBattle(11000);
@@ -1279,6 +1358,18 @@ test('partial challenge rewards are proportional to damage and respect attack li
     selectTorment(12,1000);const max=Math.round(180*TORMENTS[12].hp),hit=40*bonus('dmg');
     if(!attackWeeklyBoss('2026-01-05')||S.coins!==Math.floor(250*bonus('coin')*.2*hit/max*combatReward(12))) return false;
     const prior=S.coins;return !attackWeeklyBoss('2026-01-06') && S.coins===prior;
+  })()`),true);
+});
+
+test('partial tower and boss rewards include skill, passive and subclass fragment bonuses', () => {
+  const g=game();
+  assert.equal(g.run(`(() => {
+    ACHIEVEMENTS.length=0;S=fresh();S.level=100;
+    S.skills={salvage:5};S.passives={wealth3:5};S.subclass='oracle';
+    S.attributes.dmg=500;S.tower.floor=100;S.tower.hp=224;S.tower.torment=0;S.tower.keys=1;
+    if(!attackTower('2026-01-05') || S.materials!==2) return false;
+    S.materials=0;S.attributes.dmg=300;S.weeklyBoss.hp=180;S.weeklyBoss.torment=0;
+    return attackWeeklyBoss('2026-01-05') && S.weeklyBoss.hp===20 && S.materials===3;
   })()`),true);
 });
 

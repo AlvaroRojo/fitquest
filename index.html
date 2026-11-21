@@ -1067,7 +1067,8 @@ function criticalDamage(damage,onCritical){
   }
   return damage;
 }
-const materialReward=amount=>Math.round(amount*(1+(skillBonus('materials')+passiveBonus('materials'))/100));
+const materialMultiplier=()=>1+(skillBonus('materials')+passiveBonus('materials'))/100;
+const materialReward=amount=>Math.round(amount*materialMultiplier());
 const attributeCost=rank=>100+50*rank+2*rank*Math.pow(Math.max(0,rank-1),2);
 const ITEMS=[];
 for(const [g,d] of Object.entries(GROUPS)) for(let t=0;t<TIER_NAMES.length;t++){
@@ -1766,7 +1767,7 @@ function grantChallengeProgress(name,damage,max,coins,xp,materials,torment){
   const fraction=Math.min(1,Math.max(0,damage/max))*.2*combatReward(torment);
   const gold=Math.floor(coins*bonus('coin')*fraction);
   const experience=Math.floor(xp*bonus('xp')*fraction);
-  const fragments=Math.floor(materials*(1+skillBonus('materials')/100)*fraction);
+  const fragments=Math.floor(materials*materialMultiplier()*fraction);
   S.coins+=gold;gain(experience);S.materials+=fragments;
   log(`⚔️ ${name}: recompensa de progreso +${gold} monedas, +${experience} XP y +${fragments} fragmentos`);
   unlockAchievements(torment);
@@ -2052,13 +2053,17 @@ function showCritical(stage,damage){
   setTimeout(()=>{label.remove();if(icon) icon.classList.remove('critical-impact')},1200);
 }
 const statNumber=value=>Number((Math.round(value*100)/100).toFixed(2)).toLocaleString('es-ES');
+const effectiveStatLabel=stat=>{
+  const value=(bonus(stat)-1)*100;
+  return `${value>=0?'+':''}${statNumber(value)} %`;
+};
 const escapeHtml=value=>String(value).replace(/[&<>"']/g,character=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[character]));
 function statCards(entries,classname){
   return entries.map(([label,value])=>`<div class="${classname}"><small>${escapeHtml(label)}</small><strong>${escapeHtml(value)}</strong></div>`).join('');
 }
 function renderHeroStats(){
   const entries=[
-    ...Object.entries(ATTRIBUTES).map(([stat,def])=>[`${def.icon} ${def.name}`,`${statNumber((bonus(stat)-1)*100)} %`]),
+    ...Object.entries(ATTRIBUTES).map(([stat,def])=>[`${def.icon} ${def.name}`,effectiveStatLabel(stat)]),
     ['🎯 Crítico',`${statNumber(criticalChance())} %`],['💥 Daño crítico',`${statNumber(150+criticalBonus())} %`],
     ['🔩 Fragmentos',`+${statNumber(skillBonus('materials')+passiveBonus('materials'))} %`],
     ['⚔️ Daño arena',statNumber(battleDamage())],['⚡ Intervalo arena',`${statNumber(battleInterval()/1000)} s`],
@@ -2083,7 +2088,7 @@ function renderStatistics(){
   const currentXp=Number.isFinite(S.xp)?S.xp:0;
   const nextLevelXp=xpNeeded(S.level);
   const missionProgress=Object.values(S.done).reduce((sum,count)=>sum+count,0);
-  const boss=S.weeklyBoss.index<WEEKLY_BOSSES.length?bossFor(S.weeklyBoss.index):null;
+  const boss=bossFor(S.weeklyBoss.index);
   const unlockedSkills=Object.values(S.skills).filter(rank=>rank>0).length;
   const groups=[
     ['📜','Aventura','Misiones, actividad y travesía',[
@@ -2096,15 +2101,15 @@ function renderStatistics(){
       ['Intervalo de arena',`${statNumber(battleInterval()/1000)} s`],['Botín de arena',`+${statNumber((battleLoot()-1)*100)} %`],
       ['Victorias de desafío',S.challengeClears],['Pisos de torre superados',Math.min(TOWER_FLOORS,S.tower.floor-1)],
       ['Piso actual de torre',Math.min(TOWER_FLOORS+1,S.tower.floor)],['Llaves de torre',S.tower.keys],
-      ['Bosses derrotados',S.weeklyBoss.index],['Boss actual',boss?.name||'Todos derrotados'],
+      ['Bosses derrotados',S.weeklyBoss.index],['Boss actual',boss.name],
       ['Vida restante del boss',statNumber(S.weeklyBoss.hp)],['Tormento de combate',TORMENTS[S.torment].name]]],
     ['🧙','Héroe y progresión','Nivel, poder y mejoras permanentes',[
       ['Nivel actual',S.level],['Experiencia acumulada del nivel',currentXp],['XP para el siguiente nivel',nextLevelXp],
       ['Progreso de nivel',`${Math.min(100,Math.floor(currentXp/nextLevelXp*100))} %`],['Poder del héroe',heroPower()],
       ['Evolución visual',`${heroEvolution(heroPower())} / 500`],['Rangos de entrenamiento',totalAttributeRanks],
-      ['Bonificación de daño',`+${statNumber(statBreakdown('dmg').total)} %`],
-      ['Bonificación de experiencia',`+${statNumber(statBreakdown('xp').total)} %`],
-      ['Bonificación de monedas',`+${statNumber(statBreakdown('coin').total)} %`]]],
+      ['Bonificación de daño',effectiveStatLabel('dmg')],
+      ['Bonificación de experiencia',effectiveStatLabel('xp')],
+      ['Bonificación de monedas',effectiveStatLabel('coin')]]],
     ['🎒','Equipo y colección','Inventario, rarezas y mejoras',[
       ['Objetos en inventario',S.owned.length],['Objetos sin equipar',unequipped],['Objetos equipados',equipped.length],
       ['Tipos de objeto reunidos',new Set(S.owned.map(id=>itemById(id)?.g).filter(Boolean)).size],

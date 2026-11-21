@@ -125,7 +125,7 @@ confirmación. Se aceptan las copias exportadas por esta versión.
   Los rangos existentes se conservan; el coste crece más en niveles avanzados
   para evitar que el oro y el daño se disparen sin control. Estos bonos se suman a los del
   equipo, forja y logros y se aplican también a la arena, la torre y los bosses. El panel
-  de estadísticas muestra el bono total.
+  de estadísticas muestra el bono efectivo, incluido el estilo activo.
   Bajo el entrenamiento se muestran los bonos efectivos, críticos, fragmentos,
   daño e intervalo de arena, daño base de desafíos y estilo activo. La pestaña
   **Estadísticas** organiza más de 60 datos guardados y derivados en paneles
@@ -147,7 +147,7 @@ confirmación. Se aceptan las copias exportadas por esta versión.
   volver al estilo neutral. **Redistribuir puntos** los recupera todos gratis,
   previa confirmación, y restablece el estilo neutral.
   Los bonos de daño, monedas y XP se suman a los demás bonos; los de fragmentos
-  afectan a enemigos, logros y travesía, no al desmantelamiento. Los golpes
+  afectan a enemigos, desafíos, logros y travesía, no al desmantelamiento. Los golpes
   críticos pueden producirse en misiones, arena, torre y bosses, tienen una
   probabilidad máxima del 75 % y causan inicialmente el 150 % del daño.
   Los críticos visibles muestran un impacto y su daño en misiones, arena,
@@ -213,7 +213,8 @@ confirmación. Se aceptan las copias exportadas por esta versión.
   fragmentos y abre la siguiente planta; el daño sobrante no se traslada.
   Cada ataque no letal concede adicionalmente hasta un 20 % del botín de
   victoria, proporcional al daño causado respecto a la vida máxima. Se redondea
-  hacia abajo y usa el tormento mínimo en el que se ha atacado.
+  hacia abajo después de aplicar los bonos, incluidos los de fragmentos de
+  habilidades, pasivas y subclase, y usa el tormento mínimo en el que se ha atacado.
   La planta 100 completa la torre. El ataque causa 24 de daño base, con los
   bonos generales de daño.
 - **Bosses semanales:** hay doce enemigos en orden. Se permite un único ataque
