@@ -872,7 +872,7 @@ test('torment sanctuary displays unlocks and saves the selected difficulty', () 
   assert.equal(elements['torment-reward'].textContent,'×1.4');
   assert.equal(elements['torment-target'].textContent,'+5%');
   assert.equal(box.children[1]['aria-pressed'],'true');
-  assert.match(elements['torment-status'].textContent,/Tormento I seleccionado/);
+  assert.match(elements['torment-status'].textContent,/Tormento I aplicado a todo el juego/);
   state.level=20;
   vm.runInContext('renderTorment()',context);
   click(box.children[2]);
@@ -881,38 +881,35 @@ test('torment sanctuary displays unlocks and saves the selected difficulty', () 
   assert.equal(state.torment,0);
 });
 
-test('missions keep their target and reward until replaced, then use new torment', () => {
+test('active missions immediately change target and rewards without losing progress or drifting', () => {
   const g=game();
   assert.equal(g.run(`(() => {
     Math.random=()=>0.5; S=fresh(); S.level=120;
-    S.achievements=ACHIEVEMENTS.map(a=>a.id); S.monsterHp=1000000;
-    const old=byId(S.active[0]),targetBefore=missionTarget(old),estimate=missionEstimate(old);
-    if(!selectTorment(12) || missionTarget(old)!==targetBefore || S.missionTorments[old.id]!==0) return false;
-    completeMission(old);
-    if(S.coins!==estimate.coins || S.xp!==estimate.xp) return false;
-    const next=byId(S.active[0]),nextTarget=missionTarget(next);
-    if(S.missionTorments[next.id]!==12 ||
-      nextTarget!==Math.ceil(target(next,S.level)*DIFFICULTIES[missionDifficulty(next)].target*1.6)) return false;
-    const nextEstimate=missionEstimate(next),coins=S.coins,xp=S.xp;
-    selectTorment(0);
-    if(missionTarget(next)!==nextTarget || S.missionTorments[next.id]!==12) return false;
-    completeMission(next);
-    return S.coins-coins===nextEstimate.coins && S.xp-xp===nextEstimate.xp;
+    S.achievements=ACHIEVEMENTS.map(a=>a.id);
+    const ex=byId(S.active[0]),original=missionTarget(ex);
+    S.done[ex.id]=3;
+    if(!selectTorment(12) || missionTarget(ex)!==Math.ceil(original*1.6) ||
+       S.done[ex.id]!==3 || S.missionTorments[ex.id]!==12 ||
+       missionEstimate(ex).coins!==Math.round(10*bonus('coin')*DIFFICULTIES[missionDifficulty(ex)].reward*22.5)) return false;
+    for(let i=0;i<20;i++){selectTorment(1);selectTorment(12)}
+    selectTorment(0);save();
+    return missionTarget(ex)===original && S.done[ex.id]===3;
   })()`),true);
+  assert.equal(game(g.saved()).run('S.done[S.active[0]]'),3);
 });
 
-test('mission monsters lock torment until defeated and new monsters scale their rewards', () => {
+test('mission monsters immediately scale health and rewards with torment', () => {
   const g=game();
   assert.equal(g.run(`(() => {
     Math.random=()=>0.5; S=fresh(); S.level=120; S.achievements=ACHIEVEMENTS.map(a=>a.id);
-    S.monsterHp=1; const baseCoins=Math.round(10*bonus('coin'));
-    selectTorment(12); hit(1);
-    if(S.coins!==baseCoins || S.encounter.torment!==12 ||
-      S.monsterHp!==S.encounter.maxHp) return false;
-    const monster=S.encounter,kind=ENCOUNTER_TYPES[monster.kind],kills=S.missionKills;
-    const expected=Math.round((10+kills*2)*bonus('coin')*kind.coins*22.5),coins=S.coins;
-    selectTorment(0); S.monsterHp=1; hit(1);
-    return S.coins-coins===expected && S.encounter.torment===0;
+    S.monsterHp=25;
+    selectTorment(12);
+    if(S.encounter.torment!==12 || S.encounter.maxHp!==4250 || S.monsterHp!==2125) return false;
+    S.monsterHp=1;hit(1);
+    if(S.coins!==Math.round(10*bonus('coin')*22.5) || S.encounter.torment!==12) return false;
+    const max=S.encounter.maxHp;S.monsterHp=max/3;
+    selectTorment(0);selectTorment(12);
+    return S.encounter.maxHp===max && Math.abs(S.monsterHp-max/3)<1e-8;
   })()`),true);
 });
 
@@ -922,14 +919,14 @@ test('changing torment settles pending arena progress before switching', () => {
     S=fresh(); S.level=120; S.achievements=ACHIEVEMENTS.map(a=>a.id);
     S.battleUpdated=1000; S.autoMonsterHp=20;
     const damage=battleDamage();
-    if(!selectTorment(12,11000) || S.autoMonsterHp!==20-damage || S.autoTorment!==0) return false;
+    if(!selectTorment(12,11000) || S.autoMonsterHp!==(20-damage)*85 || S.autoTorment!==12) return false;
     S.autoMonsterHp=1;
-    const normalCoins=Math.round(10*bonus('coin'));
+    const highCoins=Math.round(10*bonus('coin')*22.5);
     settleBattle(21000);
-    if(S.coins!==normalCoins || S.autoTorment!==12 ||
+    if(S.coins!==highCoins || S.autoTorment!==12 ||
       Math.abs(S.autoMonsterHp-(autoMaxHp(1,12)-(damage-1)))>1e-8) return false;
     selectTorment(0,21000); S.autoMonsterHp=1;
-    const coins=S.coins,expected=Math.round(12*bonus('coin')*22.5);
+    const coins=S.coins,expected=Math.round(12*bonus('coin'));
     settleBattle(31000);
     return S.coins-coins===expected && S.autoTorment===0 &&
       Math.abs(S.autoMonsterHp-(autoMaxHp(2,0)-(damage-1)))<1e-8;
@@ -954,16 +951,58 @@ test('higher torment improves eligible pack odds without unlocking higher-level 
   })()`),true);
 });
 
-test('daily shop locks its generating torment until stock refreshes', () => {
+test('shop changes offers per torment without resetting purchases or rerolling', () => {
   const g=game();
   assert.equal(g.run(`(() => {
-    S=fresh(); S.level=120; selectTorment(12); ensureShopStock('2026-01-05');
-    const offers=JSON.stringify(S.shopStock.offers);
-    if(S.shopStock.torment!==12 || S.shopStock.offers.length!==10) return false;
+    S=fresh(); S.level=120; S.coins=1000000; S.achievements=ACHIEVEMENTS.map(a=>a.id);
+    const day=today(); ensureShopStock(day);
+    const original=S.shopStock.offers.slice(),bought=original[0];
+    if(!buyDailyItem(bought)) return false;
+    selectTorment(12);ensureShopStock(day);
+    const high=S.shopStock.offers.slice();
+    if(S.shopStock.torment!==12 || high[0]!==bought || !S.shopStock.sold.includes(bought) ||
+       new Set(high).size!==10 || buyDailyItem(bought)) return false;
+    selectTorment(0);ensureShopStock(day);
+    if(JSON.stringify(S.shopStock.offers)!==JSON.stringify(original)) return false;
+    selectTorment(12);ensureShopStock(day);
+    if(JSON.stringify(S.shopStock.offers)!==JSON.stringify(high)) return false;
+    save();return true;
+  })()`),true);
+  const restored=game(g.saved());
+  assert.equal(restored.run(`(() => {
+    ensureShopStock();const before=JSON.stringify(S.shopStock.offers);
+    selectTorment(0);ensureShopStock();selectTorment(12);ensureShopStock();
+    return JSON.stringify(S.shopStock.offers)===before && Object.keys(S.shopStock.soldSlots).length===1;
+  })()`),true);
+});
+
+test('switching shop torment cannot reset the ten daily purchase slots', () => {
+  const g=game();
+  assert.equal(g.run(`(() => {
+    S=fresh();S.level=120;S.coins=10000000;S.achievements=ACHIEVEMENTS.map(a=>a.id);
+    for(let i=0;i<10;i++){
+      selectTorment(i%2?12:0);ensureShopStock();
+      const offer=S.shopStock.offers.find(id=>!S.shopStock.sold.includes(id));
+      if(!offer || !buyDailyItem(offer)) return false;
+    }
+    for(const torment of [0,1,6,12]){
+      selectTorment(torment);ensureShopStock();
+      if(S.shopStock.offers.length!==10 || S.shopStock.offers.some(id=>!S.shopStock.sold.includes(id))) return false;
+    }
+    return S.shopStock.sold.length===10 && Object.keys(S.shopStock.soldSlots).length===10;
+  })()`),true);
+});
+
+test('new mission targets use their original unrounded base when lowering torment', () => {
+  const g=game();
+  assert.equal(g.run(`(() => {
+    S=fresh();S.level=120;selectTorment(12);
+    const ex=byId(S.active[2]);
+    delete S.targets[ex.id];delete S.missionTargetReferences[ex.id];
+    const base=target(ex,S.level)*DIFFICULTIES[missionDifficulty(ex)].target;
+    if(missionTarget(ex)!==Math.ceil(base*1.6)) return false;
     selectTorment(0);
-    if(ensureShopStock('2026-01-05') || S.shopStock.torment!==12 ||
-      JSON.stringify(S.shopStock.offers)!==offers) return false;
-    return ensureShopStock('2026-01-06') && S.shopStock.torment===0;
+    return missionTarget(ex)===Math.ceil(base);
   })()`),true);
 });
 
@@ -1010,7 +1049,7 @@ test('global torment migration preserves old mission targets and monster health'
   })()`),true);
 });
 
-test('tower torment locks on first attack, survives reload and scales rewards', () => {
+test('tower torment changes immediately and persists health and rewards', () => {
   const g=game();
   assert.equal(g.run(`(() => {
     S=fresh(); S.level=40; S.achievements=ACHIEVEMENTS.map(a=>a.id);
@@ -1018,38 +1057,42 @@ test('tower torment locks on first attack, survives reload and scales rewards', 
     selectTorment(4);
     const hp=Math.round(towerMaxHp(50)*6)-24*bonus('dmg');
     if(!attackTower('2026-01-05') || S.tower.torment!==4 || S.tower.hp!==hp) return false;
-    selectTorment(0); save(); return true;
+    selectTorment(0);
+    if(S.tower.torment!==0 || Math.abs(S.tower.hp-hp/6)>1e-8) return false;
+    save(); return true;
   })()`),true);
   const restored=game(g.saved());
   assert.equal(restored.run(`(() => {
-    const coins=Math.round((20+50*5)*bonus('coin')*3.5);
-    const xp=Math.round((25+50*4)*bonus('xp')*3.5);
+    const coins=Math.round((20+50*5)*bonus('coin'));
+    const xp=Math.round((25+50*4)*bonus('xp'));
     S.tower.hp=1;
     if(!attackTower('2026-01-06') || S.coins!==coins || S.xp!==xp ||
-      S.materials!==Math.round(7*3.5) || S.tower.floor!==51 || S.tower.torment!==null) return false;
+      S.materials!==7 || S.tower.floor!==51 || S.tower.torment!==null) return false;
     return true;
   })()`),true);
 });
 
-test('boss torment locks on first attack and uses locked rewards on later weeks', () => {
+test('boss torment changes immediately and uses new rewards on later weeks', () => {
   const g=game();
   assert.equal(g.run(`(() => {
     S=fresh(); S.level=40; S.achievements=ACHIEVEMENTS.map(a=>a.id);
     selectTorment(2);
     const hp=Math.round(WEEKLY_BOSSES[0].hp*2.5)-40*bonus('dmg');
     if(!attackWeeklyBoss('2026-01-05') || S.weeklyBoss.torment!==2 || S.weeklyBoss.hp!==hp) return false;
-    selectTorment(4); save(); return true;
+    selectTorment(4);
+    if(S.weeklyBoss.torment!==4 || Math.abs(S.weeklyBoss.hp-hp/450*1080)>1e-8) return false;
+    save(); return true;
   })()`),true);
   const restored=game(g.saved());
   assert.equal(restored.run(`(() => {
-    const coins=Math.round(250*bonus('coin')*1.8),xp=Math.round(180*bonus('xp')*1.8);
+    const coins=Math.round(250*bonus('coin')*3.5),xp=Math.round(180*bonus('xp')*3.5);
     S.weeklyBoss.hp=1;
     return attackWeeklyBoss('2026-01-12') && S.coins===coins && S.xp===xp &&
-      S.materials===Math.round(15*1.8) && S.weeklyBoss.index===1 && S.weeklyBoss.torment===null;
+      S.materials===Math.round(15*3.5) && S.weeklyBoss.index===1 && S.weeklyBoss.torment===null;
   })()`),true);
 });
 
-test('legacy ongoing challenges retain normal difficulty and health after migration', () => {
+test('legacy ongoing challenges preserve health percentage when changing torment', () => {
   const first=game();
   first.run(`S=fresh(); S.level=40; S.tower.floor=50; S.tower.hp=100; S.tower.keys=1;
     S.weeklyBoss.hp=170;
@@ -1061,8 +1104,8 @@ test('legacy ongoing challenges retain normal difficulty and health after migrat
     selectTorment(4);
     const dmg=bonus('dmg');
     if(!attackTower('2026-01-05') || !attackWeeklyBoss('2026-01-05')) return false;
-    return S.tower.floor===50 && Math.abs(S.tower.hp-(100-24*dmg))<1e-8 &&
-      S.weeklyBoss.torment===0 && Math.abs(S.weeklyBoss.hp-(170-40*dmg))<1e-8;
+    return S.tower.floor===50 && S.tower.torment===4 && Math.abs(S.tower.hp-(600-24*dmg))<1e-8 &&
+      S.weeklyBoss.torment===4 && Math.abs(S.weeklyBoss.hp-(1020-40*dmg))<1e-8;
   })()`),true);
 });
 
@@ -1353,7 +1396,10 @@ test('identical rings are separately equippable and a store offer can sell anoth
     addItem('ring_0_0');addItem('ring_0_0');
     if(!placeItem('ring_0_0','ring1') || !placeItem('ring_0_0#1','ring2') ||
       statBreakdown('dmg').equipment!==2*ITEM.ring_0_0.pct) return false;
-    ensureShopStock();S.shopStock.offers[0]='ring_0_0';
+    ensureShopStock();
+    const existing=S.shopStock.offers.indexOf('ring_0_0');
+    if(existing>0) S.shopStock.offers[existing]=S.shopStock.offers[0];
+    S.shopStock.offers[0]='ring_0_0';S.shopStock.variants[S.torment]=S.shopStock.offers.slice();
     if(!buyDailyItem('ring_0_0') || buyDailyItem('ring_0_0')) return false;
     return S.owned.includes('ring_0_0#2') && S.eq.ring1==='ring_0_0' && S.eq.ring2==='ring_0_0#1';
   })()`),true);

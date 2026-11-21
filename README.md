@@ -22,15 +22,15 @@ eliminarla.
   Las recompensas de ejercicios diferentes pueden variar según su cantidad y
   valor. Son categorías de juego, no una valoración
   médica: ejercicios distintos pueden tener dificultades reales diferentes.
-  Las misiones antiguas mantienen sus condiciones hasta completarse.
+  Las misiones antiguas mantienen su categoría hasta completarse.
   Se pueden completar sin límite al día. Hay 20 tipos de ejercicios y el
-  objetivo se fija al comenzar
-  cada misión; descansar y adaptar el ejercicio siempre es más importante
+  objetivo se fija al comenzar cada misión y se ajusta al cambiar el tormento;
+  descansar y adaptar el ejercicio siempre es más importante
   que una recompensa. Los objetivos no son recomendaciones médicas. Si una
   partida anterior tenía progreso parcial, termina la parte restante antes
   de confirmar; únicamente se recompensará la parte que faltaba.
-  El tormento de cada nueva misión añade un 5 % al objetivo por rango y
-  multiplica su XP y monedas; se fija junto al objetivo hasta completarla.
+  El tormento añade un 5 % al objetivo por rango y multiplica su XP y monedas;
+  al cambiarlo se actualizan las misiones activas conservando su progreso.
   Adapta siempre el ejercicio a tu capacidad, independientemente del objetivo.
   El tablón muestra una estimación del daño, XP y oro (G) de cada encargo.
   El daño incluye los bonos de equipo, atributos, logros y racha; la
@@ -58,8 +58,10 @@ eliminarla.
   respetan la preferencia del sistema de reducir movimiento. Estos encuentros
   son independientes de la arena.
 - **Tienda:** cada día local, al abrir el juego o volver a él, se generan
-  diez ofertas únicas según el nivel actual; la selección permanece igual hasta
-  medianoche incluso si subes de nivel o recargas. La rareza se sortea para
+  diez ofertas únicas según el nivel actual; al cambiar de tormento cambian las
+  ofertas, manteniendo las compras y un máximo de diez compras al día. Cada
+  selección de tormento conserva sus ofertas hasta medianoche, salvo ajustes
+  para evitar duplicados con las compras. La rareza se sortea para
   cada objeto con pesos base 60/25/12/3/1/0,4/0,1
   (común/poco común/raro/legendario/mítico/ancestral/divino), modificados
   por el tormento al generar las ofertas;
@@ -155,8 +157,8 @@ eliminarla.
   mejoras anteriores; al cambiar la velocidad se conserva la fracción del
   ataque en curso. Al volver se aplican como máximo ocho horas desde la última
   actualización; el resto se pierde. La arena tiene sus propios monstruos y
-  victorias, independientes de las misiones. Sus enemigos también reciben
-  la vida y el botín del tormento asignado al aparecer. Las partidas anteriores
+  victorias, independientes de las misiones. Sus enemigos reciben
+  la vida y el botín del tormento activo. Las partidas anteriores
   conservan su progreso y empiezan con las mejoras de arena a cero.
 - **Torre de 100 plantas:** la primera misión de cada día da una llave de
   torre. Las llaves de mazmorra acumuladas en partidas anteriores se convierten
@@ -181,21 +183,18 @@ eliminarla.
   desbloqueados cada diez niveles desde el 10 hasta el 120. Los rangos I a XII
   multiplican la vida enemiga por 1,75/2,5/4/6/8/11/15/21/30/42/60/85 y
   las monedas, XP y fragmentos por 1,4/1,8/2,5/3,5/4,5/5,5/7/9/11,5/14,5/18/22,5.
-  Cada rango también añade un 5 % al objetivo de las nuevas misiones. Los
+  Cada rango también añade un 5 % al objetivo de las misiones. Los
   sobres y la selección diaria de la tienda favorecen más las rarezas altas:
   el peso de cada rareza se multiplica por `(1 + 0,15 × rango) ^ índice`,
-  excluyendo las rarezas bloqueadas por nivel y normalizando después. La tienda
-  conserva las ofertas y el tormento con que se generaron hasta el día siguiente.
+  excluyendo las rarezas bloqueadas por nivel y normalizando después.
   Las monedas y fragmentos de logros y capítulos también aumentan; las llaves,
   los objetos y los porcentajes
   permanentes de logros no cambian. Las recompensas de capítulo se calculan
   con el tormento de la misión que lo completa.
-  La dificultad se fija al asignar una misión, al aparecer un monstruo, al
-  atacar por primera vez cada planta o boss;
-  cambiarla no modifica objetivos ni enemigos en curso. El combate automático
-  pendiente se calcula antes del cambio. Las misiones y enemigos anteriores
-  a esta actualización conservan sus objetivos y vida en Normal; las
-  plantas y bosses ya iniciados conservan su tormento. La vida y
+  El cambio se aplica inmediatamente a las misiones, los enemigos de misión,
+  la arena, la torre y los bosses. Se conserva el progreso absoluto de las
+  misiones y el porcentaje de vida restante de cada enemigo. El combate
+  automático pendiente se calcula antes del cambio. La vida y
   los fragmentos se redondean al entero más próximo; las monedas y la XP se
   redondean tras aplicar también sus bonos habituales.
 - **Progresión a largo plazo:** hay logros por 7, 30, 90, 180 y 365 días

@@ -749,7 +749,7 @@
     <div class="torment-options" id="torment-options" aria-label="Niveles de tormento"></div>
   </div>
   <p id="torment-status" role="status" aria-live="polite"></p>
-  <p class="torment-note">Las nuevas misiones y enemigos usan el tormento elegido; los que ya están en curso conservan el suyo. Los sobres mejoran sus probabilidades y la tienda mantiene sus ofertas del día.</p>
+  <p class="torment-note">El tormento se aplica al instante: conserva el progreso de las misiones y el porcentaje de vida de los enemigos. Los sobres y las ofertas de la tienda se adaptan al nivel elegido.</p>
   <p class="torment-note">Los objetivos son mecánicas de juego: adapta siempre el ejercicio a tu capacidad.</p>
 </div>
 </section>
@@ -1164,6 +1164,27 @@ function selectTorment(index,now=Date.now()){
   if(!Number.isInteger(index)||!TORMENTS[index]||S.level<TORMENTS[index].level) return false;
   for(const id of S.active) missionTarget(byId(id));
   settleBattle(now);
+  for(const id of S.active){
+    const reference=S.missionTargetReferences[id] ??= {target:S.targets[id],torment:S.missionTorments[id]};
+    S.targets[id]=Math.ceil(reference.target*(1+0.05*index)/(1+0.05*reference.torment)-1e-10);
+    S.missionTorments[id]=index;
+  }
+  const encounter=S.encounter;
+  const reference=encounter.tormentReference ??= {maxHp:encounter.maxHp,torment:encounter.torment};
+  const maxHp=Math.max(1,Math.round(reference.maxHp*TORMENTS[index].hp/TORMENTS[reference.torment].hp));
+  S.monsterHp=S.monsterHp/encounter.maxHp*maxHp;
+  encounter.maxHp=maxHp;encounter.torment=index;
+  const autoMax=autoMaxHp(S.autoKills,S.autoTorment);
+  S.autoMonsterHp=S.autoMonsterHp/autoMax*autoMaxHp(S.autoKills,index);
+  S.autoTorment=index;
+  for(const [progress,base] of [[S.tower,S.tower.floor<=TOWER_FLOORS?towerMaxHp(S.tower.floor):0],
+    [S.weeklyBoss,WEEKLY_BOSSES[S.weeklyBoss.index]?.hp||0]]){
+    if(base && progress.torment!==null){
+      const oldMax=Math.round(base*TORMENTS[progress.torment].hp),newMax=Math.round(base*TORMENTS[index].hp);
+      progress.hp=progress.hp/oldMax*newMax;
+      progress.torment=index;
+    }
+  }
   S.torment=index;
   return true;
 }
@@ -1173,7 +1194,7 @@ const FULL_REWARD_MISSIONS=6, WEEKLY_DAYS=3, JOURNEY_CHAPTERS=52;
 
 const fresh = () => ({level:1,xp:0,coins:0,owned:[],eq:{},streak:0,kills:0,
   day:today(),done:{},bonus:{},lastActive:null,lastRest:null,monsterHp:monsterHp(0),log:[],active:pickMissions(),completedToday:0,
-  targets:{},missionTorments:{},totalMissions:0,packsOpened:0,achievements:[],missionKills:0,autoKills:0,autoMonsterHp:monsterHp(0),autoTorment:0,battleUpdated:Date.now(),
+  targets:{},missionTorments:{},missionTargetReferences:{},totalMissions:0,packsOpened:0,achievements:[],missionKills:0,autoKills:0,autoMonsterHp:monsterHp(0),autoTorment:0,battleUpdated:Date.now(),
   challengeClears:0,materials:0,activeDays:0,lastActivityDay:null,
   weeklyRewards:0,balanceVersion:1,unlimitedMissionsVersion:1,upgrades:{},attributes:{dmg:0,xp:0,coin:0},encounter:nextEncounter(0),
   missionDifficultyVersion:1,legacyMissions:{},shopStock:null,forgeRanks:{dmg:0,xp:0,coin:0},forgeLastWeek:null,forgeWeek:null,forgeWeekPurchases:0,
@@ -1189,6 +1210,7 @@ if(!S.owned){S.owned=[];S.eq={}}
 if(S.weapon){for(let w=0;w<S.weapon;w++)S.coins+=Math.round(50*Math.pow(1.5,w));delete S.weapon}
 S.targets ??= {};
 if(!S.missionTorments) S.missionTorments=Object.fromEntries(S.active.map(id=>[id,0]));
+S.missionTargetReferences ??= {};
 S.autoTorment ??= 0;
 S.totalMissions ??= 0;
 S.packsOpened ??= 0;
@@ -1261,23 +1283,37 @@ while(S.active.length<SLOTS) S.active.push(randomMission([...S.active,...migrate
 function log(t){S.log.unshift(t);S.log=S.log.slice(0,40)}
 function ensureShopStock(day=today()){
   const sameDay=S.shopStock && S.shopStock.day===day;
-  if(sameDay && S.shopStock.offers.length>=SHOP_SIZE) return false;
   if(!sameDay) S.shopStock={day,level:S.level,torment:S.torment,offers:[],sold:[]};
-  S.shopStock.torment ??= 0;
-  const eligible=ITEMS.filter(item=>item.lvl<=S.shopStock.level);
-  while(S.shopStock.offers.length<SHOP_SIZE){
-    const remaining=eligible.filter(item=>!S.shopStock.offers.includes(item.id));
+  const stock=S.shopStock;
+  stock.torment ??= 0;
+  stock.variants ??= {[stock.torment]:stock.offers.slice()};
+  stock.soldSlots ??= Object.fromEntries(stock.offers.flatMap((id,i)=>stock.sold.includes(id)?[[i,id]]:[]));
+  const oldOffers=stock.offers,oldTorment=stock.torment;
+  const offers=(stock.variants[S.torment]||[]).slice();
+  for(const [slot,id] of Object.entries(stock.soldSlots)) offers[Number(slot)]=id;
+  const used=new Set(Object.values(stock.soldSlots));
+  for(let i=0;i<SHOP_SIZE;i++){
+    if(Object.hasOwn(stock.soldSlots,i)) continue;
+    if(offers[i] && !used.has(offers[i])) used.add(offers[i]);
+    else offers[i]=null;
+  }
+  const eligible=ITEMS.filter(item=>item.lvl<=stock.level);
+  for(let i=0;i<SHOP_SIZE;i++){
+    if(offers[i]) continue;
+    const remaining=eligible.filter(item=>!used.has(item.id));
     if(!remaining.length) break;
-    const tiers=SHOP_WEIGHTS.map((weight,tier)=>remaining.some(item=>item.tier===tier)?rarityWeight(weight,tier,S.shopStock.torment):0);
+    const tiers=SHOP_WEIGHTS.map((weight,tier)=>remaining.some(item=>item.tier===tier)?rarityWeight(weight,tier,S.torment):0);
     const total=tiers.reduce((sum,weight)=>sum+weight,0);
     let roll=Math.random()*total,tier=0;
     for(;tier<tiers.length-1;tier++){if(roll<tiers[tier]) break;roll-=tiers[tier]}
     const pool=remaining.filter(item=>item.tier===tier);
     const unowned=pool.filter(item=>!ownsItemType(item.id));
     const choices=unowned.length?unowned:pool;
-    S.shopStock.offers.push(choices[Math.floor(Math.random()*choices.length)].id);
+    offers[i]=choices[Math.floor(Math.random()*choices.length)].id;
+    used.add(offers[i]);
   }
-  return true;
+  stock.offers=offers;stock.torment=S.torment;stock.variants[S.torment]=offers.slice();
+  return !sameDay || oldTorment!==stock.torment || JSON.stringify(oldOffers)!==JSON.stringify(offers);
 }
 function buyDailyItem(id){
   ensureShopStock();
@@ -1285,6 +1321,7 @@ function buyDailyItem(id){
   if(!item || !S.shopStock.offers.includes(id) || S.shopStock.sold.includes(id) ||
     S.level<item.lvl || S.coins<item.cost) return false;
   S.coins-=item.cost;addItem(id);S.shopStock.sold.push(id);
+  S.shopStock.soldSlots[S.shopStock.offers.indexOf(id)]=id;
   log(`🛒 Comprado: ${item.name}`);
   unlockAchievements();
   return true;
@@ -1336,7 +1373,11 @@ function missionDifficulty(ex){
 }
 function missionTarget(ex){
   S.missionTorments[ex.id] ??= S.torment;
-  if(!S.targets[ex.id]) S.targets[ex.id]=Math.ceil(target(ex,S.level)*DIFFICULTIES[missionDifficulty(ex)].target*(1+0.05*S.missionTorments[ex.id]));
+  if(!S.targets[ex.id]){
+    const base=target(ex,S.level)*DIFFICULTIES[missionDifficulty(ex)].target;
+    S.missionTargetReferences[ex.id]={target:base,torment:0};
+    S.targets[ex.id]=Math.ceil(base*(1+0.05*S.missionTorments[ex.id]));
+  }
   return S.targets[ex.id];
 }
 function rollDay(){
@@ -1517,7 +1558,7 @@ function completeMission(ex){
   unlockAchievements(torment);
   const next=randomMission(S.active);
   S.active[S.active.indexOf(ex.id)]=next;
-  delete S.done[ex.id];delete S.bonus[ex.id];delete S.targets[ex.id];delete S.legacyMissions[ex.id];delete S.missionTorments[ex.id];
+  delete S.done[ex.id];delete S.bonus[ex.id];delete S.targets[ex.id];delete S.legacyMissions[ex.id];delete S.missionTorments[ex.id];delete S.missionTargetReferences[ex.id];
   missionTarget(byId(next));
   log(`🎲 Nueva misión: ${byId(next).name}`);
   if(S.lastActive!==today()){
@@ -1662,7 +1703,7 @@ function journeyMarkup(){
   const percent=100*progress/WEEKLY_DAYS;
   const next=completed+1;
   const reward=completed===JOURNEY_CHAPTERS?'¡Has completado toda la travesía!':
-    `Próximo capítulo: +${35+3*next} monedas y +${3+Math.min(next,20)} fragmentos base, antes de tormento`;
+    `Próximo capítulo: +${Math.round((35+3*next)*TORMENTS[S.torment].reward)} monedas y +${Math.round((3+Math.min(next,20))*TORMENTS[S.torment].reward)} fragmentos`;
   return `<div class="week-card"><div class="journey-summary"><div class="chapter">🌌 Crónicas del héroe · ${completed}/${JOURNEY_CHAPTERS}</div>
     <p>${completed===JOURNEY_CHAPTERS?'Puedes seguir jugando a tu ritmo.':`${progress}/${WEEKLY_DAYS} días de actividad para avanzar`}</p>
     <p class="reward">${reward}</p><small>Los días de actividad no tienen que ser consecutivos; descansar no borra el progreso.</small></div>
@@ -1783,7 +1824,7 @@ $('torment-options').addEventListener('click',event=>{
     renderTorment();$('torment-status').textContent='Ese tormento todavía no está disponible.';return;
   }
   save();render();
-  $('torment-status').textContent=`${TORMENTS[S.torment].name} seleccionado. Las misiones y encuentros en curso mantienen su tormento.`;
+  $('torment-status').textContent=`${TORMENTS[S.torment].name} aplicado a todo el juego.`;
 });
 function renderBattleUpgrades(){
   const box=$('battle-upgrades');box.replaceChildren();
@@ -2006,7 +2047,7 @@ function renderAchievements(){
   for(const a of ACHIEVEMENTS){
     const unlocked=S.achievements.includes(a.id);
     const el=document.createElement('div');el.className=`achievement${unlocked?'':' locked'}`;
-    el.innerHTML=`<strong>${unlocked?'🏆':'🔒'} ${a.name}</strong><br><span>${a.description} · ${Math.min(a.value(S),a.goal)}/${a.goal}</span><br><span class="reward">${achievementRewardText(a)}${unlocked?' · desbloqueado':''}</span>`;
+    el.innerHTML=`<strong>${unlocked?'🏆':'🔒'} ${a.name}</strong><br><span>${a.description} · ${Math.min(a.value(S),a.goal)}/${a.goal}</span><br><span class="reward">${achievementRewardText(a,unlocked?0:S.torment)}${unlocked?' · desbloqueado (recompensa base)':''}</span>`;
     box.appendChild(el);
   }
 }
@@ -2032,7 +2073,7 @@ function renderTower(){
     <div class="challenge-details">
       <span class="challenge-pill">🗼 Planta ${floor} / ${TOWER_FLOORS} · 🔷 ${tower.keys} llaves</span>
       <h3>${MISSION_MONSTERS[species].name}</h3>
-      <span class="challenge-pill">🔥 ${difficulty.name} · ${tower.torment===null?'se fija al atacar':'fijado para esta planta'}</span>
+      <span class="challenge-pill">🔥 ${difficulty.name}</span>
       <div class="bar challenge-progress" aria-label="Progreso de la torre"><div style="width:${(floor-1)/TOWER_FLOORS*100}%"></div></div>
       <p>❤️ ${Math.max(0,Math.ceil(hp))} / ${max} · ⚔️ ${damage} daño</p>
       <div class="bar hp"><div style="width:${Math.max(0,100*hp/max)}%"></div></div>
@@ -2062,7 +2103,7 @@ function renderWeeklyBoss(){
     <div class="challenge-details">
       <span class="challenge-pill">👑 Boss ${rank} / ${WEEKLY_BOSSES.length}</span>
       <h3>${boss.name}</h3>
-      <span class="challenge-pill">🔥 ${difficulty.name} · ${progress.torment===null?'se fija al atacar':'fijado para este boss'}</span>
+      <span class="challenge-pill">🔥 ${difficulty.name}</span>
       <p>❤️ ${Math.max(0,Math.ceil(hp))} / ${max} · ⚔️ ${damage} daño</p>
       <div class="bar hp"><div style="width:${Math.max(0,100*hp/max)}%"></div></div>
       <p><small>Un ataque en total por semana, de lunes a domingo. La vida se conserva; el siguiente boss aparece al vencer al actual.</small></p>
@@ -2110,6 +2151,7 @@ $('reset').onclick=()=>{
 rollDay();
 unlockAchievements();
 settleBattle();
+selectTorment(S.torment);
 claimJourneyRewards();
 render();
 save();
