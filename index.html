@@ -2659,8 +2659,10 @@ function renderPrestige(){
 }
 const prestigeScroll=$('prestige-scroll');
 let prestigeZoom=1;
+const prestigeMinZoom=()=>Math.min(1.5,Math.max(.5,prestigeScroll.clientWidth/PRESTIGE_MAP_SIZE,prestigeScroll.clientHeight/PRESTIGE_MAP_SIZE));
 function setPrestigeZoom(value,x=prestigeScroll.clientWidth/2,y=prestigeScroll.clientHeight/2){
-  const next=Math.max(.35,Math.min(1.5,value));
+  const minimum=prestigeMinZoom(),next=Math.max(minimum,Math.min(1.5,value));
+  $('prestige-zoom-out').disabled=next<=minimum;$('prestige-zoom-in').disabled=next>=1.5;
   if(next===prestigeZoom) return;
   const mapX=(prestigeScroll.scrollLeft+x)/prestigeZoom,mapY=(prestigeScroll.scrollTop+y)/prestigeZoom;
   prestigeZoom=next;
@@ -2670,9 +2672,11 @@ function setPrestigeZoom(value,x=prestigeScroll.clientWidth/2,y=prestigeScroll.c
   prestigeScroll.scrollLeft=mapX*next-x;prestigeScroll.scrollTop=mapY*next-y;
   $('prestige-zoom-reset').textContent=`${Math.round(next*100)}%`;
   $('prestige-zoom-reset').setAttribute('aria-label',`Restablecer zoom (${Math.round(next*100)}%)`);
-  $('prestige-zoom-out').disabled=next<=.35;$('prestige-zoom-in').disabled=next>=1.5;
   $('prestige-tooltip').hidden=true;
 }
+new ResizeObserver(()=>{
+  if(prestigeScroll.clientWidth&&prestigeScroll.clientHeight) setPrestigeZoom(prestigeZoom);
+}).observe(prestigeScroll);
 prestigeScroll.addEventListener('wheel',event=>{
   if(event.ctrlKey||event.metaKey||!event.deltaY) return;
   event.preventDefault();

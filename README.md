@@ -170,6 +170,8 @@ confirmación. Se aceptan las copias exportadas por esta versión.
   arrastrándolo con el ratón, con el teclado o mediante gestos táctiles; las
   barras de desplazamiento están ocultas. La rueda del ratón acerca o aleja
   el mapa alrededor del cursor y los botones de zoom también funcionan en móvil.
+  El alejamiento está limitado al 50 % o al mínimo necesario para llenar la
+  ventana del mapa si esta es más grande.
 - **Árbol de habilidades:** al llegar a cada nivel se obtiene un punto,
   incluidos los niveles existentes al actualizar; el nivel inicial también da
   uno. En los niveles múltiplos de diez se reciben dos puntos en total. Las

@@ -1395,6 +1395,36 @@ test('expanded prestige map preserves the original nodes and has reachable non-o
   })()`),true);
 });
 
+test('prestige zoom is limited and adapts to a larger viewport', () => {
+  const elements=Object.fromEntries(['prestige-scroll','prestige-canvas','prestige-map','prestige-zoom-out',
+    'prestige-zoom-in','prestige-zoom-reset','prestige-tooltip'].map(id=>[id,{
+    style:{},attributes:{},setAttribute(name,value){this.attributes[name]=value;},
+    addEventListener(type,handler){this[type]=handler;}
+  }]));
+  const scroll=elements['prestige-scroll'];
+  Object.assign(scroll,{clientWidth:1000,clientHeight:680,scrollLeft:900,scrollTop:900});
+  let resize;
+  const context=vm.createContext({
+    $:id=>elements[id],PRESTIGE_MAP_SIZE:2800,
+    ResizeObserver:class {constructor(callback){resize=callback;} observe(){}}
+  });
+  vm.runInContext(script.slice(script.indexOf("const prestigeScroll=$('prestige-scroll');"),script.indexOf('let prestigeDrag=')),context);
+  vm.runInContext('setPrestigeZoom(.1)',context);
+  assert.equal(vm.runInContext('prestigeZoom',context),.5);
+  assert.equal(elements['prestige-zoom-out'].disabled,true);
+  assert.equal(elements['prestige-canvas'].style.width,'1400px');
+  scroll.clientWidth=2100;resize();
+  assert.equal(vm.runInContext('prestigeZoom',context),.75);
+  assert.equal(elements['prestige-canvas'].style.width,'2100px');
+  assert.equal(elements['prestige-zoom-out'].disabled,true);
+  vm.runInContext('setPrestigeZoom(2)',context);
+  assert.equal(vm.runInContext('prestigeZoom',context),1.5);
+  assert.equal(elements['prestige-zoom-in'].disabled,true);
+  scroll.clientWidth=1000;resize();
+  vm.runInContext('setPrestigeZoom(.1)',context);
+  assert.equal(vm.runInContext('prestigeZoom',context),.5);
+});
+
 test('ascension nodes combine distinct bonuses, enforce paths and persist through reload', () => {
   const g=game();
   assert.equal(g.run(`(() => {
