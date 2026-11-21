@@ -148,13 +148,18 @@ confirmación. Se aceptan las copias exportadas por esta versión.
   completadas, travesía y progreso de desafíos. Las compras de tienda del día
   siguen contando; sus nuevas ofertas usan el nivel 1. Es recomendable
   exportar una copia antes de prestigiar.
-  El mapa tiene cinco ramas conectadas de seis nodos: daño, XP, monedas,
-  fragmentos y una rama universal. Cada nodo cuesta un punto y exige el nodo
-  anterior de su rama; sus mejoras se suman dentro del multiplicador de
-  prestigio y se multiplican por los demás bonos. El multiplicador de monedas
+  El mapa tiene diez ramas conectadas de diez nodos: daño, XP, monedas,
+  fragmentos, una rama universal, probabilidad y daño crítico, daño y botín
+  de autobatalla y tiempo sin conexión. Cada nodo cuesta un punto y exige el
+  anterior de su rama. Las mejoras de multiplicador se suman dentro del
+  prestigio y se multiplican por los demás bonos; los críticos añaden puntos
+  al porcentaje existente (la probabilidad sigue limitada al 75 %). Los nodos
+  de vigilia añaden 30 minutos por nodo al límite sin conexión. El multiplicador de monedas
   también afecta a recompensas de travesía y logros; el de fragmentos no
   afecta al desmantelamiento. Redistribuir devuelve todos los puntos gratis.
-  El mapa es desplazable y cada nodo se puede seleccionar con teclado.
+  Pasa el ratón o enfoca un nodo para ver sus efectos y requisitos; un clic o
+  la activación con teclado lo desbloquea. Se puede desplazar el mapa
+  arrastrándolo con el ratón, con las barras o mediante gestos táctiles.
 - **Árbol de habilidades:** al llegar a cada nivel se obtiene un punto,
   incluidos los niveles existentes al actualizar; el nivel inicial también da
   uno. En los niveles múltiplos de diez se reciben dos puntos en total. Las

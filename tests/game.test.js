@@ -1376,12 +1376,35 @@ test('repeated prestige accumulates points and completed branches stack multipli
     ACHIEVEMENTS.length=0;S=fresh();S.level=150;S.battleUpdated=1000;
     if(!performPrestige(1000)||S.prestige.points!==15||performPrestige(1000)) return false;
     S.level=150;if(!performPrestige(1000)||S.prestige.points!==30||S.prestige.count!==2) return false;
-    for(const node of PRESTIGE_NODES) if(!unlockPrestige(node.id,1000)) return false;
+    for(const node of PRESTIGE_NODES.filter(node=>['dmg','xp','coin','materials','all'].includes(node.stat)&&
+      Number(node.id.split('-')[1])<=6)) if(!unlockPrestige(node.id,1000)) return false;
     if(prestigePointsAvailable()!==0||Math.abs(bonus('dmg')-8)>1e-8||
        Math.abs(bonus('xp')-8)>1e-8||Math.abs(bonus('coin')-8)>1e-8||
        materialReward(100)!==800||heroPower()<=1) return false;
     return validateBackup({format:'fitquest-save',version:1,state:S});
   })()`),true);
+});
+
+test('expanded prestige bonuses affect combat, loot and offline time and survive reload', () => {
+  const g=game();
+  assert.equal(g.run(`(() => {
+    ACHIEVEMENTS.length=0;S=fresh();S.level=200;S.battleUpdated=1000;
+    if(!performPrestige(1000)) return false;
+    for(const id of ['crit-1','crit-2','critDamage-1','arenaDamage-1','arenaLoot-1','offline-1'])
+      if(!unlockPrestige(id,1000)) return false;
+    if(criticalChance()!==2||criticalBonus()!==5||battleDamage()!==2.4||
+       battleLoot()!==1.2||offlineLimit()!==8.5*3600000||bonus('dmg')!==1) return false;
+    S.level=100;S.skills={precision:20,impact:5,execution:5,deadeye:1,hunter:1};S.passives.hunt1=5;S.skillStyle='hunter';
+    if(criticalChance()!==44) return false;
+    S.skills.focus=20;S.passives.hunt2=3;S.passives.hunt3=5;
+    if(criticalChance()!==69) return false;
+    for(let i=3;i<=10;i++) if(!unlockPrestige('crit-'+i,1000)) return false;
+    if(criticalChance()!==75||!validateBackup({format:'fitquest-save',version:1,state:S})) return false;
+    save();return true;
+  })()`),true);
+  const restored=game(g.saved());
+  assert.equal(restored.run(`criticalChance()===75&&battleDamage()===2*.85*1.2&&offlineLimit()===8.5*3600000`),true);
+  assert.equal(restored.run(`resetPrestigeTree(1000)&&criticalChance()===67&&battleLoot()===1&&offlineLimit()===OFFLINE_LIMIT`),true);
 });
 
 test('passive backup validation rejects locked, invalid or overspent progress', () => {
