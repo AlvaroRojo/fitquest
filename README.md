@@ -43,9 +43,12 @@ confirmación. Se aceptan las copias exportadas por esta versión.
   posteriores dan el 25 % de XP, daño y monedas de misión. El botín de
   monstruos no se reduce. La primera misión del día da una llave de torre.
   Esto evita que acumular ejercicio sea necesario para progresar.
-  El tablón usa los ejercicios y objetivos guardados en la partida, pero ya no
-  muestra controles para personalizarlos ni para registrar descansos. Las
-  preferencias y los descansos de partidas anteriores se conservan al actualizar.
+  El tablón usa los ejercicios y objetivos guardados en la partida, pero no
+  muestra controles para personalizarlos. Se pueden registrar hasta dos días
+  de descanso por semana natural: protegen la racha sin dar recompensas ni
+  contar como días de actividad. No se registra descanso en un día con misión
+  ya completada; un descanso registrado no impide hacer una misión después.
+  Las preferencias y descansos anteriores se conservan al actualizar.
 - **Encuentros de misiones:** cada enemigo tiene vida según su especie.
   Tras cada cinco victorias aparece un élite y, tras cada diez, un jefe
   en su lugar. En los demás encuentros hay un 5 % de probabilidad de
@@ -114,8 +117,11 @@ confirmación. Se aceptan las copias exportadas por esta versión.
   Desequipa un objeto para poder mejorarlo. Puedes usar fragmentos para mejorarlo
   sin un máximo de nivel; cada mejora añade un 1 %
   a su estadística. El coste es 5 + 3 por nivel de mejora actual + 2 por
-  índice de rareza (común 0 a divino 6). Desmantelar elimina el objeto y
-  sus mejoras; aún no hay fabricación.
+  índice de rareza (común 0 a divino 6). Desmantelar elimina el objeto y sus
+  mejoras. En la tienda puedes fabricar un objeto aleatorio del tipo y rareza
+  elegidos, siempre que la rareza esté desbloqueada. Los costes por rareza
+  son 10, 30, 70, 150, 300, 600 y 1200 fragmentos; desmantelar el resultado
+  siempre devuelve menos de lo invertido.
   Hay 218 objetos en siete rarezas; los sobres ofrecen otra forma de
   conseguirlos.
 - **Entrenamiento del héroe:** en la pestaña Personaje puedes comprar rangos
@@ -156,7 +162,15 @@ confirmación. Se aceptan las copias exportadas por esta versión.
   por nivel a partir de ese nivel, también retroactivamente. Las cuatro ramas
   tienen veinte mejoras de hasta cinco rangos; para desbloquear la siguiente se
   necesitan tres rangos en la anterior. Sus bonos se suman a los de habilidades,
-  equipo y logros, y el crítico conserva su límite del 75 %.
+  equipo y logros, y el crítico conserva su límite del 75 %. Antes de invertir
+  un punto que supere ese límite se muestra un aviso y se puede cancelar.
+  Al alcanzar el rango 5 en el último nodo de cada rama se desbloquea una
+  maestría: Guerra reduce un 25 % la resistencia de bosses; Caza reduce a la
+  mitad la resistencia restante en golpes críticos; Fortuna añade un 10 % de
+  probabilidad de duplicar fragmentos de enemigos de misión; Sabiduría amplía
+  el progreso de arena sin conexión a 12 horas. Las reducciones de resistencia
+  se combinan multiplicativamente; los críticos del Cazador siguen ignorándola
+  por completo. Las probabilidades de Fortuna y Buscatesoros se suman.
   Con 20 puntos invertidos se elige una subclase sin coste adicional:
   Campeón (+30 % de daño), Asesino (+10 % de probabilidad y +30 % de daño
   crítico) u Oráculo (+20 % de XP, monedas y fragmentos de recompensas).
@@ -180,7 +194,12 @@ confirmación. Se aceptan las copias exportadas por esta versión.
   actual. Cada sobre tiene distintos pesos y los más caros favorecen las
   rarezas altas. Los pesos de rarezas bloqueadas se excluyen y los restantes
   se normalizan; el tormento favorece las rarezas altas y las probabilidades
-  actuales se muestran antes de comprar.
+  actuales se muestran antes de comprar. Tras 20 sobres consecutivos sin
+  legendario o superior, el siguiente garantiza una de esas rarezas; la
+  garantía es global para todos los sobres y se conserva entre sesiones.
+  Se acumula también antes del nivel 15, pero se aplica únicamente cuando esa
+  rareza está desbloqueada. La pantalla muestra el contador y las
+  probabilidades efectivas, incluidas las de la garantía.
   Cada objeto de una rareza tiene igual probabilidad. Cada premio se añade al
   inventario, incluso si es repetido, sin devolución de monedas. La compra se
   guarda inmediatamente, antes de mostrar el carrusel animado, cuyo recorrido
@@ -201,7 +220,7 @@ confirmación. Se aceptan las copias exportadas por esta versión.
   no tienen límite. Antes de mejorar se calcula el combate pendiente con las
   mejoras anteriores; al cambiar la velocidad se conserva la fracción del
   ataque en curso. Al volver se aplican como máximo ocho horas desde la última
-  actualización; el resto se pierde. La arena tiene sus propios monstruos y
+  actualización (doce con la maestría de Sabiduría); el resto se pierde. La arena tiene sus propios monstruos y
   victorias, independientes de las misiones. Sus enemigos reciben
   la vida y el botín del tormento activo. Las partidas anteriores
   conservan su progreso y empiezan con las mejoras de arena a cero.
@@ -215,10 +234,14 @@ confirmación. Se aceptan las copias exportadas por esta versión.
   victoria, proporcional al daño causado respecto a la vida máxima. Se redondea
   hacia abajo después de aplicar los bonos, incluidos los de fragmentos de
   habilidades, pasivas y subclase, y usa el tormento mínimo en el que se ha atacado.
-  La planta 100 completa la torre. El ataque causa 24 de daño base, con los
-  bonos generales de daño.
-- **Bosses semanales:** hay doce enemigos en orden. Se permite un único ataque
-  en total por semana natural (lunes a domingo, hora local); la vida se
+  La planta 100 completa la torre. Se puede iniciar otra vuelta opcional tantas
+  veces como se desee: cada vuelta adicional aumenta un 50 % la vida base y
+  un 25 % las recompensas, conservando las llaves, el historial y el límite
+  de un ataque por día. El ataque causa 24 de daño base, con los bonos generales
+  de daño.
+- **Bosses semanales:** hay doce enemigos en orden. Se permiten hasta tres
+  ataques por semana natural (lunes a domingo, hora local), con un
+  máximo de uno al día; la vida se
   conserva entre semanas. Al derrotar al boss se reciben monedas, XP y
   fragmentos y se abre el siguiente. El ataque causa 40 de daño base con los
   bonos generales. Cada boss tiene una resistencia propia; algunas se activan
@@ -267,7 +290,11 @@ confirmación. Se aceptan las copias exportadas por esta versión.
   Los días no tienen que ser consecutivos. Con tres días de actividad
   semanales se avanza aproximadamente un capítulo a la semana durante
   un año. Los días que ya había registrados antes de esta versión cuentan:
-  sus recompensas se entregan automáticamente una sola vez.
+  sus recompensas se entregan automáticamente una sola vez. Al completar los
+  52 capítulos se puede comenzar otra vuelta opcional con nuevos días de
+  actividad; cada vuelta adicional requiere un día de actividad más por
+  capítulo y aumenta las recompensas base un 25 %.
+  Los días anteriores al comienzo de una vuelta no se vuelven a recompensar.
 
 La XP necesaria para el siguiente nivel es `100 + 20 × n + 6 × n² + n³`,
 donde `n` es el nivel actual menos uno. Al actualizar, la XP dentro del nivel y
@@ -277,6 +304,14 @@ vez, sin perder niveles ni objetos.
 Los bonos de cada estadística se suman entre sí. Las misiones, el equipo y las
 recompensas son mecánicas de juego, no un plan de entrenamiento: adapta cada
 actividad a tu capacidad y detente si sientes dolor.
+
+## Simulación de equilibrio
+
+`node tests/balance-simulation.js` simula un año con perfiles de dos, tres y
+cinco días de actividad por semana. Incluye arena sin conexión, habilidades,
+pasivas, forja, fabricación y vueltas opcionales. Usa decisiones y azar
+deterministas simplificados: sus resultados orientan el ajuste, pero no
+predicen la progresión de todas las partidas.
 
 ## Referencias de diseño
 

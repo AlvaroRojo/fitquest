@@ -212,6 +212,25 @@ test('every ranked skill and passive contributes its advertised effect', () => {
   })()`),true);
 });
 
+test('ancestral branch masteries provide distinct combat, loot and offline effects', () => {
+  const g=game();
+  assert.equal(g.run(`(() => {
+    ACHIEVEMENTS.length=0;S=fresh();S.passives={war5:4,hunt5:4,wealth5:4,sage5:4};
+    const boss=WEEKLY_BOSSES[1];
+    if(effectiveBossResistance(boss,180,180,0,true)!==.1||offlineLimit()!==OFFLINE_LIMIT) return false;
+    S.passives={war5:5,hunt5:5,wealth5:5,sage5:5};
+    if(Math.abs(effectiveBossResistance(boss,180,180,0,false)-.075)>1e-10 ||
+       Math.abs(effectiveBossResistance(boss,180,180,0,true)-.0375)>1e-10 ||
+       offlineLimit()!==12*60*60*1000) return false;
+    S.skillStyle='hunter';if(effectiveBossResistance(boss,180,180,0,true)!==0) return false;
+    S.skillStyle=null;Math.random=()=>0;
+    S.encounter={kind:'elite',species:0,maxHp:40,torment:0};S.monsterHp=1;hit(1);
+    if(S.materials!==6) return false;
+    S.autoMonsterHp=1000000000;S.battleUpdated=1000;
+    return settleBattle(1000+24*60*60*1000).ticks===4320;
+  })()`),true);
+});
+
 test('daily stock respects level, remains stable through reload and records sold offers', () => {
   const g=game();
   assert.equal(g.run(`(() => {
@@ -530,12 +549,13 @@ test('active mission targets and partial progress persist across day changes', (
   assert.equal(restored.run('S.targets[S.active[4]]'),g.run('S.targets[S.active[4]]'));
 });
 
-test('mission board omits guidance text and weekly rest control', () => {
+test('mission board offers rest without restoring exercise customization', () => {
   const board = html.match(/<h2>📜 Tablón de encargos[\s\S]*?<\/div>\s*<div class="card" id="journey">/)[0];
   assert.doesNotMatch(board, /Reglas y bienestar|Elige una misión/);
   assert.doesNotMatch(html, /Tu ejercicio real es el daño/);
   assert.doesNotMatch(html, /id="rest"|\$\('rest'\)/);
-  assert.doesNotMatch(board, /personalizar ejercicios|mission-scale|rest-day|exercise-options/i);
+  assert.doesNotMatch(board, /personalizar ejercicios|mission-scale|exercise-options/i);
+  assert.match(board, /id="rest-day"/);
 });
 
 test('inventory removes bulk selection but keeps per-item dismantling', () => {
@@ -601,6 +621,29 @@ test('previously recorded rest still protects streak during migration', () => {
     S.day=date(yesterday); S.lastRest=date(yesterday); S.lastActive=date(twoDaysAgo); S.streak=3;
     rollDay(); return S.streak===3;
   })()`),true);
+});
+
+test('two rest days protect streak without granting activity or rewards and reset each week', () => {
+  const g=game();
+  assert.equal(g.run(`(() => {
+    const RealDate=Date;let clock=RealDate.parse('2026-01-05T12:00:00Z');
+    Date=class extends RealDate {
+      constructor(...args){super(...(args.length?args:[clock]))}
+      static now(){return clock}
+    };
+    const day=value=>{clock=RealDate.parse(value+'T12:00:00Z')};
+    S=fresh();S.streak=5;S.lastActive='2026-01-04';
+    const coins=S.coins,xp=S.xp;
+    if(!registerRest()||registerRest()||S.streak!==5||S.activeDays!==0||S.coins!==coins||S.xp!==xp) return false;
+    day('2026-01-06');if(!registerRest()||S.streak!==5) return false;
+    day('2026-01-07');if(registerRest()||S.streak!==5) return false;
+    S.lastActive='2026-01-07';S.streak=6;
+    day('2026-01-08');if(registerRest()) return false;
+    day('2026-01-12');if(!registerRest()||S.restDays.length!==1||S.streak!==0) return false;
+    save();return true;
+  })()`),true);
+  const restored=game(g.saved());
+  assert.equal(restored.run(`S.restDays.length===1 && S.restDays[0]==='2026-01-12' && S.restWeek==='2026-01-12'`),true);
 });
 
 test('mission damage preview and actual damage include all character modifiers', () => {
@@ -934,13 +977,62 @@ test('tower requires a key, limits attacks by day and persists health and comple
   assert.equal(game(restored.saved()).run('S.tower.floor'),101);
 });
 
-test('weekly bosses retain health, enforce one attack per week and advance once', () => {
+test('tower optional rounds scale health and rewards without resetting earned progress', () => {
+  const g=game();
+  assert.equal(g.run(`(() => {
+    ACHIEVEMENTS.length=0;S=fresh();S.tower.floor=101;S.tower.hp=0;S.tower.keys=2;S.kills=100;
+    if(!startTowerRound()||startTowerRound()||S.tower.round!==1||S.tower.hp!==39||S.kills!==100) return false;
+    S.tower.torment=0;S.tower.hp=1;const coins=S.coins;
+    if(!attackTower('2026-01-05')||S.coins-coins!==Math.round(25*1.25)||S.tower.floor!==2) return false;
+    save();return true;
+  })()`),true);
+  const restored=game(g.saved());
+  assert.equal(restored.run(`S.tower.round===1&&S.tower.floor===2&&towerMaxHp(2)===42`),true);
+});
+
+test('tower round bonuses also apply to partial rewards and survive torment changes', () => {
+  const g=game();
+  assert.equal(g.run(`(() => {
+    ACHIEVEMENTS.length=0;S=fresh();S.level=20;S.battleUpdated=1000;
+    S.tower.round=1;S.tower.floor=100;S.tower.hp=towerMaxHp(100);S.tower.keys=1;
+    if(S.tower.hp!==336||!attackTower('2026-01-05')||S.coins!==9||S.tower.hp!==312) return false;
+    selectTorment(1,1000);
+    return Math.abs(S.tower.hp-546)<1e-8&&S.tower.rewardTorment===0;
+  })()`),true);
+});
+
+test('tower achievements retain completed floors across optional rounds', () => {
+  const g=game();
+  assert.equal(g.run(`(() => {
+    S=fresh();S.tower.floor=101;
+    const milestone=ACHIEVEMENTS.find(a=>a.id==='tower-floors-100');
+    if(milestone.value(S)!==100||!startTowerRound()||milestone.value(S)!==100) return false;
+    S.tower.floor=3;return milestone.value(S)===102;
+  })()`),true);
+});
+
+test('optional journey rounds only count new active days and scale rewards', () => {
+  const g=game();
+  assert.equal(g.run(`(() => {
+    ACHIEVEMENTS.length=0;S=fresh();S.activeDays=200;claimJourneyRewards();
+    if(S.weeklyRewards!==52||!startJourneyRound()||startJourneyRound()) return false;
+    const coins=S.coins,materials=S.materials;
+    claimJourneyRewards();if(S.weeklyRewards!==52||S.coins!==coins) return false;
+    S.activeDays=203;claimJourneyRewards();if(S.weeklyRewards!==52) return false;
+    S.activeDays=204;claimJourneyRewards();
+    if(S.weeklyRewards!==53||S.coins-coins!==Math.round(38*1.25)||S.materials-materials!==5) return false;
+    save();return true;
+  })()`),true);
+  assert.equal(game(g.saved()).run(`S.journeyRound===1&&S.journeyStartDays===200&&S.weeklyRewards===53`),true);
+});
+
+test('weekly bosses retain health, enforce one attack per day and advance once', () => {
   const g=game();
   assert.equal(g.run(`(() => {
     S=fresh(); S.achievements=ACHIEVEMENTS.map(a=>a.id);
     S.weeklyBoss.hp=40*bonus('dmg')+1; S.weeklyBoss.torment=0;
     if(!attackWeeklyBoss('2026-01-05') || Math.abs(S.weeklyBoss.hp-1)>1e-8 ||
-      attackWeeklyBoss('2026-01-11')) return false;
+      attackWeeklyBoss('2026-01-05')) return false;
     save(); return true;
   })()`),true);
   const restored=game(g.saved());
@@ -954,6 +1046,22 @@ test('weekly bosses retain health, enforce one attack per week and advance once'
     save(); return true;
   })()`),true);
   assert.equal(game(restored.saved()).run('S.weeklyBoss.index'),12);
+});
+
+test('weekly bosses allow three different days, reset on Monday and migrate old saves', () => {
+  const g=game();
+  assert.equal(g.run(`(() => {
+    ACHIEVEMENTS.length=0;S=fresh();S.weeklyBoss.hp=1000;S.weeklyBoss.torment=0;
+    if(!attackWeeklyBoss('2026-01-05')||attackWeeklyBoss('2026-01-05')||
+       !attackWeeklyBoss('2026-01-06')||!attackWeeklyBoss('2026-01-07')||
+       attackWeeklyBoss('2026-01-11')||S.weeklyBoss.weekAttacks!==3) return false;
+    save();return true;
+  })()`),true);
+  const restored=game(g.saved());
+  assert.equal(restored.run(`!attackWeeklyBoss('2026-01-11') && attackWeeklyBoss('2026-01-12') && S.weeklyBoss.weekAttacks===1`),true);
+  const old=restored.saved();delete old.weeklyBoss.weekAttacks;delete old.weeklyBoss.lastAttackDay;
+  old.weeklyBoss.lastAttackWeek='2026-01-05';
+  assert.equal(game(old).run(`S.weeklyBoss.weekAttacks===1 && attackWeeklyBoss('2026-01-07') && S.weeklyBoss.weekAttacks===2`),true);
 });
 
 test('torment unlocks by level and rejects locked or invalid selections', () => {
@@ -1357,7 +1465,7 @@ test('partial challenge rewards are proportional to damage and respect attack li
     S=fresh();S.level=120;S.achievements=ACHIEVEMENTS.map(a=>a.id);S.battleUpdated=1000;
     selectTorment(12,1000);const max=Math.round(180*TORMENTS[12].hp),hit=40*bonus('dmg');
     if(!attackWeeklyBoss('2026-01-05')||S.coins!==Math.floor(250*bonus('coin')*.2*hit/max*combatReward(12))) return false;
-    const prior=S.coins;return !attackWeeklyBoss('2026-01-06') && S.coins===prior;
+    const prior=S.coins;return !attackWeeklyBoss('2026-01-05') && S.coins===prior;
   })()`),true);
 });
 
@@ -1397,6 +1505,22 @@ test('backup validation accepts exported state and rejects damaged or incompatib
     backup.state.battleUpgrades.speed=0;backup.state.skills.blade=1;if(validateBackup(backup)) return false;
     backup.state.skills={};backup.state.owned=['missing'];if(validateBackup(backup)) return false;
     backup.state.owned=[];backup.version=2;return !validateBackup(backup);
+  })()`),true);
+});
+
+test('new progression counters validate while legacy saves remain importable', () => {
+  const g=game();
+  assert.equal(g.run(`(() => {
+    S=fresh();const backup={format:'fitquest-save',version:1,state:JSON.parse(JSON.stringify(S))},s=backup.state;
+    for(const key of ['packMisses','journeyRound','journeyStartDays','restWeek','restDays']) delete s[key];
+    delete s.tower.round;delete s.weeklyBoss.lastAttackDay;delete s.weeklyBoss.weekAttacks;
+    if(!validateBackup(backup)) return false;
+    s.packMisses=21;if(validateBackup(backup)) return false;
+    s.packMisses=20;s.tower.round=-1;if(validateBackup(backup)) return false;
+    s.tower.round=0;s.journeyRound=1;if(validateBackup(backup)) return false;
+    s.journeyRound=0;s.restWeek='2026-01-05';s.restDays=['bad'];
+    if(validateBackup(backup)) return false;
+    s.restDays=['2026-01-05','2026-01-06'];return validateBackup(backup);
   })()`),true);
 });
 

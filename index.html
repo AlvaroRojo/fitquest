@@ -129,6 +129,7 @@
   .skill-node[data-active="true"]{border-color:#e8bc73;box-shadow:inset 0 0 15px #dca15833,0 0 8px #dca15833}
   .skill-node small{display:block;margin-top:3px}
   .skill-node:disabled{opacity:.6}
+  @media(max-width:760px){.skill-tree{grid-template-columns:repeat(2,minmax(0,1fr))}}
   .passive-intro{padding:12px;border:1px solid #aa8558;border-radius:12px;background:linear-gradient(120deg,#45313e,#171b2c)}
   .passive-intro p{margin:4px 0}
   .passive-classes{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:12px 0}
@@ -667,6 +668,8 @@
   <h2>📜 Tablón de encargos <small id="cnt"></small></h2>
   <div id="missions" class="quest-board"></div>
   <p id="mission-status" class="mission-status" role="status" aria-live="polite"></p>
+  <button id="rest-day" type="button">🌿 Registrar descanso</button>
+  <p id="rest-status" role="status" aria-live="polite"></p>
 </div>
 <div class="card" id="journey">
   <h2>🗺️ Travesía del héroe</h2>
@@ -757,6 +760,17 @@
     <div class="forge-week-banner" id="forge-week" role="status"></div>
     <div class="forge-options" id="forge-options"></div>
   </section>
+  <section class="armory-section" aria-labelledby="craft-title">
+    <div class="armory-header"><h3 id="craft-title">🔨 Fabricar equipo</h3></div>
+    <p>El objeto concreto será aleatorio dentro del tipo y la rareza elegidos.</p>
+    <label for="craft-type">Tipo de equipo</label>
+    <select id="craft-type"></select>
+    <label for="craft-tier">Rareza y coste en fragmentos</label>
+    <select id="craft-tier"></select>
+    <p id="craft-info"></p>
+    <button type="button" id="craft-button">Fabricar</button>
+    <p id="craft-status" role="status" aria-live="polite"></p>
+  </section>
   <p id="shop-status" role="status" aria-live="polite"></p>
 </div>
 </section>
@@ -772,6 +786,7 @@
 <section id="packs" role="tabpanel" aria-labelledby="tab-packs" hidden>
 <div class="card">
   <h2>🎁 Sobres de botín</h2>
+  <p id="pack-guarantee" role="status"></p>
   <div id="pack-list" class="pack-list"></div>
   <div id="pack-stage" class="pack-stage loot-tier" data-tier="0" aria-hidden="true"><div class="pack-reel" id="pack-reel"><div class="pack-reel-card loot-tier" data-tier="3"><b>🎁</b><small>Abre un sobre</small></div></div></div>
   <p id="pack-result" class="pack-result" role="status" aria-live="polite"></p>
@@ -800,7 +815,7 @@
     <div class="bar hp"><div id="battle-bar"></div></div>
   </div>
   <div id="battle-status" class="battle-stats"></div>
-  <small>Progreso sin conexión: máximo 8 horas.</small>
+  <small id="offline-limit"></small>
 </div>
 <div class="card">
   <h2>⚒️ Mejoras de arena</h2>
@@ -1059,6 +1074,7 @@ function resetSkills(now=Date.now()){
 }
 const criticalChance=()=>Math.min(75,skillBonus('crit')+passiveBonus('crit')+(S.skillStyle==='hunter'?15:0));
 const criticalBonus=()=>skillBonus('critDamage')+passiveBonus('critDamage')+(S.skillStyle==='hunter'?25:0);
+const passiveMastery=id=>(S.passives[id]||0)>=PASSIVE_MAX;
 function criticalDamage(damage,onCritical){
   if(damage>0 && criticalChance()>0 && Math.random()*100<criticalChance()){
     const result=damage*(1.5+criticalBonus()/100);
@@ -1097,6 +1113,18 @@ function addItem(id){
 const SHOP_SIZE=10, FORGE_WEEKLY_LIMIT=10;
 const SHOP_WEIGHTS=[60,25,12,3,1,.4,.1];
 const FORGE={dmg:{name:'Filo eterno',icon:'⚔️'},xp:{name:'Sabiduría arcana',icon:'📘'},coin:{name:'Prosperidad dorada',icon:'🪙'}};
+const CRAFT_COST=[10,30,70,150,300,600,1200];
+function craftItem(group,tier){
+  if(!Object.hasOwn(GROUPS,group)||!Number.isInteger(tier)||tier<0||tier>=TIER_NAMES.length||
+     S.level<TIER_LVL[tier]||S.materials<CRAFT_COST[tier]) return null;
+  const pool=ITEMS.filter(item=>item.g===group&&item.tier===tier);
+  if(!pool.length) return null;
+  const item=pool[Math.floor(Math.random()*pool.length)];
+  S.materials-=CRAFT_COST[tier];
+  const instance=addItem(item.id);
+  log(`🔨 Fabricado: ${item.name} (${TIER_NAMES[tier]}) por ${CRAFT_COST[tier]} fragmentos`);
+  return itemById(instance);
+}
 const forgeCost=()=>150+100*Object.keys(FORGE).reduce((sum,stat)=>sum+(S.forgeRanks[stat]||0),0);
 function weekStart(day){
   const [year,month,date]=day.split('-').map(Number);
@@ -1216,7 +1244,7 @@ const ACHIEVEMENTS=[
   ...milestoneAchievements(
     'tower-floors','Ascensión','Plantas de torre superadas:',
     [1,2,5,10,15,20,30,40,50,60,75,90,100],
-    s=>s.tower.floor-1,['dmg','coin','xp'],
+    s=>(s.tower.round||0)*100+s.tower.floor-1,['dmg','coin','xp'],
     (i,goal)=>({coins:30+goal*3,materials:5+i*3})
   ),
   ...milestoneAchievements(
@@ -1293,6 +1321,7 @@ const inventoryAvailable=(ids,type='all')=>{
 };
 const target = (ex,l) => Math.max(ex.base, Math.round(ex.base*Math.min(2,1+0.05*(l-1))/ex.step[0])*ex.step[0]);
 const BATTLE_INTERVAL=10000, OFFLINE_LIMIT=8*60*60*1000;
+const offlineLimit=()=>OFFLINE_LIMIT*(passiveMastery('sage5')?1.5:1);
 const BATTLE_UPGRADES={
   damage:{name:'Golpe devastador',icon:'⚔️',cost:100,step:50},
   speed:{name:'Ritmo imparable',icon:'⚡',cost:250,step:125,max:20},
@@ -1314,6 +1343,7 @@ const PACKS=[
   {id:'gold',name:'Sobre dorado',icon:'🥇',level:15,cost:800,weights:[5,15,35,30,10,4,1]},
   {id:'arcane',name:'Sobre arcano',icon:'🔮',level:30,cost:1800,weights:[1,4,10,30,30,20,5]}
 ];
+const PACK_GUARANTEE_MISSES=20, PACK_HIGH_TIER=3;
 const packReelLayout=width=>{
   const padding=Math.ceil((width/2+40)/136)+1;
   return {start:padding,winner:padding+24+Math.floor(Math.random()*29),padding,offset:Math.floor(Math.random()*81)-40,duration:3800+Math.floor(Math.random()*1401)};
@@ -1324,8 +1354,14 @@ function packOdds(pack,level,torment=0){
   const total=eligible.reduce((sum,weight)=>sum+weight,0);
   return eligible.map(weight=>weight/total);
 }
+function effectivePackOdds(pack,level,torment=0,misses=0){
+  const odds=packOdds(pack,level,torment);
+  if(level<TIER_LVL[PACK_HIGH_TIER]||misses<PACK_GUARANTEE_MISSES) return odds;
+  const total=odds.slice(PACK_HIGH_TIER).reduce((sum,chance)=>sum+chance,0);
+  return odds.map((chance,tier)=>tier<PACK_HIGH_TIER?0:chance/total);
+}
 function samplePackItem(pack){
-  const odds=packOdds(pack,S.level,S.torment);
+  const odds=effectivePackOdds(pack,S.level,S.torment,S.packMisses??0);
   let roll=Math.random(),tier=0;
   for(let i=0;i<odds.length;i++){
     if(odds[i]>0) tier=i;
@@ -1343,6 +1379,7 @@ function drawPack(id){
   S.coins-=pack.cost;
   const instance=addItem(item.id);
   S.packsOpened++;
+  S.packMisses=tier>=PACK_HIGH_TIER?0:Math.min(PACK_GUARANTEE_MISSES,(S.packMisses??0)+1);
   const message=`${TIER_ICONS[tier]} ${TIER_NAMES[tier]}: ${item.name} · añadido al inventario`;
   log(`🎁 ${pack.name}: ${message}`);
   unlockAchievements();
@@ -1370,6 +1407,13 @@ function bossResistance(boss,hp,max,hits){
   if(boss.rule==='wounded' && hp>max/2) return 0;
   if(boss.rule==='alternating' && hits%2===1) return 0;
   return boss.resistance;
+}
+function effectiveBossResistance(boss,hp,max,hits,critical=false){
+  if(critical&&S.skillStyle==='hunter') return 0;
+  let resistance=bossResistance(boss,hp,max,hits);
+  if(passiveMastery('war5')) resistance*=.75;
+  if(critical&&passiveMastery('hunt5')) resistance*=.5;
+  return resistance;
 }
 const bossAbilityText=boss=>`${boss.ability}: reduce el daño un ${Math.round(boss.resistance*100)}%${boss.rule==='opening'?' mientras tenga más de media vida':boss.rule==='wounded'?' con media vida o menos':boss.rule==='alternating'?' en ataques alternos':''}.`;
 const TORMENTS=[
@@ -1421,19 +1465,21 @@ function selectTorment(index,now=Date.now()){
   return true;
 }
 const TOWER_FLOORS=100;
-const towerMaxHp=floor=>24+floor*2;
-const FULL_REWARD_MISSIONS=6, WEEKLY_DAYS=3, JOURNEY_CHAPTERS=52;
+const towerMaxHp=(floor,round=S.tower?.round||0)=>Math.round((24+floor*2)*(1+round*.5));
+const towerRewardMultiplier=round=>1+round*.25;
+const FULL_REWARD_MISSIONS=6, WEEKLY_DAYS=3, JOURNEY_CHAPTERS=52, REST_WEEKLY_LIMIT=2, BOSS_WEEKLY_LIMIT=3;
+const journeyDaysRequired=round=>WEEKLY_DAYS+round;
 
 const fresh = () => ({level:1,xp:0,coins:0,owned:[],eq:{},streak:0,kills:0,
-  day:today(),done:{},bonus:{},lastActive:null,lastRest:null,monsterHp:monsterHp(0),log:[],active:pickMissions(),completedToday:0,
-  targets:{},missionTorments:{},missionTargetReferences:{},exerciseEnabled:EXERCISES.map(e=>e.id),missionScale:100,skills:{},skillStyle:null,passives:{},subclass:null,arenaBalanceVersion:1,levelBalanceVersion:1,totalMissions:0,packsOpened:0,achievements:[],missionKills:0,autoKills:0,autoMonsterHp:monsterHp(0),autoTorment:0,battleUpdated:Date.now(),
+  day:today(),done:{},bonus:{},lastActive:null,lastRest:null,restWeek:null,restDays:[],monsterHp:monsterHp(0),log:[],active:pickMissions(),completedToday:0,
+  targets:{},missionTorments:{},missionTargetReferences:{},exerciseEnabled:EXERCISES.map(e=>e.id),missionScale:100,skills:{},skillStyle:null,passives:{},subclass:null,arenaBalanceVersion:1,levelBalanceVersion:1,totalMissions:0,packsOpened:0,packMisses:0,achievements:[],missionKills:0,autoKills:0,autoMonsterHp:monsterHp(0),autoTorment:0,battleUpdated:Date.now(),
   challengeClears:0,materials:0,activeDays:0,lastActivityDay:null,
-  weeklyRewards:0,balanceVersion:1,unlimitedMissionsVersion:1,upgrades:{},attributes:{dmg:0,xp:0,coin:0},encounter:nextEncounter(0),
+  weeklyRewards:0,journeyRound:0,journeyStartDays:0,balanceVersion:1,unlimitedMissionsVersion:1,upgrades:{},attributes:{dmg:0,xp:0,coin:0},encounter:nextEncounter(0),
   missionDifficultyVersion:1,legacyMissions:{},shopStock:null,forgeRanks:{dmg:0,xp:0,coin:0},forgeLastWeek:null,forgeWeek:null,forgeWeekPurchases:0,
   battleUpgrades:{damage:0,speed:0,loot:0},
   torment:0,
-  tower:{floor:1,hp:towerMaxHp(1),keys:0,lastAttack:null,torment:null},
-  weeklyBoss:{index:0,hp:WEEKLY_BOSSES[0].hp,lastAttackWeek:null,torment:null}});
+  tower:{floor:1,round:0,hp:towerMaxHp(1,0),keys:0,lastAttack:null,torment:null},
+  weeklyBoss:{index:0,hp:WEEKLY_BOSSES[0].hp,lastAttackWeek:null,lastAttackDay:null,weekAttacks:0,torment:null}});
 let S;
 try{S=JSON.parse(localStorage.getItem(KEY)||'null') || fresh()}
 catch(error){alert('No se puede leer la partida guardada. No se ha borrado; revisa los datos del navegador.');throw error}
@@ -1452,11 +1498,16 @@ S.subclass ??= null;
 S.autoTorment ??= 0;
 S.totalMissions ??= 0;
 S.packsOpened ??= 0;
+S.packMisses ??= 0;
 S.achievements ??= [];
 S.materials ??= 0;
 S.activeDays ??= 0;
 S.lastActivityDay ??= null;
 S.weeklyRewards ??= 0;
+S.journeyRound ??= 0;
+S.journeyStartDays ??= 0;
+S.restWeek ??= S.lastRest?weekStart(S.lastRest):null;
+S.restDays ??= S.lastRest?[S.lastRest]:[];
 S.upgrades ??= {};
 S.attributes ??= {dmg:0,xp:0,coin:0};
 S.shopStock ??= null;
@@ -1467,6 +1518,11 @@ S.forgeWeekPurchases ??= S.forgeLastWeek ? 1 : 0;
 S.battleUpgrades ??= {damage:0,speed:0,loot:0};
 S.tower ??= {floor:1,hp:towerMaxHp(1),keys:0,lastAttack:null};
 S.weeklyBoss ??= {index:0,hp:WEEKLY_BOSSES[0].hp,lastAttackWeek:null};
+S.tower.round ??= 0;
+if(S.weeklyBoss.weekAttacks==null){
+  S.weeklyBoss.weekAttacks=S.weeklyBoss.lastAttackWeek?1:0;
+  S.weeklyBoss.lastAttackDay=S.weeklyBoss.lastAttackWeek===weekStart(today())?today():null;
+}
 S.torment ??= 0;
 function migrateRemovedDungeons(){
   S.tower ??= {floor:1,hp:towerMaxHp(1),keys:0,lastAttack:null,torment:null};
@@ -1584,13 +1640,20 @@ function buyForgeUpgrade(stat){
   return true;
 }
 function claimJourneyRewards(torment=S.torment){
-  const reached=Math.min(JOURNEY_CHAPTERS,Math.floor(S.activeDays/WEEKLY_DAYS));
+  const round=S.journeyRound,base=round*JOURNEY_CHAPTERS;
+  const reached=base+Math.min(JOURNEY_CHAPTERS,Math.floor(Math.max(0,S.activeDays-S.journeyStartDays)/journeyDaysRequired(round)));
   while(S.weeklyRewards<reached){
-    const chapter=++S.weeklyRewards;
-    const coins=Math.round((35+3*chapter)*TORMENTS[torment].reward),materials=materialReward((3+Math.min(chapter,20))*TORMENTS[torment].reward);
+    const chapter=++S.weeklyRewards-base,multiplier=1+round*.25;
+    const coins=Math.round((35+3*chapter)*multiplier*TORMENTS[torment].reward),materials=materialReward((3+Math.min(chapter,20))*multiplier*TORMENTS[torment].reward);
     S.coins+=coins;S.materials+=materials;
-    log(`🌟 Travesía ${chapter}/${JOURNEY_CHAPTERS}: +${coins} monedas y +${materials} fragmentos`);
+    log(`🌟 Travesía ${chapter}/${JOURNEY_CHAPTERS} · vuelta ${round+1}: +${coins} monedas y +${materials} fragmentos`);
   }
+}
+function startJourneyRound(){
+  if(S.weeklyRewards<(S.journeyRound+1)*JOURNEY_CHAPTERS) return false;
+  S.journeyRound++;S.journeyStartDays=S.activeDays;
+  log(`🌌 Comienza la vuelta ${S.journeyRound+1} de la travesía`);
+  return true;
 }
 function unlockAchievements(torment=S.torment){
   for(const a of ACHIEVEMENTS){
@@ -1645,6 +1708,16 @@ function rollDay(){
   S.day=t;S.bonus={};S.completedToday=0;
   return true;
 }
+function registerRest(){
+  rollDay();
+  const day=today(),week=weekStart(day);
+  if(S.lastRest===day || S.lastActive===day) return false;
+  const days=S.restWeek===week?S.restDays:[];
+  if(days.length>=REST_WEEKLY_LIMIT) return false;
+  S.restWeek=week;S.restDays=[...days,day];S.lastRest=day;
+  log('🌿 Día de descanso registrado. La racha queda protegida.');
+  return true;
+}
 const streakMult = () => 1+Math.min(0.3,S.streak*0.02);
 
 function gain(xp){
@@ -1667,7 +1740,8 @@ function hit(dmg,arena='mission'){
     const loot=automatic?battleLoot():1;
     const reward=Math.round((10+S[kills]*2)*bonus('coin')*type.coins*loot*rewardMultiplier);
     let materials=materialReward(type.materials*rewardMultiplier);
-    if(materials>0 && !automatic && S.skillStyle==='seeker' && Math.random()<.1) materials*=2;
+    const duplicateChance=(S.skillStyle==='seeker' ? .1 : 0)+(passiveMastery('wealth5') ? .1 : 0);
+    if(materials>0 && !automatic && duplicateChance>0 && Math.random()<duplicateChance) materials*=2;
     S.coins+=reward;gain(Math.round((20+S[kills]*3)*bonus('xp')*type.xp*loot*rewardMultiplier));
     S.materials+=materials;
     const monster=automatic?MISSION_MONSTERS[autoEncounter(S.autoKills).species].name:encounter.legacy?MONSTERS[S[kills]%MONSTERS.length]:encounter.kind==='lucky'?'🍀 Goblin de la suerte':MISSION_MONSTERS[encounter.species].name;
@@ -1686,7 +1760,7 @@ function hit(dmg,arena='mission'){
 }
 function settleBattle(now=Date.now()){
   const elapsed=Math.max(0,now-S.battleUpdated);
-  const capped=Math.min(elapsed,OFFLINE_LIMIT);
+  const limit=offlineLimit(),capped=Math.min(elapsed,limit);
   const interval=battleInterval();
   const ticks=Math.floor(capped/interval);
   let lastCritical=null;
@@ -1696,10 +1770,10 @@ function settleBattle(now=Date.now()){
       lastCritical=null;
       hit(criticalDamage(battleDamage(),damage=>{lastCritical=damage}),'auto');
     }
-    S.battleUpdated=elapsed>OFFLINE_LIMIT?now:now-(capped%interval);
+    S.battleUpdated=elapsed>limit?now:now-(capped%interval);
     unlockAchievements(S.autoTorment);
     if(elapsed>=60000){
-      log(`⌛ Autobatalla: ${Math.floor(capped/60000)} min, ${S.autoKills-killsBefore} monstruos, +${S.coins-coinsBefore} monedas${elapsed>OFFLINE_LIMIT?' (límite de 8 h)':''}.`);
+      log(`⌛ Autobatalla: ${Math.floor(capped/60000)} min, ${S.autoKills-killsBefore} monstruos, +${S.coins-coinsBefore} monedas${elapsed>limit?` (límite de ${limit/3600000} h)`:''}.`);
     }
   }else if(now<S.battleUpdated) S.battleUpdated=now;
   return {ticks,lastCritical};
@@ -1722,7 +1796,7 @@ function attackTower(day=today(),onCritical){
   if(tower.floor>TOWER_FLOORS || tower.keys<1 || tower.lastAttack===day) return false;
   if(tower.torment===null){tower.torment=S.torment;tower.hp=Math.round(towerMaxHp(tower.floor)*TORMENTS[tower.torment].hp)}
   tower.rewardTorment=Math.min(tower.rewardTorment??tower.torment,tower.torment);
-  const torment=tower.rewardTorment,multiplier=combatReward(torment);
+  const torment=tower.rewardTorment,multiplier=combatReward(torment)*towerRewardMultiplier(tower.round||0);
   const before=tower.hp,max=Math.round(towerMaxHp(tower.floor)*TORMENTS[tower.torment].hp);
   tower.keys--;tower.lastAttack=day;tower.hp-=criticalDamage(24*bonus('dmg'),onCritical);
   if(tower.hp<=0){
@@ -1732,22 +1806,30 @@ function attackTower(day=today(),onCritical){
     tower.floor++;tower.hp=tower.floor<=TOWER_FLOORS?towerMaxHp(tower.floor):0;tower.torment=null;tower.rewardTorment=null;
     log(`🗼 Planta ${floor} superada: +${coins} monedas, +${xp} XP y +${materials} fragmentos`);
     unlockAchievements(torment);
-  }else grantChallengeProgress('Torre',before-tower.hp,max,20+tower.floor*5,25+tower.floor*4,2+Math.floor(tower.floor/10),torment);
+  }else grantChallengeProgress('Torre',before-tower.hp,max,20+tower.floor*5,25+tower.floor*4,2+Math.floor(tower.floor/10),torment,towerRewardMultiplier(tower.round||0));
+  return true;
+}
+function startTowerRound(){
+  if(S.tower.floor<=TOWER_FLOORS) return false;
+  S.tower.round++;S.tower.floor=1;S.tower.hp=towerMaxHp(1);
+  S.tower.torment=null;S.tower.rewardTorment=null;
+  log(`🗼 Comienza la vuelta ${S.tower.round+1} de la torre`);
   return true;
 }
 function attackWeeklyBoss(day=today(),onCritical){
   const progress=S.weeklyBoss,boss=bossFor(progress.index),week=weekStart(day);
-  if(progress.lastAttackWeek===week) return false;
+  const used=progress.lastAttackWeek===week?(progress.weekAttacks??1):0;
+  if(used>=BOSS_WEEKLY_LIMIT || progress.lastAttackDay===day) return false;
   if(progress.torment===null){progress.torment=S.torment;progress.hp=Math.round(bossBaseHp(progress.index)*TORMENTS[progress.torment].hp)}
   progress.rewardTorment=Math.min(progress.rewardTorment??progress.torment,progress.torment);
   const torment=progress.rewardTorment,multiplier=combatReward(torment);
   const max=Math.round(bossBaseHp(progress.index)*TORMENTS[progress.torment].hp);
   const before=progress.hp;
-  const resistance=bossResistance(boss,progress.hp,max,progress.hits||0);
-  progress.lastAttackWeek=week;progress.hits=(progress.hits||0)+1;
+  progress.lastAttackWeek=week;progress.lastAttackDay=day;progress.weekAttacks=used+1;progress.hits=(progress.hits||0)+1;
   let wasCritical=false;
   const baseDamage=40*bonus('dmg'),damage=criticalDamage(baseDamage,()=>{wasCritical=true});
-  const dealt=damage*(1-(S.skillStyle==='hunter'&&wasCritical?0:resistance));
+  const resistance=effectiveBossResistance(boss,before,max,progress.hits-1,wasCritical);
+  const dealt=damage*(1-resistance);
   progress.hp-=dealt;
   if(wasCritical&&onCritical) onCritical(dealt);
   if(progress.hp<=0){
@@ -1763,8 +1845,8 @@ function attackWeeklyBoss(day=today(),onCritical){
   }
   return true;
 }
-function grantChallengeProgress(name,damage,max,coins,xp,materials,torment){
-  const fraction=Math.min(1,Math.max(0,damage/max))*.2*combatReward(torment);
+function grantChallengeProgress(name,damage,max,coins,xp,materials,torment,roundMultiplier=1){
+  const fraction=Math.min(1,Math.max(0,damage/max))*.2*combatReward(torment)*roundMultiplier;
   const gold=Math.floor(coins*bonus('coin')*fraction);
   const experience=Math.floor(xp*bonus('xp')*fraction);
   const fragments=Math.floor(materials*materialMultiplier()*fraction);
@@ -1865,6 +1947,7 @@ function save(){localStorage.setItem(KEY,JSON.stringify(S))}
 function validateBackup(data){
   if(!data || data.format!=='fitquest-save' || data.version!==1 || !data.state || typeof data.state!=='object' || Array.isArray(data.state)) return false;
   const s=data.state;
+  if(s.packMisses!=null&&(!Number.isInteger(s.packMisses)||s.packMisses<0||s.packMisses>PACK_GUARANTEE_MISSES)) return false;
   const numbers=['level','xp','coins','streak','kills','monsterHp','autoMonsterHp','missionKills','autoKills','battleUpdated','totalMissions','packsOpened','challengeClears','materials','activeDays','weeklyRewards','completedToday','missionScale','torment'];
   if(numbers.some(key=>!Number.isFinite(s[key])||s[key]<0) || !Number.isInteger(s.level) || s.level<1 || !Number.isInteger(s.torment) || !TORMENTS[s.torment] || s.level<TORMENTS[s.torment].level) return false;
   if(![50,75,100,125,150].includes(s.missionScale)) return false;
@@ -1903,6 +1986,16 @@ function validateBackup(data){
      !validTorment(s.tower.torment)||!validTorment(s.weeklyBoss.torment)||
      !Number.isInteger(s.encounter.torment)||!TORMENTS[s.encounter.torment]||
      !Number.isInteger(s.autoTorment)||!TORMENTS[s.autoTorment]) return false;
+  const validDay=day=>typeof day==='string' && /^\d{4}-\d{2}-\d{2}$/.test(day) &&
+    Number.isFinite(Date.parse(day)) && new Date(day).toISOString().slice(0,10)===day;
+  if((s.tower.round!=null&&(!Number.isInteger(s.tower.round)||s.tower.round<0)) ||
+     (s.journeyRound!=null&&(!Number.isInteger(s.journeyRound)||s.journeyRound<0)) ||
+     (s.journeyStartDays!=null&&(!Number.isInteger(s.journeyStartDays)||s.journeyStartDays<0||s.journeyStartDays>s.activeDays)) ||
+     (s.journeyRound!=null&&(s.weeklyRewards<s.journeyRound*JOURNEY_CHAPTERS||s.weeklyRewards>(s.journeyRound+1)*JOURNEY_CHAPTERS)) ||
+     (s.weeklyBoss.weekAttacks!=null&&(!Number.isInteger(s.weeklyBoss.weekAttacks)||s.weeklyBoss.weekAttacks<0||s.weeklyBoss.weekAttacks>BOSS_WEEKLY_LIMIT)) ||
+     (s.weeklyBoss.lastAttackDay!=null&&!validDay(s.weeklyBoss.lastAttackDay)) ||
+     (s.restWeek!=null&&!validDay(s.restWeek)) ||
+     (s.restDays!=null&&(!Array.isArray(s.restDays)||s.restDays.length>REST_WEEKLY_LIMIT||new Set(s.restDays).size!==s.restDays.length||s.restDays.some(day=>!validDay(day)||weekStart(day)!==s.restWeek)))) return false;
   if([s.encounter.rewardTorment,s.autoRewardTorment,s.tower.rewardTorment,s.weeklyBoss.rewardTorment].some(value=>value!=null&&!validTorment(value))) return false;
   if(s.shopStock){
     const stock=s.shopStock,validItems=items=>Array.isArray(items)&&items.every(id=>typeof id==='string'&&Object.hasOwn(ITEM,id));
@@ -2095,12 +2188,12 @@ function renderStatistics(){
       ['Misiones completadas',S.totalMissions],['Misiones hoy',S.completedToday],['Encargos activos',S.active.length],
       ['Progreso de encargos',missionProgress],['Enemigos de misión',S.missionKills],['Días de actividad',S.activeDays],
       ['Racha actual',S.streak],['Último descanso',S.lastRest||'Ninguno'],
-      ['Capítulos de travesía',`${S.weeklyRewards}/${JOURNEY_CHAPTERS}`],['Último día activo',S.lastActive||'Sin actividad']]],
+      ['Capítulos de travesía',`${S.weeklyRewards} · vuelta ${S.journeyRound+1}`],['Último día activo',S.lastActive||'Sin actividad']]],
     ['⚔️','Combate y desafíos','Victorias, progreso y estado actual',[
       ['Enemigos derrotados',S.kills],['Victorias de arena',S.autoKills],['Daño por golpe de arena',statNumber(battleDamage())],
       ['Intervalo de arena',`${statNumber(battleInterval()/1000)} s`],['Botín de arena',`+${statNumber((battleLoot()-1)*100)} %`],
-      ['Victorias de desafío',S.challengeClears],['Pisos de torre superados',Math.min(TOWER_FLOORS,S.tower.floor-1)],
-      ['Piso actual de torre',Math.min(TOWER_FLOORS+1,S.tower.floor)],['Llaves de torre',S.tower.keys],
+      ['Victorias de desafío',S.challengeClears],['Pisos de torre superados',S.tower.round*TOWER_FLOORS+S.tower.floor-1],
+      ['Piso actual de torre',`${Math.min(TOWER_FLOORS+1,S.tower.floor)} · vuelta ${S.tower.round+1}`],['Llaves de torre',S.tower.keys],
       ['Bosses derrotados',S.weeklyBoss.index],['Boss actual',boss.name],
       ['Vida restante del boss',statNumber(S.weeklyBoss.hp)],['Tormento de combate',TORMENTS[S.torment].name]]],
     ['🧙','Héroe y progresión','Nivel, poder y mejoras permanentes',[
@@ -2133,14 +2226,17 @@ function renderStatistics(){
   $('statistics-content').innerHTML=banner+groups.map(([icon,heading,description,entries])=>`<section class="overview-group"><header><span aria-hidden="true">${icon}</span><div><h3>${heading}</h3><small>${description}</small></div></header><div class="overview-grid">${statCards(entries.map(([name,value])=>[name,typeof value==='number'?statNumber(value):value]),'overview-stat')}</div></section>`).join('');
 }
 function journeyMarkup(){
-  const completed=Math.min(JOURNEY_CHAPTERS,S.weeklyRewards);
-  const progress=completed===JOURNEY_CHAPTERS?WEEKLY_DAYS:S.activeDays%WEEKLY_DAYS;
-  const percent=100*progress/WEEKLY_DAYS;
+  const completed=S.weeklyRewards-S.journeyRound*JOURNEY_CHAPTERS;
+  const required=journeyDaysRequired(S.journeyRound);
+  const progress=completed===JOURNEY_CHAPTERS?required:(S.activeDays-S.journeyStartDays)%required;
+  const percent=100*progress/required;
   const next=completed+1;
+  const multiplier=1+S.journeyRound*.25;
   const reward=completed===JOURNEY_CHAPTERS?'¡Has completado toda la travesía!':
-    `Próximo capítulo: +${Math.round((35+3*next)*TORMENTS[S.torment].reward)} monedas y +${materialReward((3+Math.min(next,20))*TORMENTS[S.torment].reward)} fragmentos`;
-  return `<div class="week-card"><div class="journey-summary"><div class="chapter">🌌 Crónicas del héroe · ${completed}/${JOURNEY_CHAPTERS}</div>
-    <p>${completed===JOURNEY_CHAPTERS?'Puedes seguir jugando a tu ritmo.':`${progress}/${WEEKLY_DAYS} días de actividad para avanzar`}</p>
+    `Próximo capítulo: +${Math.round((35+3*next)*multiplier*TORMENTS[S.torment].reward)} monedas y +${materialReward((3+Math.min(next,20))*multiplier*TORMENTS[S.torment].reward)} fragmentos`;
+  return `<div class="week-card"><div class="journey-summary"><div class="chapter">🌌 Crónicas del héroe · ${completed}/${JOURNEY_CHAPTERS} · vuelta ${S.journeyRound+1}</div>
+    <p>${completed===JOURNEY_CHAPTERS?'Puedes comenzar otra vuelta cuando quieras.':`${progress}/${required} días de actividad para avanzar`}</p>
+    ${completed===JOURNEY_CHAPTERS?'<button id="journey-next-round" type="button">🌌 Comenzar otra vuelta</button>':''}
     <p class="reward">${reward}</p><small>Los días de actividad no tienen que ser consecutivos; descansar no borra el progreso.</small></div>
     <div class="chapter-progress"><h3>${completed===JOURNEY_CHAPTERS?'🏆 Leyenda de la travesía':`✨ Camino al capítulo ${next}`}</h3>
     <div class="bar mis"><div style="width:${percent}%"></div></div>
@@ -2210,6 +2306,7 @@ function render(liveOnly=false){
   $('battle-hp').textContent=`${Math.max(0,Math.ceil(S.autoMonsterHp))}/${autoMax} HP`;
   $('battle-bar').style.width=Math.min(100,100*S.autoMonsterHp/autoMax)+'%';
   $('battle-status').innerHTML=`<span>⚔️ ${Math.round(battleDamage()*100)/100} daño</span><span>⚡ ${(battleInterval()/1000).toFixed(1)} s</span><span>💰 +${S.battleUpgrades.loot*10}% botín</span><span>🏆 ${S.autoKills} victorias</span>`;
+  $('offline-limit').textContent=`Progreso sin conexión: máximo ${offlineLimit()/3600000} horas.`;
   renderPacks();
   if(!$('statistics').hidden) renderStatistics();
   if(liveOnly && !dayChanged) return;
@@ -2249,9 +2346,19 @@ function render(liveOnly=false){
     $('missions').appendChild(el);
   }
   $('cnt').textContent=`(${S.completedToday} hoy · sin límite)`;
+  const restUsed=S.restWeek===weekStart(today())?S.restDays.length:0;
+  $('rest-day').disabled=S.lastRest===today()||S.lastActive===today()||restUsed>=REST_WEEKLY_LIMIT;
+  $('rest-status').textContent=`Descansos esta semana: ${restUsed}/${REST_WEEKLY_LIMIT} · No otorgan XP ni cuentan como actividad.`;
   $('weekly-progress').innerHTML=journeyMarkup();
   renderChar();renderAttributes();renderSkills();renderPassives();renderShop();renderAchievements();renderTorment();renderTower();renderWeeklyBoss();renderBattleUpgrades();
 }
+$('rest-day').onclick=()=>{
+  if(registerRest()){save();render()}
+  else $('rest-status').textContent='No se puede registrar un descanso hoy.';
+};
+$('weekly-progress').addEventListener('click',event=>{
+  if(event.target.id==='journey-next-round'&&startJourneyRound()){save();render()}
+});
 function renderSkills(){
   const box=$('skill-tree'),labels={dmg:'daño',xp:'XP',coin:'monedas de misiones y enemigos',crit:'probabilidad de crítico',critDamage:'daño crítico',materials:'fragmentos de recompensas'};
   const focused=document.activeElement?.dataset.skill;
@@ -2267,9 +2374,12 @@ function renderSkills(){
       button.className='skill-node';button.type='button';
       button.dataset.active=String(rank>0);button.dataset.skill=node.id;
       const required=!!(skill.requires&&!rank&&(S.skills[skill.requires]||0)<SKILL_REQUIRED);
-      button.innerHTML=`<strong>${node.name} · ${rank}/${skillMax(node)}${node.style&&S.skillStyle===node.style?' · activo':''}</strong><small>${node.style?node.description:`+${node.amount}% ${labels[node.stat]} por punto`}${required?` · requiere ${SKILL_REQUIRED} rangos en ${SKILLS[skill.requires].name} (${S.skills[skill.requires]||0}/${SKILL_REQUIRED})`:''}</small>`;
+      const styleGain=node.style==='hunter'&&S.skillStyle!=='hunter'&&(rank>0||!S.skillStyle)?15:0;
+      const wasted=node.stat==='crit'?Math.max(0,node.amount-(75-criticalChance())):Math.max(0,styleGain-(75-criticalChance()));
+      button.innerHTML=`<strong>${node.name} · ${rank}/${skillMax(node)}${node.style&&S.skillStyle===node.style?' · activo':''}</strong><small>${node.style?node.description:`+${node.amount}% ${labels[node.stat]} por punto`}${wasted?` · ⚠️ ${wasted}% supera el límite de crítico`:''}${required?` · requiere ${SKILL_REQUIRED} rangos en ${SKILLS[skill.requires].name} (${S.skills[skill.requires]||0}/${SKILL_REQUIRED})`:''}</small>`;
       button.disabled=node.style&&rank?S.skillStyle===node.style:skillPoints()<1 || rank>=skillMax(node) || required;
       button.onclick=()=>{
+        if(wasted&&!confirm(`El límite de crítico es 75 %. Esta mejora desperdiciará ${wasted} %. ¿Continuar?`)) return;
         if(node.style&&rank) selectSkillStyle(node.style);else unlockSkill(node.id);
         save();render();
       };
@@ -2282,6 +2392,7 @@ function renderSkills(){
 function renderPassives(){
   const tree=$('passive-tree'),classes=$('passive-classes'),focused=document.activeElement?.dataset.passive;
   const labels={dmg:'daño',xp:'XP',coin:'monedas de misiones y enemigos',crit:'probabilidad de crítico',critDamage:'daño crítico',materials:'fragmentos de recompensas'};
+  const masteries={war5:'Al rango 5: reduce un 25 % la resistencia de los bosses',hunt5:'Al rango 5: los críticos reducen a la mitad la resistencia restante de los bosses',wealth5:'Al rango 5: 10 % de duplicar fragmentos de enemigos de misión',sage5:'Al rango 5: hasta 12 horas de progreso sin conexión'};
   const locked=S.level<50,spent=passiveSpent();
   $('passive-points').textContent=locked?`🔒 Disponible al nivel 50 · nivel actual ${S.level}`:
     `✨ Puntos disponibles: ${passivePoints()} · invertidos: ${spent} · subclase: ${S.subclass?PASSIVE_CLASSES[S.subclass].name:'sin elegir'}`;
@@ -2290,9 +2401,11 @@ function renderPassives(){
   for(const [id,subclass] of Object.entries(PASSIVE_CLASSES)){
     const button=document.createElement('button');button.type='button';button.className='passive-class';
     button.dataset.subclass=id;button.setAttribute('aria-pressed',String(S.subclass===id));
-    button.innerHTML=`<strong>${subclass.name}</strong><small>${subclass.description}</small>`;
+    const wasted=id==='assassin'&&!S.subclass?Math.max(0,10-(75-criticalChance())):0;
+    button.innerHTML=`<strong>${subclass.name}</strong><small>${subclass.description}${wasted?` · ⚠️ ${wasted}% supera el límite de crítico`:''}</small>`;
     button.disabled=locked||spent<PASSIVE_CLASS_REQUIRED||S.subclass!==null;
     button.onclick=()=>{
+      if(wasted&&!confirm(`El límite de crítico es 75 %. Esta subclase desperdiciará ${wasted} %. ¿Continuar?`)) return;
       if(!chooseSubclass(id)){$('passive-status').textContent='No se puede seleccionar esta subclase.';return}
       save();render();$('passive-status').textContent='';
     };
@@ -2305,10 +2418,12 @@ function renderPassives(){
     for(const node of branch.nodes){
       const passive=PASSIVES[node.id],rank=S.passives[node.id]||0,button=document.createElement('button');
       const required=passive.requires&&(S.passives[passive.requires]||0)<PASSIVE_REQUIRED;
+      const wasted=node.stat==='crit'?Math.max(0,node.amount-(75-criticalChance())):0;
       button.type='button';button.className='skill-node';button.dataset.passive=node.id;button.dataset.active=String(rank>0);
-      button.innerHTML=`<strong>${node.name} · ${rank}/${PASSIVE_MAX}</strong><small>+${node.amount}% ${labels[node.stat]} por punto${required?` · requiere ${PASSIVE_REQUIRED} rangos en ${PASSIVES[passive.requires].name}`:''}</small>`;
+      button.innerHTML=`<strong>${node.name} · ${rank}/${PASSIVE_MAX}</strong><small>+${node.amount}% ${labels[node.stat]} por punto${wasted?` · ⚠️ ${wasted}% supera el límite de crítico`:''}${required?` · requiere ${PASSIVE_REQUIRED} rangos en ${PASSIVES[passive.requires].name}`:''}${masteries[node.id]?` · ${masteries[node.id]}`:''}</small>`;
       button.disabled=locked||passivePoints()<1||rank>=PASSIVE_MAX||!!required;
       button.onclick=()=>{
+        if(wasted&&!confirm(`El límite de crítico es 75 %. Este rango desperdiciará ${wasted} %. ¿Invertir el punto de todos modos?`)) return;
         if(!unlockPassive(node.id)){$('passive-status').textContent='No se puede mejorar esta pasiva.';return}
         save();render();$('passive-status').textContent='';
       };
@@ -2374,9 +2489,13 @@ function renderBattleUpgrades(){
 function renderPacks(){
   const box=$('pack-list');
   const focused=document.activeElement?.dataset.pack;
+  const misses=S.packMisses??0,unlocked=S.level>=TIER_LVL[PACK_HIGH_TIER];
+  $('pack-guarantee').textContent=`Garantía global: ${misses} / ${PACK_GUARANTEE_MISSES} sobres sin legendario o superior. `+
+    (unlocked?(misses>=PACK_GUARANTEE_MISSES?'El próximo sobre garantiza uno.':'Al alcanzar 20, el siguiente garantiza uno.'):
+      `Disponible desde el nivel ${TIER_LVL[PACK_HIGH_TIER]}; el progreso se conserva.`);
   box.replaceChildren();
   for(const pack of PACKS){
-    const locked=S.level<pack.level,odds=packOdds(pack,S.level,S.torment);
+    const locked=S.level<pack.level,odds=effectivePackOdds(pack,S.level,S.torment,misses);
     const card=document.createElement('div');card.className='pack-offer';
     const probabilities=odds.map((chance,tier)=>`<span>${TIER_ICONS[tier]} ${TIER_NAMES[tier]}: ${(chance*100).toFixed(2)} %${S.level<TIER_LVL[tier]?` (nivel ${TIER_LVL[tier]})`:''}</span>`).join('');
     card.innerHTML=`<strong>${pack.icon} ${pack.name}</strong><small>Desbloqueo: nivel ${pack.level} · ${pack.cost} monedas</small><div class="pack-odds" aria-label="Probabilidades actuales">${probabilities}</div>`;
@@ -2565,6 +2684,29 @@ function renderShop(){
     };
     row.appendChild(button);forge.appendChild(row);
   }
+  const type=$('craft-type'),tier=$('craft-tier'),previousType=type.value,previousTier=tier.value;
+  type.replaceChildren();
+  for(const [id,group] of Object.entries(GROUPS)){
+    const option=document.createElement('option');option.value=id;option.textContent=`${group.icon} ${group.label}`;type.appendChild(option);
+  }
+  if(Object.hasOwn(GROUPS,previousType)) type.value=previousType;
+  tier.replaceChildren();
+  TIER_NAMES.forEach((name,index)=>{
+    if(S.level<TIER_LVL[index]) return;
+    const option=document.createElement('option');option.value=String(index);
+    option.textContent=`${TIER_ICONS[index]} ${name} · ${CRAFT_COST[index]} fragmentos`;tier.appendChild(option);
+  });
+  if(previousTier!==''&&Number(previousTier)<TIER_NAMES.length&&S.level>=TIER_LVL[Number(previousTier)]) tier.value=previousTier;
+  const selectedTier=Number(tier.value),cost=CRAFT_COST[selectedTier],button=$('craft-button');
+  $('craft-info').textContent=`Fragmentos disponibles: ${S.materials} · Coste: ${cost} · Desmantelar: ${TIER_FRAGMENTS[selectedTier]}`;
+  button.textContent=`Fabricar · ${cost} fragmentos`;button.disabled=S.materials<cost;
+  button.onclick=()=>{
+    settleBattle();
+    const item=craftItem(type.value,Number(tier.value));
+    save();render();
+    $('craft-status').textContent=item?`${TIER_ICONS[item.tier]} ${item.name} añadido al inventario.`:'No se puede fabricar este objeto.';
+  };
+  type.onchange=()=>renderShop();tier.onchange=()=>renderShop();
 }
 function renderAchievements(){
   const box=$('achievement-list');box.innerHTML='';
@@ -2585,17 +2727,20 @@ function challengeStage(species,kind,label){
 function renderTower(){
   const box=$('dungeon-tower'),tower=S.tower;
   if(tower.floor>TOWER_FLOORS){
-    box.innerHTML='<h3>🗼 Torre de 100 plantas</h3><p>🏆 ¡Has conquistado la torre!</p>';
+    box.innerHTML=`<h3>🗼 Torre de 100 plantas</h3><p>🏆 ¡Has conquistado la vuelta ${tower.round+1}!</p>`;
+    const next=document.createElement('button');next.type='button';next.textContent='🗼 Comenzar otra vuelta';
+    next.onclick=()=>{if(startTowerRound()){save();render()}};
+    box.appendChild(next);
     return;
   }
-  const floor=tower.floor,torment=tower.torment??S.torment,difficulty=TORMENTS[torment],lootIndex=Math.min(tower.rewardTorment??torment,torment),loot=TORMENTS[lootIndex],multiplier=combatReward(lootIndex);
+  const floor=tower.floor,torment=tower.torment??S.torment,difficulty=TORMENTS[torment],lootIndex=Math.min(tower.rewardTorment??torment,torment),loot=TORMENTS[lootIndex],multiplier=combatReward(lootIndex)*towerRewardMultiplier(tower.round||0);
   const max=Math.round(towerMaxHp(floor)*difficulty.hp),hp=tower.torment===null?max:tower.hp,species=(floor-1)%MISSION_MONSTERS.length;
   const kind=floor%10===0?'boss':floor%5===0?'elite':'normal';
   const damage=Math.round(24*bonus('dmg')*100)/100;
   box.innerHTML=`<div class="expedition-challenge">
     ${challengeStage(species,kind,`Planta ${floor} / ${TOWER_FLOORS}`)}
     <div class="challenge-details">
-      <span class="challenge-pill">🗼 Planta ${floor} / ${TOWER_FLOORS} · 🔷 ${tower.keys} llaves</span>
+      <span class="challenge-pill">🗼 Planta ${floor} / ${TOWER_FLOORS} · vuelta ${tower.round+1} · 🔷 ${tower.keys} llaves</span>
       <h3>${MISSION_MONSTERS[species].name}</h3>
       <span class="challenge-pill">🔥 ${difficulty.name}</span>
       <div class="bar challenge-progress" aria-label="Progreso de la torre"><div style="width:${(floor-1)/TOWER_FLOORS*100}%"></div></div>
@@ -2620,7 +2765,8 @@ function renderWeeklyBoss(){
   const rank=progress.index+1,round=Math.floor(progress.index/WEEKLY_BOSSES.length)+1,position=progress.index%WEEKLY_BOSSES.length;
   const torment=progress.torment??S.torment,difficulty=TORMENTS[torment],lootIndex=Math.min(progress.rewardTorment??torment,torment),loot=TORMENTS[lootIndex],multiplier=combatReward(lootIndex),max=Math.round(bossBaseHp(progress.index)*difficulty.hp);
   const hp=progress.torment===null?max:progress.hp;
-  const damage=Math.round(40*bonus('dmg')*(1-bossResistance(boss,hp,max,progress.hits||0))*100)/100;
+  const used=progress.lastAttackWeek===weekStart(today())?progress.weekAttacks:0;
+  const damage=Math.round(40*bonus('dmg')*(1-effectiveBossResistance(boss,hp,max,progress.hits||0))*100)/100;
   box.innerHTML=`<div class="expedition-challenge">
     ${challengeStage(boss.species,'boss',`Boss ${position+1} / ${WEEKLY_BOSSES.length} · vuelta ${round}`)}
     <div class="challenge-details">
@@ -2630,17 +2776,17 @@ function renderWeeklyBoss(){
       <p><small>✨ ${bossAbilityText(boss)}</small></p>
       <p>❤️ ${Math.max(0,Math.ceil(hp))} / ${max} · ⚔️ ${damage} daño</p>
       <div class="bar hp"><div style="width:${Math.max(0,100*hp/max)}%"></div></div>
-      <p><small>Un ataque en total por semana, de lunes a domingo. La vida se conserva; el siguiente boss aparece al vencer al actual.</small></p>
+      <p><small>${used}/${BOSS_WEEKLY_LIMIT} ataques esta semana (lunes a domingo), máximo uno al día. La vida se conserva; el siguiente boss aparece al vencer al actual.</small></p>
       <p><small>Victoria (${loot.name}): ${Math.round((150+rank*100)*multiplier)} monedas y ${Math.round((100+rank*80)*multiplier)} XP antes de bonos · ${materialReward((10+rank*5)*multiplier)} fragmentos. Los ataques sin victoria dan hasta un 20 % adicional proporcional al daño.</small></p>
     </div></div>
     <div class="boss-roster" aria-label="Progreso de bosses">${WEEKLY_BOSSES.map((entry,i)=>`<span>${i<position?'✅':i===position?'⚔️':'🔒'} ${entry.name}</span>`).join('')}</div>`;
   const button=document.createElement('button');button.type='button';button.className='complete';
-  button.disabled=progress.lastAttackWeek===weekStart(today());
-  button.textContent=button.disabled?'Ya atacaste esta semana':'⚔️ Atacar al boss';
+  button.disabled=used>=BOSS_WEEKLY_LIMIT||progress.lastAttackDay===today();
+  button.textContent=progress.lastAttackDay===today()?'Ya atacaste hoy':used>=BOSS_WEEKLY_LIMIT?'Sin ataques esta semana':'⚔️ Atacar al boss';
   button.onclick=()=>{
     settleBattle();let critical=null;
     const attacked=attackWeeklyBoss(today(),damage=>{critical=damage}),message=attacked?S.log[0]:'';save();render();
-    $('expedition-status').textContent=attacked?message:'No se puede atacar al boss esta semana.';
+    $('expedition-status').textContent=attacked?message:'No se puede atacar al boss hoy.';
     if(attacked&&critical!==null) showCritical($('dungeon-bosses').querySelector('.challenge-stage'),critical);
   };
   box.querySelector('.challenge-details').appendChild(button);
@@ -2743,7 +2889,9 @@ window.addEventListener('storage',event=>{
   if(event.key!==KEY || event.newValue===null) return;
   try{S=JSON.parse(event.newValue)}
   catch(error){alert('No se puede leer la partida actualizada en otra pestaña.');throw error}
-  if(!S.skills || !S.passives || !S.exerciseEnabled || S.missionScale==null){location.reload();return}
+  if(!S.skills || !S.passives || !S.exerciseEnabled || S.missionScale==null ||
+     S.packMisses==null || S.journeyRound==null || S.journeyStartDays==null ||
+     !S.restDays || S.tower?.round==null || S.weeklyBoss?.weekAttacks==null){location.reload();return}
   migrateRemovedDungeons();
   $('torment-status').textContent='';
   render();
