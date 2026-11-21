@@ -59,7 +59,6 @@
   .inventory-item[draggable="true"]{cursor:grab}
   .item-actions{display:flex;gap:6px;flex-wrap:wrap}
   .danger{border-color:#f08493;color:#ffe1e7}
-  .dungeon-card{border:1px solid #514475;border-radius:10px;padding:12px;margin:10px 0;background:#12162bdd}
   .chapter{font-size:.75em;color:#9be6d6;letter-spacing:.1em;text-transform:uppercase}
   .key-gem{display:inline-grid;place-items:center;width:44px;height:44px;border:1px solid #e3c56d;border-radius:12px;background:linear-gradient(145deg,#665225,#251b3d);font-size:1.55rem;box-shadow:0 0 16px #f4d15d55;animation:float 3s ease-in-out infinite}
   .week-card{border:1px solid #65cdb7;background:linear-gradient(120deg,#1c3b4b,#242447);border-radius:12px;padding:14px;margin:12px 0}
@@ -144,7 +143,7 @@
   .arena::before{border-color:#dfb07788;box-shadow:0 0 35px #b67dd266,inset 0 0 24px #dca87c33}
   .arena-label{color:#f3d9bd;font-weight:700}
   .creature{width:clamp(125px,12vw,185px);height:auto}
-  .quest-board .mission,.inventory-item,.dungeon-card,.attribute{border-color:#78604f;background:linear-gradient(135deg,#3b3033,#211f30);box-shadow:inset 0 1px #fff1}
+  .quest-board .mission,.inventory-item,.attribute{border-color:#78604f;background:linear-gradient(135deg,#3b3033,#211f30);box-shadow:inset 0 1px #fff1}
   .quest-board .mission{padding:15px;border-radius:12px}
   .quest-rewards span{border:1px solid #7d654b;background:#171c28;border-radius:7px}
   .encounter-tag{display:inline-block;margin-bottom:10px;padding:4px 10px;border:1px solid #a87d4c;border-radius:999px;background:#272137;color:#ffdaa0;font-size:.75rem;font-weight:700;letter-spacing:.04em}
@@ -343,10 +342,6 @@
   .expedition-section{padding:16px;border:1px solid #806346;border-radius:14px;background:linear-gradient(145deg,#312a37,#171c2b)}
   .expedition-section h3{margin:0;color:#ffe0a2;font:700 1.15rem Georgia,serif}
   .expedition-section p{color:#d8c6a9}
-  .expedition-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr));gap:10px}
-  .expedition-grid .dungeon-card{margin:0;display:flex;flex-direction:column;gap:6px}
-  .expedition-grid .dungeon-card h3,.expedition-grid .dungeon-card p{margin:0}
-  .expedition-grid .dungeon-card button{margin-top:auto}
   .expedition-challenge{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,270px),1fr));gap:14px;align-items:stretch;min-width:0}
   .expedition-challenge>*{min-width:0}
   .expedition-challenge .challenge-stage{min-height:300px;padding:70px 10px 10px;--encounter-accent:#e8bc83;--encounter-glow:#a765bb}
@@ -428,8 +423,8 @@
     #character .global-stats{margin-top:8px;padding-top:7px}
     #character .global-stats h3{margin-bottom:5px;font-size:.9rem}
     #character .global-stats th,#character .global-stats td{padding:2px 6px;font-size:.75rem}
-    #achievement-list,#dungeon-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:10px}
-    #inventory .inventory-item,#dungeon-list .dungeon-card{margin:0}
+    #achievement-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:10px}
+    #inventory .inventory-item{margin:0}
     #achievement-list .achievement{padding:12px;border:1px solid #78604f;border-radius:10px}
     body:has(#adventure:not([hidden])) .status-card,body:has(#store:not([hidden])) .status-card,body:has(#torment:not([hidden])) .status-card{padding:5px 12px;margin-bottom:6px}
     body:has(#adventure:not([hidden])) .navigation,body:has(#store:not([hidden])) .navigation,body:has(#torment:not([hidden])) .navigation{padding:5px;margin-bottom:6px}
@@ -575,7 +570,7 @@
   <button type="button" role="tab" id="tab-achievements" data-section="achievements" aria-controls="achievements" aria-selected="false" tabindex="-1">🏆 Logros</button>
   <button type="button" role="tab" id="tab-packs" data-section="packs" aria-controls="packs" aria-selected="false" tabindex="-1">🎁 Sobres</button>
   <button type="button" role="tab" id="tab-battle" data-section="battle" aria-controls="battle" aria-selected="false" tabindex="-1">⚔️ Autobatalla</button>
-  <button type="button" role="tab" id="tab-dungeons" data-section="dungeons" aria-controls="dungeons" aria-selected="false" tabindex="-1">🔑 Mazmorras</button>
+  <button type="button" role="tab" id="tab-dungeons" data-section="dungeons" aria-controls="dungeons" aria-selected="false" tabindex="-1">🏰 Desafíos</button>
   <button type="button" role="tab" id="tab-torment" data-section="torment" aria-controls="torment" aria-selected="false" tabindex="-1">🔥 Tormento</button>
 </div>
 
@@ -652,7 +647,7 @@
       <tr><th scope="row">📜 Misiones completadas</th><td id="stat-missions"></td></tr>
       <tr><th scope="row">⚔️ Monstruos derrotados</th><td id="stat-kills"></td></tr>
       <tr><th scope="row">🌱 Días de actividad</th><td id="stat-days"></td></tr>
-      <tr><th scope="row">🔑 Mazmorras completadas</th><td id="stat-dungeons"></td></tr>
+      <tr><th scope="row">🏆 Victorias de desafío</th><td id="stat-dungeons"></td></tr>
       <tr><th scope="row">🎁 Sobres abiertos</th><td id="stat-packs"></td></tr>
       <tr><th scope="row">🏆 Logros desbloqueados</th><td id="stat-achievements"></td></tr>
       <tr><th scope="row">🗺️ Capítulos completados</th><td id="stat-chapters"></td></tr>
@@ -697,7 +692,7 @@
 <section id="achievements" role="tabpanel" aria-labelledby="tab-achievements" hidden>
 <div class="card">
   <h2>🏆 Sala de trofeos</h2>
-  <p>Retos de misiones, caza, botín, mazmorras y travesía. Sus mejoras son permanentes. Las monedas y fragmentos indicados son valores base, multiplicados por el tormento al desbloquearlos.</p>
+  <p>Retos de misiones, caza, botín, desafíos y travesía. Sus mejoras son permanentes. Las monedas y fragmentos indicados son valores base, multiplicados por el tormento al desbloquearlos.</p>
   <div id="achievement-list"></div>
 </div>
 </section>
@@ -753,29 +748,12 @@
 <div class="card expedition-hub">
   <div class="expedition-heading"><div><h2>🏰 Portal de desafíos</h2><p>Elige tu próxima aventura.</p></div><span class="key-gem" aria-hidden="true">🗝️</span></div>
   <div class="expedition-nav" aria-label="Desafíos disponibles">
-    <button type="button" data-dungeon-view="classic" aria-pressed="true" aria-controls="dungeon-classic">🗝️ Expediciones</button>
-    <button type="button" data-dungeon-view="tower" aria-pressed="false" aria-controls="dungeon-tower">🗼 Torre de 100 plantas</button>
+    <button type="button" data-dungeon-view="tower" aria-pressed="true" aria-controls="dungeon-tower">🗼 Torre de 100 plantas</button>
     <button type="button" data-dungeon-view="bosses" aria-pressed="false" aria-controls="dungeon-bosses">👑 Bosses semanales</button>
-    <button type="button" data-dungeon-view="level" aria-pressed="false" aria-controls="dungeon-level">⚔️ Mazmorras por nivel</button>
   </div>
   <p id="expedition-status" role="status" aria-live="polite"></p>
-  <div id="dungeon-classic" class="expedition-section">
-    <div id="dungeon-run"></div>
-    <h3>🗝️ Mazmorras del vacío</h3>
-    <p id="dungeon-keys"></p>
-    <p id="dungeon-daily-status"></p>
-    <p><small>Primera misión diaria: 3 % de hallar una llave, garantizada tras 13 días de actividad sin hallazgo. Una llave y los días necesarios abren cada mazmorra para siempre.</small></p>
-    <div id="dungeon-list" class="expedition-grid"></div>
-  </div>
-  <div id="dungeon-tower" class="expedition-section" hidden></div>
+  <div id="dungeon-tower" class="expedition-section"></div>
   <div id="dungeon-bosses" class="expedition-section" hidden></div>
-  <div id="dungeon-level" class="expedition-section" hidden>
-    <h3>⚔️ Mazmorras por nivel</h3>
-    <p>Se abren por nivel, sin llaves ni límite diario. El combate es automático, incluso sin conexión; solo puedes tener una mazmorra en curso.</p>
-    <p id="level-dungeon-status"></p>
-    <div id="level-dungeon-run"></div>
-    <div id="level-dungeon-list" class="expedition-grid"></div>
-  </div>
 </div>
 </section>
 
@@ -909,7 +887,7 @@ const TIER_ICONS=['⚪','🟢','🔷','🌟','🟣','🔴','🌈'];
 const TIER_FRAGMENTS=[2,5,12,25,40,65,100];
 const STAT_TXT={dmg:'daño',xp:'XP',coin:'monedas'};
 const ATTRIBUTES={
-  dmg:{name:'Poder',icon:'⚔️',description:'Aumenta el daño en misiones, arena y mazmorras.'},
+  dmg:{name:'Poder',icon:'⚔️',description:'Aumenta el daño en misiones, arena, torre y bosses.'},
   xp:{name:'Sabiduría',icon:'📘',description:'Aumenta la experiencia obtenida.'},
   coin:{name:'Fortuna',icon:'🪙',description:'Aumenta las monedas de misiones y enemigos.'}
 };
@@ -976,7 +954,7 @@ const ACHIEVEMENTS=[
   {id:'level15',name:'Héroe veterano',description:'Alcanza el nivel 15',stat:'dmg',pct:5,goal:15,value:s=>s.level},
   {id:'pack10',name:'Coleccionista',description:'Abre 10 sobres',stat:'xp',pct:3,goal:10,value:s=>s.packsOpened},
   ...[7,30,90,180,365].map((days,i)=>({id:`days${days}`,name:['Recluta','Viajero','Veterano','Guardián','Leyenda anual'][i],description:`Entrena en ${days} días diferentes`,stat:['xp','coin','dmg','xp','dmg'][i],pct:[2,3,4,5,8][i],goal:days,value:s=>s.activeDays})),
-  {id:'dungeon5',name:'Explorador del vacío',description:'Completa 5 expediciones',stat:'dmg',pct:3,goal:5,value:s=>s.dungeonClears},
+  {id:'dungeon5',name:'Campeón de desafíos',description:'Consigue 5 victorias en la arena, torre o bosses',stat:'dmg',pct:3,goal:5,value:s=>s.challengeClears},
   ...[3,14,21,42,63,105,156,240,300].map((days,i)=>({
     id:`days${days}`,name:`Sendero del héroe ${i+1}`,description:`Completa misiones en ${days} días diferentes`,
     stat:['xp','coin','dmg'][i%3],pct:1,goal:days,value:s=>s.activeDays
@@ -990,8 +968,8 @@ const ACHIEVEMENTS=[
     stat:['dmg','xp','coin'][i%3],pct:1,goal:count,value:s=>s.kills
   })),
   ...[1,10,25,50,100].map((count,i)=>({
-    id:`dungeons-extra-${count}`,name:`Expedicionario ${i+1}`,description:`Completa ${count} expediciones`,
-    stat:['coin','dmg','xp'][i%3],pct:1,goal:count,value:s=>s.dungeonClears
+    id:`dungeons-extra-${count}`,name:`Campeón ${i+1}`,description:`Consigue ${count} victorias en la arena, torre o bosses`,
+    stat:['coin','dmg','xp'][i%3],pct:1,goal:count,value:s=>s.challengeClears
   })),
   ...[1,5,20,50].map((count,i)=>({
     id:`packs-extra-${count}`,name:`Buscatesoros ${i+1}`,description:`Abre ${count} sobres`,
@@ -1028,9 +1006,9 @@ const ACHIEVEMENTS=[
     (i,goal)=>({coins:35+goal*3,materials:i>=3?10+i*4:0,keys:goal===365?1:0})
   ),
   ...milestoneAchievements(
-    'dungeons','Expedicionario','Expediciones completadas:',
+    'dungeons','Campeón','Victorias en arena, torre o bosses:',
     [1,2,5,10,15,25,50,75,100,150,250],
-    s=>s.dungeonClears,['dmg','coin','xp'],
+    s=>s.challengeClears,['dmg','coin','xp'],
     (i,goal)=>({coins:50+goal*4,materials:15+goal,keys:goal===100?1:0,item:goal===50?'shield_2_0':null})
   ),
   ...milestoneAchievements(
@@ -1120,7 +1098,7 @@ const heroPower=()=>S.level+Object.keys(ATTRIBUTES).reduce((sum,stat)=>sum+statB
 const heroEvolution=power=>Math.max(1,Math.min(100,Math.floor((power-1)/10)+1));
 const globalStats=()=>({
   missions:S.totalMissions,kills:S.kills,days:S.activeDays,
-  dungeons:S.dungeonClears,packs:S.packsOpened,achievements:S.achievements.length,
+  dungeons:S.challengeClears,packs:S.packsOpened,achievements:S.achievements.length,
   chapters:S.weeklyRewards,streak:S.streak
 });
 const inventoryEquippedFirst=ids=>{
@@ -1179,31 +1157,6 @@ function drawPack(id,stat=null){
   return {message,tier,item:itemById(instance)};
 }
 function openPack(id){return drawPack(id)?.message??null}
-const DUNGEONS=[
-  {id:'crypt',name:'Cripta de las Sombras',description:'Los ecos de la primera expedición.',hp:36,reward:20,days:0},
-  {id:'mire',name:'Pantano de las Almas',description:'Voces bajo el agua oscura.',hp:42,reward:23,days:7},
-  {id:'tower',name:'Torre del Espejo Roto',description:'Sombras que imitan a los héroes.',hp:48,reward:26,days:14},
-  {id:'forge',name:'Forja Espectral',description:'Antiguos guardianes de metal.',hp:54,reward:30,days:21},
-  {id:'forest',name:'Bosque Maldito',description:'Raíces y colmillos acechan en la oscuridad.',hp:60,reward:35,days:30},
-  {id:'catacombs',name:'Catacumbas del Eco',description:'Susurros en piedra antigua.',hp:75,reward:42,days:45},
-  {id:'abyss',name:'Abismo Carmesí',description:'Un portal abierto hacia enemigos más fuertes.',hp:90,reward:50,days:60},
-  {id:'observatory',name:'Observatorio Roto',description:'Un cielo repleto de ojos.',hp:110,reward:60,days:75},
-  {id:'citadel',name:'Ciudadela de Ceniza',description:'Los centinelas custodian las ruinas.',hp:135,reward:70,days:90},
-  {id:'throne',name:'Trono del Eclipse',description:'Un desafío para héroes veteranos.',hp:200,reward:95,days:105},
-  {id:'rift',name:'Grieta del Infinito',description:'Las reglas del mundo ya no se aplican.',hp:270,reward:120,days:120},
-  {id:'crown',name:'Corona del Vacío',description:'El desafío de los antiguos.',hp:360,reward:155,days:138},
-  {id:'eternity',name:'Umbral de la Eternidad',description:'La última puerta de la travesía.',hp:480,reward:200,days:156}
-];
-const LEVEL_DUNGEONS=[
-  {id:'level-5',name:'Santuario olvidado',description:'Las primeras pruebas de un héroe.',level:5,hp:50,reward:30},
-  {id:'level-10',name:'Foso de los colmillos',description:'Un territorio salvaje y peligroso.',level:10,hp:75,reward:45},
-  {id:'level-15',name:'Fortaleza de ceniza',description:'Guerreros perdidos entre las llamas.',level:15,hp:110,reward:60},
-  {id:'level-20',name:'Palacio sumergido',description:'Secretos en las profundidades.',level:20,hp:160,reward:80},
-  {id:'level-30',name:'Templo de la tormenta',description:'La furia de los antiguos.',level:30,hp:240,reward:110},
-  {id:'level-40',name:'Abismo astral',description:'Las estrellas ocultan guardianes.',level:40,hp:360,reward:150},
-  {id:'level-50',name:'Trono del dragón',description:'El reino de una criatura legendaria.',level:50,hp:500,reward:210},
-  {id:'level-75',name:'Corazón del infinito',description:'Una prueba para héroes veteranos.',level:75,hp:750,reward:300}
-];
 const WEEKLY_BOSSES=[
   {name:'Colmillo de la noche',species:2,hp:180},
   {name:'Señor de la cripta',species:11,hp:300},
@@ -1239,14 +1192,12 @@ function selectTorment(index,now=Date.now()){
 }
 const TOWER_FLOORS=100;
 const towerMaxHp=floor=>24+floor*2;
-const dungeonById=id=>DUNGEONS.find(d=>d.id===id)||LEVEL_DUNGEONS.find(d=>d.id===id);
-const KEY_CHANCE=.03, KEY_PITY=13, DUNGEON_ENEMIES=3;
 const FULL_REWARD_MISSIONS=6, WEEKLY_DAYS=3, JOURNEY_CHAPTERS=52;
 
 const fresh = () => ({level:1,xp:0,coins:0,owned:[],eq:{},streak:0,kills:0,
   day:today(),done:{},bonus:{},lastActive:null,lastRest:null,monsterHp:monsterHp(0),log:[],active:pickMissions(),completedToday:0,
   targets:{},missionTorments:{},totalMissions:0,packsOpened:0,achievements:[],missionKills:0,autoKills:0,autoMonsterHp:monsterHp(0),autoTorment:0,battleUpdated:Date.now(),
-  keys:0,keyPity:0,unlockedDungeons:['crypt'],dungeonRun:null,lastDungeonDay:null,dungeonClears:0,materials:0,activeDays:0,lastActivityDay:null,
+  challengeClears:0,materials:0,activeDays:0,lastActivityDay:null,
   weeklyRewards:0,balanceVersion:1,unlimitedMissionsVersion:1,upgrades:{},attributes:{dmg:0,xp:0,coin:0},encounter:nextEncounter(0),
   missionDifficultyVersion:1,legacyMissions:{},shopStock:null,forgeRanks:{dmg:0,xp:0,coin:0},forgeLastWeek:null,forgeWeek:null,forgeWeekPurchases:0,
   battleUpgrades:{damage:0,speed:0,loot:0},
@@ -1265,12 +1216,6 @@ S.autoTorment ??= 0;
 S.totalMissions ??= 0;
 S.packsOpened ??= 0;
 S.achievements ??= [];
-S.keys ??= 0;
-S.keyPity ??= 0;
-S.unlockedDungeons ??= ['crypt'];
-S.dungeonRun ??= null;
-S.lastDungeonDay ??= null;
-S.dungeonClears ??= 0;
 S.materials ??= 0;
 S.activeDays ??= 0;
 S.lastActivityDay ??= null;
@@ -1286,16 +1231,13 @@ S.battleUpgrades ??= {damage:0,speed:0,loot:0};
 S.tower ??= {floor:1,hp:towerMaxHp(1),keys:0,lastAttack:null};
 S.weeklyBoss ??= {index:0,hp:WEEKLY_BOSSES[0].hp,lastAttackWeek:null};
 S.torment ??= 0;
-if(S.dungeonRun && S.dungeonRun.torment==null) S.dungeonRun.torment=0;
-if(S.dungeonRun && dungeonById(S.dungeonRun.id)?.level!=null && S.dungeonRun.autoUpdated==null){
-  const run=S.dungeonRun,dungeon=dungeonById(run.id);
-  const previousMax=dungeonMaxHp(dungeon,run.stage,run.torment);
-  run.hp=run.hp/previousMax*dungeonMaxHp(dungeon,DUNGEON_ENEMIES-1,run.torment);
-  run.rewardEnemies=DUNGEON_ENEMIES-run.stage;
-  run.stage=DUNGEON_ENEMIES-1;
-  run.autoUpdated=Date.now();
+function migrateRemovedDungeons(){
+  S.tower ??= {floor:1,hp:towerMaxHp(1),keys:0,lastAttack:null,torment:null};
+  S.tower.keys ??= 0;
+  S.challengeClears ??= S.dungeonClears ?? 0;
+  if(S.keys!=null){S.tower.keys+=S.keys;delete S.keys}
 }
-if(S.dungeonRun && S.dungeonRun.autoUpdated==null) S.dungeonRun.autoUpdated=Date.now();
+migrateRemovedDungeons();
 if(!Object.hasOwn(S.tower,'torment')) S.tower.torment=S.tower.floor<=TOWER_FLOORS&&S.tower.hp<towerMaxHp(S.tower.floor)?0:null;
 if(!Object.hasOwn(S.weeklyBoss,'torment')) S.weeklyBoss.torment=WEEKLY_BOSSES[S.weeklyBoss.index]&&S.weeklyBoss.hp<WEEKLY_BOSSES[S.weeklyBoss.index].hp?0:null;
 let legacyTicks=0;
@@ -1396,7 +1338,7 @@ function unlockAchievements(torment=S.torment){
       const reward=a.reward||{};
       if(reward.coins) S.coins+=Math.round(reward.coins*TORMENTS[torment].reward);
       if(reward.materials) S.materials+=Math.round(reward.materials*TORMENTS[torment].reward);
-      if(reward.keys) S.keys+=reward.keys;
+      if(reward.keys) S.tower.keys+=reward.keys;
       if(reward.item&&ITEM[reward.item]) addItem(reward.item);
       log(`🏆 Logro: ${a.name} · ${achievementRewardText(a,torment)}`);
     }
@@ -1406,7 +1348,7 @@ function achievementRewardText(a,torment=0){
   const reward=a.reward||{},parts=[`+${a.pct}% ${STAT_TXT[a.stat]}`];
   if(reward.coins) parts.push(`+${Math.round(reward.coins*TORMENTS[torment].reward)} 🪙`);
   if(reward.materials) parts.push(`+${Math.round(reward.materials*TORMENTS[torment].reward)} 🔩`);
-  if(reward.keys) parts.push(`+${reward.keys} 🔑`);
+  if(reward.keys) parts.push(`+${reward.keys} 🔷 (torre)`);
   if(reward.item&&ITEM[reward.item]) parts.push(`🎁 ${ITEM[reward.item].name}`);
   return parts.join(' · ');
 }
@@ -1451,6 +1393,7 @@ function hit(dmg,arena='mission'){
     S.materials+=materials;
     const monster=automatic?MISSION_MONSTERS[autoEncounter(S.autoKills).species].name:encounter.legacy?MONSTERS[S[kills]%MONSTERS.length]:encounter.kind==='lucky'?'🍀 Goblin de la suerte':MISSION_MONSTERS[encounter.species].name;
     S[kills]++;S.kills++;
+    if(automatic) S.challengeClears++;
     log(`💀 ${automatic?'Arena':'Misión'}: derrotaste a ${monster} (+${reward} 🪙${materials?`, +${materials} 🔩`:''})`);
     if(automatic) S.autoTorment=S.torment;
     else S.encounter=nextEncounter(S.missionKills,S.torment);
@@ -1459,7 +1402,6 @@ function hit(dmg,arena='mission'){
   }
 }
 function settleBattle(now=Date.now()){
-  settleLevelDungeon(now);
   const elapsed=Math.max(0,now-S.battleUpdated);
   const capped=Math.min(elapsed,OFFLINE_LIMIT);
   const interval=battleInterval();
@@ -1487,88 +1429,6 @@ function buyBattleUpgrade(stat,now=Date.now()){
   unlockAchievements();
   return true;
 }
-function awardKey(){
-  if(S.unlockedDungeons.length+S.keys>=DUNGEONS.length) return;
-  S.keyPity++;
-  if(Math.random()<KEY_CHANCE || S.keyPity>=KEY_PITY){
-    S.keys++;S.keyPity=0;
-    log('🔑 ¡Has encontrado una llave de mazmorra!');
-  }
-}
-function unlockDungeon(id){
-  const dungeon=DUNGEONS.find(d=>d.id===id);
-  if(!dungeon || S.keys<1 || S.activeDays<dungeon.days || S.unlockedDungeons.includes(id)) return false;
-  S.keys--;S.unlockedDungeons.push(id);
-  log(`🔓 Desbloqueada para siempre: ${dungeon.name}`);
-  return true;
-}
-function dungeonMaxHp(dungeon,stage,torment=0){
-  return Math.round(dungeon.hp*(stage===DUNGEON_ENEMIES-1?2:1)*TORMENTS[torment].hp);
-}
-function startDungeon(id,now=Date.now()){
-  const dungeon=dungeonById(id);
-  if(!dungeon || (dungeon.level!=null?S.level<dungeon.level:!S.unlockedDungeons.includes(id)||S.lastDungeonDay===today()) || S.dungeonRun) return false;
-  if(dungeon.level==null) S.lastDungeonDay=today();
-  const torment=S.torment;
-  const stage=dungeon.level!=null?DUNGEON_ENEMIES-1:0;
-  S.dungeonRun={id,stage,hp:dungeonMaxHp(dungeon,stage,torment),torment,autoUpdated:now};
-  if(dungeon.level!=null) S.dungeonRun.rewardEnemies=DUNGEON_ENEMIES;
-  log(`🗝️ Expedición iniciada: ${dungeon.name} · ${TORMENTS[torment].name}`);
-  return true;
-}
-function attackDungeon(damage=12*bonus('dmg')){
-  const run=S.dungeonRun;
-  if(!run) return false;
-  const dungeon=dungeonById(run.id);
-  if(!dungeon || dungeon.level!=null) return false;
-  const difficulty=TORMENTS[run.torment];
-  run.hp-=damage;
-  if(run.hp<=0){
-    const reward=Math.round(dungeon.reward*bonus('coin')*difficulty.reward);
-    S.coins+=reward;
-    gain(Math.round(dungeon.reward*bonus('xp')*difficulty.reward));
-    S.kills++;
-    log(`💀 Mazmorra: enemigo derrotado (+${reward} 🪙)`);
-    run.stage++;
-    if(run.stage===DUNGEON_ENEMIES){
-      const fragments=Math.round(5*difficulty.reward);
-      S.materials+=fragments;S.dungeonClears++;S.dungeonRun=null;
-      log(`🏆 ${dungeon.name} completada: +${fragments} fragmentos`);
-    }else run.hp=dungeonMaxHp(dungeon,run.stage,run.torment);
-    unlockAchievements(run.torment);
-  }
-  return true;
-}
-function settleLevelDungeon(now=Date.now()){
-  const run=S.dungeonRun,dungeon=run&&dungeonById(run.id);
-  if(!dungeon) return false;
-  if(now<run.autoUpdated){run.autoUpdated=now;return true}
-  let ticks=Math.floor((now-run.autoUpdated)/BATTLE_INTERVAL);
-  if(!ticks) return false;
-  if(dungeon.level==null){
-    while(ticks>0 && S.dungeonRun===run){
-      const damage=12*bonus('dmg');
-      const used=Math.min(ticks,Math.max(1,Math.ceil(run.hp/damage)));
-      run.autoUpdated+=used*BATTLE_INTERVAL;
-      ticks-=used;
-      attackDungeon(used*damage);
-    }
-    return true;
-  }
-  run.autoUpdated+=ticks*BATTLE_INTERVAL;
-  run.hp-=ticks*12*bonus('dmg');
-  if(run.hp<=0){
-    const difficulty=TORMENTS[run.torment];
-    const coins=run.rewardEnemies*Math.round(dungeon.reward*bonus('coin')*difficulty.reward);
-    const xp=run.rewardEnemies*Math.round(dungeon.reward*bonus('xp')*difficulty.reward);
-    const fragments=Math.round(5*difficulty.reward);
-    S.coins+=coins;gain(xp);S.materials+=fragments;S.kills++;S.dungeonClears++;
-    S.dungeonRun=null;
-    log(`🏆 ${dungeon.name}: boss derrotado (+${coins} 🪙, +${xp} XP, +${fragments} 🔩)`);
-    unlockAchievements(run.torment);
-  }
-  return true;
-}
 function attackTower(day=today()){
   const tower=S.tower;
   if(tower.floor>TOWER_FLOORS || tower.keys<1 || tower.lastAttack===day) return false;
@@ -1578,7 +1438,7 @@ function attackTower(day=today()){
   if(tower.hp<=0){
     const floor=tower.floor,coins=Math.round((20+floor*5)*bonus('coin')*difficulty.reward);
     const xp=Math.round((25+floor*4)*bonus('xp')*difficulty.reward),materials=Math.round((2+Math.floor(floor/10))*difficulty.reward);
-    S.coins+=coins;gain(xp);S.materials+=materials;S.kills++;
+    S.coins+=coins;gain(xp);S.materials+=materials;S.kills++;S.challengeClears++;
     tower.floor++;tower.hp=tower.floor<=TOWER_FLOORS?towerMaxHp(tower.floor):0;tower.torment=null;
     log(`🗼 Planta ${floor} superada: +${coins} monedas, +${xp} XP y +${materials} fragmentos`);
     unlockAchievements(torment);
@@ -1594,7 +1454,7 @@ function attackWeeklyBoss(day=today()){
   if(progress.hp<=0){
     const rank=progress.index+1,coins=Math.round((150+rank*100)*bonus('coin')*difficulty.reward);
     const xp=Math.round((100+rank*80)*bonus('xp')*difficulty.reward),materials=Math.round((10+rank*5)*difficulty.reward);
-    S.coins+=coins;gain(xp);S.materials+=materials;S.kills++;
+    S.coins+=coins;gain(xp);S.materials+=materials;S.kills++;S.challengeClears++;
     progress.index++;progress.hp=WEEKLY_BOSSES[progress.index]?.hp||0;progress.torment=null;
     log(`👑 ${boss.name} derrotado: +${coins} monedas, +${xp} XP y +${materials} fragmentos`);
     unlockAchievements(torment);
@@ -1673,7 +1533,6 @@ function completeMission(ex){
   S.completedToday++;
   S.totalMissions++;
   if(S.completedToday===1){
-    awardKey();
     if(S.tower.floor<=TOWER_FLOORS){S.tower.keys++;log('🔷 ¡Has encontrado una llave de la torre!')}
   }
   if(S.lastActivityDay!==today()){S.activeDays++;S.lastActivityDay=today()}
@@ -1897,13 +1756,12 @@ function render(liveOnly=false){
     complete.disabled=!!S.bonus[ex.id];
     complete.onclick=()=>{
       const index=S.active.indexOf(ex.id),before=S.totalMissions,focused=document.activeElement===complete;
-      const previous={kills:S.missionKills,level:S.level,keys:S.keys,towerKeys:S.tower.keys,achievements:S.achievements.length,chapters:S.weeklyRewards};
+      const previous={kills:S.missionKills,level:S.level,towerKeys:S.tower.keys,achievements:S.achievements.length,chapters:S.weeklyRewards};
       completeMission(ex);
       if(S.totalMissions>before){
         const updates=[`✅ ${ex.name} completada`,`Nueva misión: ${byId(S.active[index]).name}`];
         if(S.missionKills>previous.kills) updates.push(`⚔️ ${S.missionKills-previous.kills} enemigos derrotados`);
         if(S.level>previous.level) updates.push(`⭐ Nivel ${S.level}`);
-        if(S.keys>previous.keys) updates.push(`🔑 +${S.keys-previous.keys} llave`);
         if(S.tower.keys>previous.towerKeys) updates.push(`🔷 +${S.tower.keys-previous.towerKeys} llave de torre`);
         if(S.achievements.length>previous.achievements) updates.push(`🏆 ${S.achievements.length-previous.achievements} logros nuevos`);
         if(S.weeklyRewards>previous.chapters) updates.push(`🗺️ Travesía: capítulo ${S.weeklyRewards}`);
@@ -1917,7 +1775,7 @@ function render(liveOnly=false){
   }
   $('cnt').textContent=`(${S.completedToday} hoy · sin límite)`;
   $('weekly-progress').innerHTML=journeyMarkup();
-  renderChar();renderAttributes();renderShop();renderAchievements();renderTorment();renderDungeons();renderTower();renderWeeklyBoss();renderLevelDungeons();renderBattleUpgrades();
+  renderChar();renderAttributes();renderShop();renderAchievements();renderTorment();renderTower();renderWeeklyBoss();renderBattleUpgrades();
 }
 function renderTorment(){
   const current=TORMENTS[S.torment],box=$('torment-options');
@@ -2207,58 +2065,6 @@ function renderAchievements(){
     box.appendChild(el);
   }
 }
-function renderDungeons(){
-  const remaining=Math.max(0,KEY_PITY-S.keyPity);
-  $('dungeon-keys').textContent=`🔑 Llaves: ${S.keys} · días de actividad: ${S.activeDays} · ${S.unlockedDungeons.length}/${DUNGEONS.length} mazmorras abiertas${S.unlockedDungeons.length+S.keys<DUNGEONS.length?` · llave garantizada en ${remaining} días de actividad sin hallazgo`:''}`;
-  const dailyStatus=S.dungeonRun?'Hay una mazmorra en curso.':S.lastDungeonDay===today()?'Ya iniciaste tu expedición de hoy.':'Puedes iniciar una expedición hoy.';
-  $('dungeon-daily-status').textContent=dailyStatus;
-  $('level-dungeon-status').textContent=S.dungeonRun?'Hay una mazmorra en curso.':'Puedes iniciar una mazmorra desbloqueada.';
-  const list=$('dungeon-list');list.innerHTML='';
-  for(const dungeon of DUNGEONS){
-    const unlocked=S.unlockedDungeons.includes(dungeon.id);
-    const card=document.createElement('div');card.className='dungeon-card';
-    const difficulty=TORMENTS[S.torment];
-    card.innerHTML=`<div class="chapter">${unlocked?'🔓 Desbloqueada':`🔒 Cerrada · 🗝️ 1 llave · 📆 ${dungeon.days} días de actividad`}</div><h3>🏰 ${dungeon.name}</h3><p>${dungeon.description}</p><small>${difficulty.name} · ❤️ ${dungeonMaxHp(dungeon,0,S.torment)} · 👹 jefe ${dungeonMaxHp(dungeon,DUNGEON_ENEMIES-1,S.torment)} · 🪙 ${Math.round(dungeon.reward*difficulty.reward)} monedas y XP por enemigo antes de bonos</small><br>`;
-    const button=document.createElement('button');
-    if(unlocked){
-      button.textContent='Iniciar expedición';
-      button.disabled=!!S.dungeonRun || S.lastDungeonDay===today();
-      button.onclick=()=>{settleBattle();if(startDungeon(dungeon.id)){save();render()}else{$('dungeon-keys').textContent='No se puede iniciar esta expedición ahora.';save()}};
-    }else{
-      button.textContent='Desbloquear · 1 llave';button.disabled=S.keys<1 || S.activeDays<dungeon.days;
-      button.onclick=()=>{settleBattle();if(unlockDungeon(dungeon.id)){save();render()}else{$('dungeon-keys').textContent='No se puede desbloquear esta mazmorra.';save()}};
-    }
-    card.appendChild(button);list.appendChild(card);
-  }
-  const box=$('dungeon-run'),levelBox=$('level-dungeon-run');
-  box.innerHTML='';levelBox.innerHTML='';
-  box.hidden=!S.dungeonRun || dungeonById(S.dungeonRun.id).level!=null;
-  if(!S.dungeonRun){
-    return;
-  }
-  const run=S.dungeonRun,dungeon=dungeonById(run.id);
-  const max=dungeonMaxHp(dungeon,run.stage,run.torment);
-  if(dungeon.level!=null){
-    const species=LEVEL_DUNGEONS.indexOf(dungeon)%MISSION_MONSTERS.length;
-    levelBox.innerHTML=`<div class="expedition-challenge">
-      ${challengeStage(species,'boss','⚔️ Combate automático')}
-      <div class="challenge-details"><span class="challenge-pill">👑 Boss · ${TORMENTS[run.torment].name}</span>
-      <h3>${MISSION_MONSTERS[species].name} · ${dungeon.name}</h3>
-      <p>❤️ ${Math.max(0,Math.ceil(run.hp))} / ${max} · ⚔️ ${Math.round(12*bonus('dmg')*100)/100} cada ${BATTLE_INTERVAL/1000} s</p>
-      <div class="bar hp"><div style="width:${Math.max(0,100*run.hp/max)}%"></div></div>
-      <small>La batalla continúa sin conexión hasta vencer al boss.</small></div></div>`;
-    return;
-  }
-  const species=(DUNGEONS.indexOf(dungeon)+run.stage)%MISSION_MONSTERS.length;
-  const boss=run.stage===DUNGEON_ENEMIES-1;
-  box.innerHTML=`<div class="expedition-challenge">
-    ${challengeStage(species,boss?'boss':'normal','⚔️ Combate automático')}
-    <div class="challenge-details"><span class="challenge-pill">${boss?'👑 Boss':`👹 Enemigo ${run.stage+1}/${DUNGEON_ENEMIES}`} · ${TORMENTS[run.torment].name}</span>
-    <h3>${MISSION_MONSTERS[species].name} · ${dungeon.name}</h3>
-    <p>❤️ ${Math.max(0,Math.ceil(run.hp))} / ${max} · ⚔️ ${Math.round(12*bonus('dmg')*100)/100} cada ${BATTLE_INTERVAL/1000} s</p>
-    <div class="bar hp"><div style="width:${Math.max(0,100*run.hp/max)}%"></div></div>
-    <small>La batalla continúa sin conexión.</small></div></div>`;
-}
 function challengeStage(species,kind,label){
   return `<div class="encounter-stage challenge-stage">
     <div class="encounter-light" aria-hidden="true"></div><div class="encounter-aura" aria-hidden="true"></div>
@@ -2327,23 +2133,6 @@ function renderWeeklyBoss(){
   };
   box.querySelector('.challenge-details').appendChild(button);
 }
-function renderLevelDungeons(){
-  const box=$('level-dungeon-list');box.replaceChildren();
-  for(const dungeon of LEVEL_DUNGEONS){
-    const unlocked=S.level>=dungeon.level;
-    const card=document.createElement('div');card.className='dungeon-card';
-    const difficulty=TORMENTS[S.torment];
-    card.innerHTML=`<div class="chapter">${unlocked?'🔓 Disponible':`🔒 Nivel ${dungeon.level}`}</div><h3>🏰 ${dungeon.name}</h3><p>${dungeon.description}</p><small>${difficulty.name} · 👹 boss ${dungeonMaxHp(dungeon,DUNGEON_ENEMIES-1,S.torment)} HP · 🪙 ${DUNGEON_ENEMIES*Math.round(dungeon.reward*difficulty.reward)} monedas y XP antes de bonos · ${Math.round(5*difficulty.reward)} fragmentos</small>`;
-    const button=document.createElement('button');button.type='button';
-    button.textContent=unlocked?'Iniciar expedición':`Disponible al nivel ${dungeon.level}`;
-    button.disabled=!unlocked||!!S.dungeonRun;
-    button.onclick=()=>{
-      settleBattle();const started=startDungeon(dungeon.id);save();render();
-      $('expedition-status').textContent=started?'Expedición iniciada.':'No se puede iniciar esta expedición ahora.';
-    };
-    card.appendChild(button);box.appendChild(card);
-  }
-}
 for(const button of document.querySelectorAll('[data-dungeon-view]')){
   button.addEventListener('click',()=>{
     for(const option of document.querySelectorAll('[data-dungeon-view]')){
@@ -2379,18 +2168,17 @@ render();
 save();
 setInterval(()=>{
   const previous=S.battleUpdated;
-  const previousRun=S.dungeonRun,previousRunUpdated=previousRun?.autoUpdated;
   const previousCoins=S.coins,previousLevel=S.level,previousAchievements=S.achievements.length;
   settleBattle();
-  if(S.battleUpdated!==previous || previousRun!==S.dungeonRun || previousRunUpdated!==S.dungeonRun?.autoUpdated){
+  if(S.battleUpdated!==previous){
     save();render(true);
     if(!$('store').hidden && (S.coins!==previousCoins || S.level!==previousLevel)) renderShop();
     if(!$('character').hidden && S.coins!==previousCoins) renderAttributes();
     if(!$('character').hidden && (S.level!==previousLevel || S.achievements.length!==previousAchievements)) renderChar();
     if(!$('achievements').hidden && S.achievements.length!==previousAchievements) renderAchievements();
     if(S.level!==previousLevel) renderTorment();
-    if(!$('dungeons').hidden && (S.level!==previousLevel || S.achievements.length!==previousAchievements || previousRun!==S.dungeonRun || previousRunUpdated!==S.dungeonRun?.autoUpdated)){
-      renderDungeons();renderTower();renderWeeklyBoss();renderLevelDungeons();
+    if(!$('dungeons').hidden && (S.level!==previousLevel || S.achievements.length!==previousAchievements)){
+      renderTower();renderWeeklyBoss();
     }
     if(!$('battle').hidden && S.coins!==previousCoins) renderBattleUpgrades();
     if(!$('battle').hidden) animateHit('battle-icon');
@@ -2403,6 +2191,7 @@ window.addEventListener('storage',event=>{
   if(event.key!==KEY || event.newValue===null) return;
   try{S=JSON.parse(event.newValue)}
   catch(error){alert('No se puede leer la partida actualizada en otra pestaña.');throw error}
+  migrateRemovedDungeons();
   $('torment-status').textContent='';
   render();
 });

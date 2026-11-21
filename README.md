@@ -36,8 +36,8 @@ eliminarla.
   estimación no incluye el botín de monstruos ni los logros nuevos.
   Las primeras seis misiones del día dan la recompensa completa; las
   posteriores dan el 25 % de XP, daño y monedas de misión. El botín de
-  monstruos no se reduce. Solo la primera misión del día puede generar una
-  llave. Esto evita que acumular ejercicio sea necesario para progresar.
+  monstruos no se reduce. La primera misión del día da una llave de torre.
+  Esto evita que acumular ejercicio sea necesario para progresar.
   Ya no hay un botón de descanso semanal para proteger la racha; los descansos
   registrados antes de esta versión se
   respetan al actualizar. La racha puede reiniciarse tras un día sin actividad,
@@ -111,11 +111,11 @@ eliminarla.
   sin límite de Poder, Sabiduría y Fortuna con monedas del juego. Cada rango
   añade un 1 % a daño, XP o monedas, respectivamente. El siguiente rango
   cuesta 100 + 50 monedas por rango actual. Estos bonos se suman a los del
-  equipo, forja y logros y se aplican también a la arena y las mazmorras. El panel
+  equipo, forja y logros y se aplican también a la arena, la torre y los bosses. El panel
   de estadísticas muestra el total y el aporte de cada una de estas fuentes.
   Bajo el entrenamiento se muestran las misiones, los monstruos derrotados
-  (incluidos los de misión, arena y mazmorras), los días de actividad,
-  las mazmorras completadas, los sobres, los logros y capítulos registrados,
+  (incluidos los de misión, arena, torre y bosses), los días de actividad,
+  las victorias de desafío, los sobres, los logros y capítulos registrados,
   y la racha actual.
 - **Logros:** desbloquean mejoras permanentes al alcanzar sus objetivos. Las
   misiones se cuentan desde esta versión; los niveles y monstruos derrotados
@@ -123,6 +123,9 @@ eliminarla.
   arena, cacería de misiones, torre, bosses semanales, colección, forja,
   mejoras de arena, atributos y objetivos avanzados de misiones y sobres.
   El progreso existente se reconoce automáticamente al cargar la partida.
+  Los antiguos logros de expediciones conservan su progreso y recompensas;
+  desde esta versión avanzan con nuevas victorias de arena, torre y bosses.
+  Sus recompensas de llaves ahora dan llaves de torre.
 - **Sobres:** hay cuatro tipos, comprados únicamente con monedas del juego:
   aventurero (100, nivel 1), plata (300, nivel 5), dorado (800, nivel 15)
   y arcano (1800, nivel 30). Las siete rarezas se desbloquean en los niveles
@@ -156,22 +159,9 @@ eliminarla.
   victorias, independientes de las misiones. Sus enemigos también reciben
   la vida y el botín del tormento asignado al aparecer. Las partidas anteriores
   conservan su progreso y empiezan con las mejoras de arena a cero.
-- **Mazmorras:** la cripta está abierta desde el principio. Hay doce más,
-  que requieren una llave y entre 7 y 156 días de actividad distintos,
-  según la mazmorra. Los días no tienen que ser consecutivos y descansar no
-  elimina el progreso. La primera misión de cada día tiene un 3 % de
-  probabilidad de otorgar una llave; si no sale ninguna, el día de actividad
-  número 13 la garantiza. Las demás misiones del día no generan llaves.
-  No se generan llaves sobrantes una vez que ya hay suficientes para abrir
-  todas las mazmorras. Una llave abre una mazmorra de forma permanente.
-  Se puede iniciar una expedición del vacío al día; tiene tres encuentros,
-  el último contra un jefe. Los ataques son automáticos cada 10 segundos,
-  con los mismos bonos de equipo y logros, incluso con el juego cerrado.
-  El botín es XP y monedas por enemigo y cinco fragmentos al terminar. Las
-  expediciones ya iniciadas conservan su enemigo y vida al activar la
-  automatización.
 - **Torre de 100 plantas:** la primera misión de cada día da una llave de
-  torre distinta de las llaves de mazmorra. Se pueden acumular y cada ataque
+  torre. Las llaves de mazmorra acumuladas en partidas anteriores se convierten
+  una sola vez en llaves de torre. Se pueden acumular y cada ataque
   consume una; solo se permite un ataque al día para toda la torre. La vida
   del enemigo se conserva entre días. Derrotarlo concede monedas, XP y
   fragmentos y abre la siguiente planta; el daño sobrante no se traslada.
@@ -182,16 +172,9 @@ eliminarla.
   conserva entre semanas. Al derrotar al boss se reciben monedas, XP y
   fragmentos y se abre el siguiente. El ataque causa 40 de daño base con los
   bonos generales. Vencer al último completa el desafío.
-- **Mazmorras por nivel:** ocho expediciones adicionales se desbloquean
-  automáticamente entre los niveles 5 y 75 sin consumir llaves. Se pueden
-  repetir sin límite diario, pero solo puede haber una mazmorra activa entre
-  estas y las del vacío. Cada una enfrenta a un único boss automáticamente:
-  un golpe de 12 de daño base cada 10 segundos con los bonos generales, incluso
-  con el juego cerrado y sin límite de tiempo sin conexión. Al vencer se
-  reciben las monedas y XP de tres enemigos y 5 fragmentos, con los bonos y el
-  tormento fijado. Las expediciones por nivel que ya estaban en curso pasan al
-  boss conservando la proporción de vida restante y las recompensas pendientes;
-  el combate automático comienza al cargar esta versión.
+- **Modos retirados:** las expediciones del vacío y las mazmorras por nivel
+  dejan de estar disponibles. Los encuentros pendientes se interrumpen y no
+  otorgan recompensas adicionales; sus datos permanecen en la partida.
 - **Tormento global:** en la pestaña **Tormento**, todos los rangos están
   visibles para comparar sus efectos y seleccionar uno disponible. El santuario muestra
   la dificultad activa; los rangos bloqueados indican el nivel necesario.
@@ -209,11 +192,11 @@ eliminarla.
   permanentes de logros no cambian. Las recompensas de capítulo se calculan
   con el tormento de la misión que lo completa.
   La dificultad se fija al asignar una misión, al aparecer un monstruo, al
-  iniciar una expedición o al atacar por primera vez cada planta o boss;
+  atacar por primera vez cada planta o boss;
   cambiarla no modifica objetivos ni enemigos en curso. El combate automático
   pendiente se calcula antes del cambio. Las misiones y enemigos anteriores
   a esta actualización conservan sus objetivos y vida en Normal; las
-  expediciones, plantas y bosses ya iniciados conservan su tormento. La vida y
+  plantas y bosses ya iniciados conservan su tormento. La vida y
   los fragmentos se redondean al entero más próximo; las monedas y la XP se
   redondean tras aplicar también sus bonos habituales.
 - **Progresión a largo plazo:** hay logros por 7, 30, 90, 180 y 365 días

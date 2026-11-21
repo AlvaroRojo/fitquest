@@ -228,7 +228,7 @@ test('global statistics use saved counters and all defeated monsters', () => {
   const g=game();
   assert.equal(g.run(`(() => {
     S=fresh(); S.totalMissions=12; S.kills=27; S.missionKills=5; S.autoKills=18;
-    S.activeDays=8; S.dungeonClears=2; S.packsOpened=4; S.achievements=['kill1','mission1'];
+    S.activeDays=8; S.challengeClears=2; S.packsOpened=4; S.achievements=['kill1','mission1'];
     S.weeklyRewards=3; S.streak=5; S.owned=['sword_0_0','shield_0_0'];
     const stats=globalStats();
     return stats.missions===12 && stats.kills===27 && stats.days===8 &&
@@ -299,7 +299,7 @@ test('all 100 hero evolutions have visually distinct artwork', () => {
   })()`),true);
 });
 
-test('training improves autobattle and dungeon damage without changing mission targets', () => {
+test('training improves autobattle and tower damage without changing mission targets', () => {
   const g=game();
   assert.equal(g.run(`(() => {
     S=fresh(); S.coins=100; S.battleUpdated=1000;
@@ -307,9 +307,9 @@ test('training improves autobattle and dungeon damage without changing mission t
     if(!trainAttribute('dmg'))return false;
     settleBattle(11000);
     if(Math.abs(S.autoMonsterHp-47.98)>1e-8)return false;
-    if(!startDungeon('crypt'))return false;
-    attackDungeon();
-    return Math.abs(S.dungeonRun.hp-23.88)<1e-8 &&
+    S.tower.keys=1; S.tower.hp=100; S.tower.torment=0;
+    if(!attackTower('2026-01-01'))return false;
+    return Math.abs(S.tower.hp-75.76)<1e-8 &&
       missionTarget(byId(S.active[0]))===targetBefore;
   })()`),true);
 });
@@ -649,14 +649,14 @@ test('missions reward only the remaining legacy progress, once', () => {
   })()`), true);
 });
 
-test('missions beyond six remain playable with reduced rewards and do not roll more keys', () => {
+test('missions beyond six remain playable with reduced rewards and do not grant more tower keys', () => {
   const g=game();
   assert.equal(g.run(`(() => {
     S=fresh(); S.active=['squat','push','plank']; S.completedToday=6;
     S.battleUpdated=Date.now(); Math.random=()=>0;
     completeMission(byId('squat'));
     return S.completedToday===7 && S.totalMissions===1 &&
-      S.monsterHp===45 && S.coins===3 && S.keys===0 && S.keyPity===0;
+      S.monsterHp===45 && S.coins===3 && S.tower.keys===0;
   })()`), true);
 });
 
@@ -669,17 +669,6 @@ test('legacy completed mission at former limit is replaced without duplicate rew
   assert.equal(second.run(`S.active.includes('squat')`),false);
   assert.equal(second.run('S.coins'),40);
   assert.equal(second.run('S.completedToday'),6);
-});
-
-test('only the first daily mission can roll a dungeon key', () => {
-  const g=game();
-  assert.equal(g.run(`(() => {
-    S=fresh(); S.active=['squat','push','plank']; S.battleUpdated=Date.now();
-    Math.random=()=>0; completeMission(byId('squat'));
-    const keys=S.keys;
-    for(let i=0;i<8;i++) completeMission(byId(S.active[0]));
-    return keys===1 && S.keys===1 && S.keyPity===0 && S.completedToday===9;
-  })()`),true);
 });
 
 test('arena applies equipment and achievements and earns shared rewards', () => {
@@ -704,41 +693,49 @@ test('arena loot and experience use equipment and achievement bonuses', () => {
   })()`), true);
 });
 
-test('keys have a 3% chance, a 13-day guarantee and no surplus', () => {
-  const g = game();
-  assert.equal(g.run(`(() => {
-    S=fresh(); Math.random=()=>0.03; awardKey(); if(S.keys!==0||S.keyPity!==1)return false;
-    Math.random=()=>0.029; awardKey(); if(S.keys!==1||S.keyPity!==0)return false;
-    Math.random=()=>1; for(let i=0;i<12;i++) awardKey();
-    if(S.keys!==1||S.keyPity!==12)return false;
-    awardKey(); if(S.keys!==2||S.keyPity!==0)return false;
-    for(let i=0;i<200;i++) awardKey();
-    return S.keys===DUNGEONS.length-1 && S.keyPity===0;
-  })()`), true);
+test('removed dungeon modes leave only tower and weekly bosses in the challenge portal', () => {
+  assert.deepEqual([...html.matchAll(/data-dungeon-view="([^"]+)"/g)].map(match=>match[1]),['tower','bosses']);
+  assert.match(html, /data-dungeon-view="tower" aria-pressed="true"/);
+  assert.match(html, /id="dungeon-tower" class="expedition-section"><\/div>/);
+  assert.doesNotMatch(html, /id="dungeon-(classic|level)"/);
 });
 
-test('dungeons require a key and activity days and unlock permanently', () => {
-  const g = game();
-  assert.equal(g.run(`(() => {
-    S=fresh(); S.keys=1; S.activeDays=29;
-    if(unlockDungeon('forest') || S.keys!==1)return false;
-    S.activeDays=30;
-    if(!unlockDungeon('forest') || S.keys!==0 || !S.unlockedDungeons.includes('forest'))return false;
-    if(unlockDungeon('forest'))return false;
-    return startDungeon('forest') && !startDungeon('forest') && S.dungeonRun.id==='forest';
-  })()`), true);
-});
-
-test('old saves keep dungeon progress and initialize tower and weekly boss', () => {
+test('old dungeon keys convert once and progress and earned bonuses are preserved', () => {
   const first=game();
-  first.run(`S=fresh(); S.keys=2; S.unlockedDungeons.push('mire');
-    S.dungeonRun={id:'mire',stage:1,hp:12}; S.lastDungeonDay='2026-01-01';
-    delete S.tower; delete S.weeklyBoss; save()`);
+  first.run(`S=fresh(); S.keys=3; S.dungeonClears=9; delete S.challengeClears;
+    S.tower.keys=2; S.tower.floor=12; S.weeklyBoss.index=2; S.achievements=['dungeon5'];
+    S.dungeonRun={id:'level-5',stage:2,hp:20,torment:0,autoUpdated:1000,rewardEnemies:3};
+    S.battleUpdated=Date.now(); save()`);
   const restored=game(first.saved());
-  assert.equal(restored.run(`S.keys===2 && S.unlockedDungeons.includes('mire') &&
-    S.dungeonRun.id==='mire' && S.dungeonRun.hp===12 && S.tower.floor===1 &&
-    S.tower.hp===towerMaxHp(1) && S.tower.keys===0 &&
-    S.weeklyBoss.index===0 && S.weeklyBoss.hp===WEEKLY_BOSSES[0].hp`),true);
+  assert.equal(restored.run(`(() => {
+    if(S.tower.keys!==5 || S.challengeClears!==9 || 'keys' in S ||
+      S.tower.floor!==12 || S.weeklyBoss.index!==2 || !S.achievements.includes('dungeon5') ||
+      bonus('dmg')!==1.03) return false;
+    settleBattle(S.battleUpdated+10000);
+    if(S.dungeonRun.hp!==20 || S.challengeClears!==9) return false;
+    save(); return true;
+  })()`),true);
+  const reloaded=game(restored.saved());
+  assert.equal(reloaded.run(`S.tower.keys===5 && S.challengeClears===9 && S.dungeonRun.hp===20`),true);
+});
+
+test('future arena, tower and boss victories advance former expedition achievements', () => {
+  const g=game();
+  assert.equal(g.run(`(() => {
+    S=fresh(); S.achievements=ACHIEVEMENTS.filter(a=>a.id!=='dungeons-1').map(a=>a.id);
+    S.monsterHp=1; hit(1);
+    if(S.challengeClears!==0) return false;
+    S.autoMonsterHp=1; hit(1,'auto');
+    if(S.challengeClears!==1 || !S.achievements.includes('dungeons-1')) return false;
+    S.tower.keys=1; S.tower.hp=1; S.tower.torment=0;
+    if(!attackTower('2026-01-05') || S.challengeClears!==2 ||
+      attackTower('2026-01-05')) return false;
+    S.weeklyBoss.hp=1; S.weeklyBoss.torment=0;
+    if(!attackWeeklyBoss('2026-01-05') || S.challengeClears!==3 ||
+      attackWeeklyBoss('2026-01-05')) return false;
+    save(); return true;
+  })()`),true);
+  assert.equal(game(g.saved()).run('S.challengeClears'),3);
 });
 
 test('first mission each day awards one separate tower key', () => {
@@ -804,112 +801,6 @@ test('weekly bosses retain health, enforce one attack per week and advance once'
   assert.equal(game(restored.saved()).run('S.weeklyBoss.index'),8);
 });
 
-test('level dungeons can be repeated after unlocking but share the active encounter', () => {
-  const g=game();
-  assert.equal(g.run(`(() => {
-    S=fresh(); S.keys=2;
-    if(startDungeon('level-5') || S.keys!==2) return false;
-    S.level=5;
-    if(!startDungeon('level-5') || S.keys!==2 || startDungeon('crypt')) return false;
-    S.dungeonRun=null;
-    if(!startDungeon('level-5') || startDungeon('level-10')) return false;
-    S.dungeonRun=null;
-    if(!startDungeon('crypt')) return false;
-    if(startDungeon('level-5')) return false;
-    S.dungeonRun=null;
-    return !startDungeon('crypt') && startDungeon('level-5') && S.keys===2;
-  })()`),true);
-});
-
-test('classic expeditions fight automatically across enemies and persist offline progress', () => {
-  const g=game();
-  assert.equal(g.run(`(() => {
-    S=fresh(); S.achievements=ACHIEVEMENTS.map(a=>a.id); S.torment=1;
-    if(!startDungeon('crypt',1000)) return false;
-    settleLevelDungeon(11000);
-    if(S.dungeonRun.stage!==0 || S.dungeonRun.hp!==63-12*bonus('dmg')) return false;
-    settleLevelDungeon(16000);
-    if(S.dungeonRun.autoUpdated!==11000) return false;
-    save(); return true;
-  })()`),true);
-  const restored=game(g.saved());
-  assert.equal(restored.run(`(() => {
-    settleLevelDungeon(10000000);
-    const snapshot=JSON.stringify([S.coins,S.xp,S.materials,S.kills,S.dungeonClears]);
-    settleLevelDungeon(20000000);
-    return !S.dungeonRun && S.kills===3 && S.dungeonClears===1 && S.materials===7 &&
-      snapshot===JSON.stringify([S.coins,S.xp,S.materials,S.kills,S.dungeonClears]) &&
-      !startDungeon('crypt');
-  })()`),true);
-});
-
-test('legacy classic expedition retains its stage and health when automation starts', () => {
-  const first=game();
-  first.run(`S=fresh(); S.dungeonRun={id:'crypt',stage:1,hp:17,torment:0}; save()`);
-  const restored=game(first.saved());
-  assert.equal(restored.run(`(() => {
-    const run=S.dungeonRun, start=run.autoUpdated;
-    if(run.stage!==1 || run.hp!==17 || !Number.isFinite(start)) return false;
-    settleLevelDungeon(start+10000);
-    return run.stage===1 && run.hp===17-12*bonus('dmg');
-  })()`),true);
-});
-
-test('automatic classic expedition awards the same rewards as individual hits', () => {
-  const manual=game(), automatic=game();
-  for(const g of [manual,automatic]) g.run(`S=fresh(); S.achievements=ACHIEVEMENTS.map(a=>a.id); S.torment=3; startDungeon('crypt',1000)`);
-  manual.run(`while(S.dungeonRun) attackDungeon()`);
-  automatic.run(`settleLevelDungeon(10000000)`);
-  const result=`JSON.stringify([S.coins,S.level,S.xp,S.materials,S.kills,S.dungeonClears])`;
-  assert.equal(automatic.run(result),manual.run(result));
-});
-
-test('level dungeon boss fights automatically offline and preserves progress', () => {
-  const g=game();
-  assert.equal(g.run(`(() => {
-    S=fresh(); S.level=5; S.achievements=ACHIEVEMENTS.map(a=>a.id);
-    if(!startDungeon('level-5',1000) || attackDungeon() ||
-      S.dungeonRun.stage!==2 || S.dungeonRun.hp!==100) return false;
-    settleLevelDungeon(11000);
-    if(S.dungeonRun.hp!==100-12*bonus('dmg')) return false;
-    save(); return true;
-  })()`),true);
-  const restored=game(g.saved());
-  assert.equal(restored.run(`(() => {
-    if(S.dungeonRun.id!=='level-5' || S.dungeonRun.hp>=100) return false;
-    settleLevelDungeon(101000);
-    const snapshot=JSON.stringify([S.coins,S.xp,S.materials,S.kills,S.dungeonClears]);
-    settleLevelDungeon(9999999);
-    return !S.dungeonRun && S.dungeonClears===1 && S.kills===1 &&
-      snapshot===JSON.stringify([S.coins,S.xp,S.materials,S.kills,S.dungeonClears]);
-  })()`),true);
-});
-
-test('legacy level dungeon encounter migrates to boss without losing health proportion', () => {
-  const first=game();
-  first.run(`S=fresh(); S.level=10; S.dungeonRun={id:'level-5',stage:1,hp:25,torment:0}; save()`);
-  const restored=game(first.saved());
-  assert.equal(restored.run(`S.dungeonRun.stage===2 && S.dungeonRun.hp===50 &&
-    S.dungeonRun.rewardEnemies===2 && Number.isFinite(S.dungeonRun.autoUpdated)`),true);
-});
-
-test('level boss uses locked torment and grants pending rewards exactly once after long offline progress', () => {
-  const g=game();
-  assert.equal(g.run(`(() => {
-    S=fresh(); S.level=120; S.achievements=ACHIEVEMENTS.map(a=>a.id);
-    S.torment=12; S.battleUpdated=1000;
-    if(!startDungeon('level-5',1000)) return false;
-    const coin=3*Math.round(30*bonus('coin')*22.5),xp=3*Math.round(30*bonus('xp')*22.5);
-    selectTorment(0,1000);
-    if(S.dungeonRun.torment!==12 || S.dungeonRun.hp!==8500) return false;
-    settleLevelDungeon(1000+30*60*60*1000);
-    if(S.dungeonRun || S.coins!==coin || S.xp!==xp ||
-      S.materials!==Math.round(5*22.5) || S.kills!==1 || S.dungeonClears!==1) return false;
-    settleLevelDungeon(1000+60*60*60*1000);
-    return S.coins===coin && S.xp===xp && S.dungeonClears===1;
-  })()`),true);
-});
-
 test('torment unlocks by level and rejects locked or invalid selections', () => {
   const g=game();
   assert.equal(g.run(`(() => {
@@ -969,44 +860,6 @@ test('torment sanctuary displays unlocks and saves the selected difficulty', () 
   assert.equal(elements['torment-target'].textContent,'+5%');
   assert.equal(box.children[1]['aria-pressed'],'true');
   assert.match(elements['torment-status'].textContent,/Tormento I seleccionado/);
-});
-
-test('torment scales expedition health and rewards and remains locked through stages', () => {
-  const g=game();
-  assert.equal(g.run(`(() => {
-    for(let i=0;i<TORMENTS.length;i++){
-      S=fresh(); S.level=120; S.achievements=ACHIEVEMENTS.map(a=>a.id);
-      selectTorment(i);
-      if(!startDungeon('crypt')) return false;
-      const mult=TORMENTS[i], coin=bonus('coin'),xp=bonus('xp');
-      if(S.dungeonRun.torment!==i || S.dungeonRun.hp!==Math.round(36*mult.hp)) return false;
-      selectTorment(0);
-      S.dungeonRun.hp=1; attackDungeon();
-      if(S.coins!==Math.round(20*coin*mult.reward) || S.xp!==Math.round(20*xp*mult.reward) ||
-        S.dungeonRun.hp!==Math.round(36*mult.hp) || S.dungeonRun.torment!==i) return false;
-      S.dungeonRun.hp=1; attackDungeon();
-      if(S.dungeonRun.hp!==Math.round(72*mult.hp)) return false;
-      S.dungeonRun.hp=1; attackDungeon();
-      if(S.dungeonRun || S.materials!==Math.round(5*mult.reward)) return false;
-    }
-    return true;
-  })()`),true);
-});
-
-test('torment applies to level dungeons and preserves existing encounters', () => {
-  const g=game();
-  assert.equal(g.run(`(() => {
-    function ordinary(torment){
-      Math.random=()=>0.5; S=fresh(); S.level=40; S.achievements=ACHIEVEMENTS.map(a=>a.id);
-      selectTorment(torment);
-      S.monsterHp=1; hit(1); S.autoMonsterHp=1; hit(1,'auto');
-      return JSON.stringify([S.coins,S.xp]);
-    }
-    if(ordinary(0)!==ordinary(4)) return false;
-    S=fresh(); S.level=40; selectTorment(4);
-    if(!startDungeon('level-5')) return false;
-    return S.dungeonRun.torment===4 && S.dungeonRun.hp===LEVEL_DUNGEONS[0].hp*12;
-  })()`),true);
 });
 
 test('missions keep their target and reward until replaced, then use new torment', () => {
@@ -1121,7 +974,7 @@ test('torment scales journey and achievement currency but not keys or item copie
       reward:{keys:2,item:'sword_0_0'}};
     ACHIEVEMENTS.push(b); S.owned.push('sword_0_0');
     const materials=S.materials; unlockAchievements(12); ACHIEVEMENTS.pop();
-    return S.keys===2 && S.materials===materials && S.owned.includes('sword_0_0#1');
+    return S.tower.keys===2 && S.materials===materials && S.owned.includes('sword_0_0#1');
   })()`),true);
 });
 
@@ -1180,37 +1033,18 @@ test('boss torment locks on first attack and uses locked rewards on later weeks'
 test('legacy ongoing challenges retain normal difficulty and health after migration', () => {
   const first=game();
   first.run(`S=fresh(); S.level=40; S.tower.floor=50; S.tower.hp=100; S.tower.keys=1;
-    S.weeklyBoss.hp=170; S.dungeonRun={id:'crypt',stage:1,hp:10};
+    S.weeklyBoss.hp=170;
     delete S.tower.torment; delete S.weeklyBoss.torment; delete S.torment; save()`);
   const restored=game(first.saved());
   assert.equal(restored.run(`(() => {
-    if(S.tower.torment!==0 || S.weeklyBoss.torment!==0 || S.dungeonRun.torment!==0 ||
+    if(S.tower.torment!==0 || S.weeklyBoss.torment!==0 ||
       S.tower.hp!==100 || S.weeklyBoss.hp!==170) return false;
     selectTorment(4);
     const dmg=bonus('dmg');
     if(!attackTower('2026-01-05') || !attackWeeklyBoss('2026-01-05')) return false;
     return S.tower.floor===50 && Math.abs(S.tower.hp-(100-24*dmg))<1e-8 &&
-      S.weeklyBoss.torment===0 && Math.abs(S.weeklyBoss.hp-(170-40*dmg))<1e-8 &&
-      S.dungeonRun.torment===0;
+      S.weeklyBoss.torment===0 && Math.abs(S.weeklyBoss.hp-(170-40*dmg))<1e-8;
   })()`),true);
-});
-
-test('dungeon progress, victory rewards and daily limits persist independently', () => {
-  const g = game();
-  assert.equal(g.run(`(() => {
-    S=fresh(); S.battleUpdated=Date.now(); const mission=S.monsterHp,auto=S.autoMonsterHp;
-    if(!startDungeon('crypt'))return false;
-    let attacks=0;
-    while(S.dungeonRun && attacks++<30) attackDungeon();
-    const snapshot=[S.dungeonClears,S.materials,S.kills,S.monsterHp,S.autoMonsterHp];
-    if(JSON.stringify(snapshot)!==JSON.stringify([1,5,3,mission,auto]))return false;
-    save();
-    return !startDungeon('crypt') && !attackDungeon();
-  })()`), true);
-  const saved=g.saved();
-  assert.equal(saved.dungeonRun, null);
-  assert.equal(saved.materials, 5);
-  assert.ok(saved.coins > 0 && saved.xp > 0);
 });
 
 test('equipment placement validates slots and dismantling only consumes unequipped owned items', () => {
@@ -1260,23 +1094,6 @@ test('upgrades continue past five, consume fragments and are lost on dismantle',
   const reloaded=game(g.saved());
   assert.equal(reloaded.run("upgradeLevel('sword_0_0')"),6);
   assert.ok(Math.abs(reloaded.run("bonus('dmg')")-1.11)<1e-8);
-});
-
-test('new dungeon and material state survives reloading', () => {
-  const first=game();
-  first.run(`S=fresh(); S.keys=2; S.keyPity=12; S.materials=17;
-    S.activeDays=30; S.unlockedDungeons.push('forest'); startDungeon('forest');
-    attackDungeon(); save();`);
-  const previous=first.saved();
-  const second=game(previous);
-  second.run('save()');
-  const restored=second.saved();
-  assert.equal(restored.keys,2);
-  assert.equal(restored.keyPity,12);
-  assert.equal(restored.materials,17);
-  assert.equal(restored.activeDays,30);
-  assert.deepEqual(restored.unlockedDungeons, ['crypt','forest']);
-  assert.deepEqual(restored.dungeonRun, previous.dungeonRun);
 });
 
 test('multiple missions on the same day count as one activity day', () => {
@@ -1358,7 +1175,7 @@ test('pack carousel varies its path while stopping within the winning card', () 
   })()`),true);
 });
 
-test('365 simulated activity days produce the annual milestone and unlock all dungeons', () => {
+test('365 simulated activity days produce the annual milestone', () => {
   const g = game();
   assert.equal(g.run(`(() => {
     const RealDate=Date; let clock=RealDate.UTC(2026,0,1,12);
@@ -1370,15 +1187,13 @@ test('365 simulated activity days produce the annual milestone and unlock all du
     for(let day=1;day<=365;day++){
       S.battleUpdated=clock;
       completeMission(byId(S.active[0]));
-      for(const dungeon of DUNGEONS) if(dungeon.days<=S.activeDays) unlockDungeon(dungeon.id);
       clock+=86400000;
     }
-    return S.activeDays===365 && S.totalMissions===365 &&
-      S.unlockedDungeons.length===DUNGEONS.length && S.achievements.includes('days365');
+    return S.activeDays===365 && S.totalMissions===365 && S.achievements.includes('days365');
   })()`), true);
 });
 
-test('three activity days a week for a year produce 52 chapters and enough keys', () => {
+test('three activity days a week for a year produce 52 chapters and tower keys', () => {
   const g=game();
   assert.equal(g.run(`(() => {
     const RealDate=Date; let clock=RealDate.UTC(2026,0,1,12);
@@ -1394,12 +1209,11 @@ test('three activity days a week for a year produce 52 chapters and enough keys'
         const before=S.weeklyRewards;
         completeMission(byId(S.active[0]));
         if(S.weeklyRewards>before) rewardChanges++;
-        for(const dungeon of DUNGEONS) if(dungeon.days<=S.activeDays) unlockDungeon(dungeon.id);
       }
       clock+=86400000;
     }
     return S.activeDays===156 && S.weeklyRewards===52 && rewardChanges===52 &&
-      S.unlockedDungeons.length===DUNGEONS.length && S.materials>0;
+      S.tower.keys>=156 && S.materials>0;
   })()`),true);
 });
 
