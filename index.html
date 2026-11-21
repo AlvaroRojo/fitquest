@@ -119,6 +119,18 @@
   .inventory-item small{display:block;margin:4px 0}
   .inventory-item .item-actions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px}
   .inventory-item .item-actions button{margin:0;padding:7px 3px;font-size:.78rem;overflow-wrap:anywhere}
+  .skill-tree{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+  .skill-branch{display:grid;gap:8px;align-content:start;padding:12px;border:1px solid #806448;border-radius:12px;background:linear-gradient(145deg,#30253b,#151b2d)}
+  .skill-branch h3{margin:0;color:#ffdcab;text-align:center}
+  .skill-node{position:relative;display:block;width:100%;text-align:left;border-color:#96754e;background:linear-gradient(135deg,#3b314e,#29273d)}
+  .skill-node:not(:last-child)::after{content:"";position:absolute;left:50%;bottom:-10px;width:2px;height:9px;background:#d9ad69;pointer-events:none}
+  .skill-node[data-active="true"]{border-color:#e8bc73;box-shadow:inset 0 0 15px #dca15833,0 0 8px #dca15833}
+  .skill-node small{display:block;margin-top:3px}
+  .skill-node:disabled{opacity:.6}
+  .settings-grid{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+  .exercise-options{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:5px;margin:10px 0}
+  .exercise-options label{display:flex;gap:6px;align-items:center}
+  .backup-controls{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
   @keyframes float{50%{transform:translateY(-8px)}}
   @keyframes portal{50%{transform:scale(1.1);opacity:.55}}
   @keyframes pulse{50%{opacity:.45}}
@@ -544,6 +556,7 @@
 <div class="navigation" role="tablist" aria-label="Secciones del juego">
   <button type="button" role="tab" id="tab-adventure" data-section="adventure" aria-controls="adventure" aria-selected="true">🍺 Posada y misiones</button>
   <button type="button" role="tab" id="tab-character" data-section="character" aria-controls="character" aria-selected="false" tabindex="-1">🧙 Personaje</button>
+  <button type="button" role="tab" id="tab-skills" data-section="skills" aria-controls="skills" aria-selected="false" tabindex="-1">🌳 Habilidades</button>
   <button type="button" role="tab" id="tab-store" data-section="store" aria-controls="store" aria-selected="false" tabindex="-1">🛒 Tienda</button>
   <button type="button" role="tab" id="tab-achievements" data-section="achievements" aria-controls="achievements" aria-selected="false" tabindex="-1">🏆 Logros</button>
   <button type="button" role="tab" id="tab-packs" data-section="packs" aria-controls="packs" aria-selected="false" tabindex="-1">🎁 Sobres</button>
@@ -593,12 +606,21 @@
   <h2>📜 Tablón de encargos <small id="cnt"></small></h2>
   <div id="missions" class="quest-board"></div>
   <p id="mission-status" class="mission-status" role="status" aria-live="polite"></p>
+  <details>
+    <summary>⚙️ Personalizar ejercicios y descanso</summary>
+    <p><small>Elige al menos siete ejercicios para los nuevos encargos. El objetivo se ajusta también en los actuales conservando tu progreso. Descansa cuando lo necesites.</small></p>
+    <div class="settings-grid"><label for="mission-scale">Objetivo de los encargos</label>
+      <select id="mission-scale"><option value="50">50 %</option><option value="75">75 %</option><option value="100">100 %</option><option value="125">125 %</option><option value="150">150 %</option></select>
+      <button id="rest-day" type="button">🌿 Registrar descanso de hoy</button></div>
+    <div id="exercise-options" class="exercise-options"></div>
+    <p id="exercise-status" role="status" aria-live="polite"></p>
+  </details>
 </div>
 <div class="card" id="journey">
   <h2>🗺️ Travesía del héroe</h2>
   <div id="weekly-progress"></div>
 </div>
-<div class="reset-footer"><button id="reset" type="button">Reiniciar partida</button></div>
+<div class="reset-footer"><div class="backup-controls"><button id="export-save" type="button">💾 Exportar partida</button><button id="import-save" type="button">📂 Importar partida</button><input id="import-file" type="file" accept=".json,application/json" hidden></div><p id="backup-status" role="status" aria-live="polite"></p><button id="reset" type="button">Reiniciar partida</button></div>
 </section>
 
 <section id="character" role="tabpanel" aria-labelledby="tab-character" hidden>
@@ -640,6 +662,7 @@
   <div class="inventory-toolbar">
     <div class="inventory-filter-heading"><span class="filter-emblem" aria-hidden="true">🔎</span><div><strong>Explorar inventario</strong><small>Encuentra tu equipo</small></div></div>
     <label for="inventory-type">⚔️ Tipo de objeto <select id="inventory-type"><option value="all">Todos los tipos</option></select></label>
+    <button id="dismantle-selected" type="button">🔨 Desmantelar selección</button>
     <div class="inventory-pagination" id="inventory-pagination">
       <button id="inventory-prev" type="button">← Anterior</button>
       <span id="inventory-page" aria-live="polite"></span>
@@ -649,6 +672,16 @@
   <p id="inventory-status" role="status" aria-live="polite"></p>
   <div id="inventory"></div>
 </div>
+</section>
+
+<section id="skills" role="tabpanel" aria-labelledby="tab-skills" hidden>
+  <div class="card">
+    <h2>🌳 Árbol de habilidades</h2>
+    <p>Un punto por nivel; los niveles múltiplos de 10 otorgan dos en total. Desbloquea un nodo anterior para avanzar por su rama.</p>
+    <p id="skill-points"></p>
+    <div id="skill-tree" class="skill-tree"></div>
+    <p id="skill-status" role="status" aria-live="polite"></p>
+  </div>
 </section>
 
 <section id="store" role="tabpanel" aria-labelledby="tab-store" hidden>
@@ -670,7 +703,7 @@
 <section id="achievements" role="tabpanel" aria-labelledby="tab-achievements" hidden>
 <div class="card">
   <h2>🏆 Sala de trofeos</h2>
-  <p>Retos de misiones, caza, botín, desafíos y travesía. Sus mejoras son permanentes. Las monedas y fragmentos indicados son valores base, multiplicados por el tormento al desbloquearlos.</p>
+  <p>Retos de misiones, caza, botín, desafíos y travesía. Sus mejoras son permanentes. Las recompensas pendientes muestran el tormento activo.</p>
   <div id="achievement-list"></div>
 </div>
 </section>
@@ -749,7 +782,7 @@
     <div class="torment-options" id="torment-options" aria-label="Niveles de tormento"></div>
   </div>
   <p id="torment-status" role="status" aria-live="polite"></p>
-  <p class="torment-note">El tormento se aplica al instante: conserva el progreso de las misiones y el porcentaje de vida de los enemigos. Los sobres y las ofertas de la tienda se adaptan al nivel elegido.</p>
+  <p class="torment-note">El tormento se aplica al instante y conserva el progreso. El botín de cada enemigo usa el tormento más bajo en el que recibió daño, para que cambiar al final no aumente su recompensa.</p>
   <p class="torment-note">Los objetivos son mecánicas de juego: adapta siempre el ejercicio a tu capacidad.</p>
 </div>
 </section>
@@ -788,8 +821,8 @@ const DIFFICULTIES = {
 };
 const byId = id => EXERCISES.find(e=>e.id===id);
 const EXERCISE_ICONS={squat:'🏋️',push:'💪',plank:'🧘',abs:'🔥',jack:'⚡',lunge:'🦵',burpee:'🌪️',climb:'⛰️',bridge:'🌉',wall:'🛡️',march:'🚶',calf:'👣',chair:'🪑',wallpush:'🧱',bird:'🐦',deadbug:'🪲',sideleg:'🦵',step:'👟',knee:'🌀',armcircle:'🔄'};
-function randomMission(exclude){
-  const pool = EXERCISES.filter(e=>!exclude.includes(e.id));
+function randomMission(exclude,allowed=EXERCISES.map(e=>e.id)){
+  const pool = EXERCISES.filter(e=>allowed.includes(e.id)&&!exclude.includes(e.id));
   return pool[Math.floor(Math.random()*pool.length)].id;
 }
 function pickMissions(){
@@ -862,6 +895,45 @@ const ATTRIBUTES={
   xp:{name:'Sabiduría',icon:'📘',description:'Aumenta la experiencia obtenida.'},
   coin:{name:'Fortuna',icon:'🪙',description:'Aumenta las monedas de misiones y enemigos.'}
 };
+const SKILL_BRANCHES=[
+  {name:'⚔️ Poder',nodes:[
+    {id:'might',name:'Fuerza ancestral',stat:'dmg',amount:2},
+    {id:'blade',name:'Filo imparable',stat:'dmg',amount:3},
+    {id:'fury',name:'Furia del héroe',stat:'dmg',amount:4},
+    {id:'legend',name:'Leyenda de guerra',stat:'dmg',amount:5}]},
+  {name:'🎯 Precisión',nodes:[
+    {id:'precision',name:'Ojo certero',stat:'crit',amount:1},
+    {id:'impact',name:'Impacto brutal',stat:'critDamage',amount:3},
+    {id:'focus',name:'Precisión mortal',stat:'crit',amount:1},
+    {id:'execution',name:'Verdugo',stat:'critDamage',amount:5}]},
+  {name:'🪙 Fortuna',nodes:[
+    {id:'fortune',name:'Buscador de oro',stat:'coin',amount:2},
+    {id:'prosperity',name:'Prosperidad',stat:'coin',amount:3},
+    {id:'salvage',name:'Afinidad arcana',stat:'materials',amount:2},
+    {id:'treasure',name:'Tesoro eterno',stat:'coin',amount:5}]},
+  {name:'📘 Sabiduría',nodes:[
+    {id:'learning',name:'Aprendiz',stat:'xp',amount:2},
+    {id:'wisdom',name:'Sabiduría antigua',stat:'xp',amount:3},
+    {id:'alchemy',name:'Maestría de fragmentos',stat:'materials',amount:3},
+    {id:'ascension',name:'Ascensión',stat:'xp',amount:5}]}
+];
+const SKILLS=Object.fromEntries(SKILL_BRANCHES.flatMap(branch=>branch.nodes.map((node,i)=>[node.id,{...node,requires:i?branch.nodes[i-1].id:null}])));
+const SKILL_MAX=20;
+const skillBonus=stat=>Object.values(SKILLS).reduce((sum,node)=>sum+(node.stat===stat?(S.skills[node.id]||0)*node.amount:0),0);
+const skillPoints=()=>S.level+Math.floor(S.level/10)-Object.values(S.skills).reduce((sum,rank)=>sum+rank,0);
+function unlockSkill(id,now=Date.now()){
+  if(!Object.hasOwn(SKILLS,id)) return false;
+  const node=SKILLS[id];
+  if(skillPoints()<1 || (S.skills[id]||0)>=SKILL_MAX || (node.requires&&!S.skills[node.requires])) return false;
+  settleBattle(now);
+  S.skills[id]=(S.skills[id]||0)+1;
+  return true;
+}
+const criticalChance=()=>Math.min(75,skillBonus('crit'));
+function criticalDamage(damage){
+  return criticalChance()>0 && Math.random()*100<criticalChance()?damage*(1.5+skillBonus('critDamage')/100):damage;
+}
+const materialReward=amount=>Math.round(amount*(1+skillBonus('materials')/100));
 const attributeCost=rank=>100+50*rank;
 const ITEMS=[];
 for(const [g,d] of Object.entries(GROUPS)) for(let t=0;t<TIER_NAMES.length;t++){
@@ -1060,8 +1132,8 @@ const statBreakdown=stat=>{
   let equipment=0,achievements=0;
   for(const id of Object.values(S.eq)){const it=itemById(id);if(it&&it.stat===stat)equipment+=itemPercent(it)}
   for(const a of ACHIEVEMENTS) if(S.achievements.includes(a.id)&&a.stat===stat)achievements+=a.pct;
-  const forge=equipment>0?(S.forgeRanks[stat]||0):0;
-  return {attributes,equipment,achievements,forge,total:attributes+equipment+achievements+forge};
+  const forge=equipment>0?(S.forgeRanks[stat]||0):0,skills=skillBonus(stat);
+  return {attributes,equipment,achievements,forge,skills,total:attributes+equipment+achievements+forge+skills};
 };
 const bonus=stat=>1+statBreakdown(stat).total/100;
 const heroPower=()=>S.level+Object.keys(ATTRIBUTES).reduce((sum,stat)=>sum+statBreakdown(stat).total,0)+
@@ -1135,15 +1207,28 @@ function drawPack(id){
 }
 function openPack(id){return drawPack(id)?.message??null}
 const WEEKLY_BOSSES=[
-  {name:'Colmillo de la noche',species:2,hp:180},
-  {name:'Señor de la cripta',species:11,hp:300},
-  {name:'Tejedora ancestral',species:8,hp:450},
-  {name:'Titán de la montaña',species:7,hp:650},
-  {name:'Devorador del pantano',species:9,hp:900},
-  {name:'Oráculo del vacío',species:15,hp:1200},
-  {name:'Emperador de ceniza',species:3,hp:1600},
-  {name:'Dragón del eclipse',species:5,hp:2200}
+  {name:'Colmillo de la noche',species:2,hp:180,ability:'Caza nocturna',resistance:0},
+  {name:'Señor de la cripta',species:11,hp:300,ability:'Armadura espectral',resistance:.1,rule:'opening'},
+  {name:'Tejedora ancestral',species:8,hp:450,ability:'Red protectora',resistance:.15,rule:'alternating'},
+  {name:'Titán de la montaña',species:7,hp:650,ability:'Piel de piedra',resistance:.15},
+  {name:'Devorador del pantano',species:9,hp:900,ability:'Furia del pantano',resistance:.2,rule:'wounded'},
+  {name:'Oráculo del vacío',species:15,hp:1200,ability:'Barrera del vacío',resistance:.2,rule:'alternating'},
+  {name:'Emperador de ceniza',species:3,hp:1600,ability:'Escudo de ceniza',resistance:.18},
+  {name:'Dragón del eclipse',species:5,hp:2200,ability:'Escamas del eclipse',resistance:.2},
+  {name:'Reina de las sombras',species:6,hp:2800,ability:'Manto sombrío',resistance:.12},
+  {name:'Guardián del abismo',species:10,hp:3500,ability:'Muralla ancestral',resistance:.22},
+  {name:'Heraldo astral',species:12,hp:4300,ability:'Velo astral',resistance:.15},
+  {name:'Devoramundos',species:5,hp:5400,ability:'Armadura primordial',resistance:.25}
 ];
+const bossFor=index=>WEEKLY_BOSSES[index%WEEKLY_BOSSES.length];
+const bossBaseHp=index=>Math.round(bossFor(index).hp*(1+Math.floor(index/WEEKLY_BOSSES.length)*.5));
+function bossResistance(boss,hp,max,hits){
+  if(boss.rule==='opening' && hp<=max/2) return 0;
+  if(boss.rule==='wounded' && hp>max/2) return 0;
+  if(boss.rule==='alternating' && hits%2===1) return 0;
+  return boss.resistance;
+}
+const bossAbilityText=boss=>`${boss.ability}: reduce el daño un ${Math.round(boss.resistance*100)}%${boss.rule==='opening'?' mientras tenga más de media vida':boss.rule==='wounded'?' con media vida o menos':boss.rule==='alternating'?' en ataques alternos':''}.`;
 const TORMENTS=[
   {name:'Normal',level:1,hp:1,reward:1},
   {name:'Tormento I',level:10,hp:1.75,reward:1.4},
@@ -1165,22 +1250,25 @@ function selectTorment(index,now=Date.now()){
   for(const id of S.active) missionTarget(byId(id));
   settleBattle(now);
   for(const id of S.active){
-    const reference=S.missionTargetReferences[id] ??= {target:S.targets[id],torment:S.missionTorments[id]};
-    S.targets[id]=Math.ceil(reference.target*(1+0.05*index)/(1+0.05*reference.torment)-1e-10);
+    const reference=S.missionTargetReferences[id] ??= {target:S.targets[id],torment:S.missionTorments[id],scale:S.missionScale};
+    S.targets[id]=Math.max(1,Math.ceil(reference.target*S.missionScale/(reference.scale??100)*(1+0.05*index)/(1+0.05*reference.torment)-1e-10));
     S.missionTorments[id]=index;
   }
   const encounter=S.encounter;
+  if(encounter.rewardTorment==null && S.monsterHp<encounter.maxHp) encounter.rewardTorment=encounter.torment;
   const reference=encounter.tormentReference ??= {maxHp:encounter.maxHp,torment:encounter.torment};
   const maxHp=Math.max(1,Math.round(reference.maxHp*TORMENTS[index].hp/TORMENTS[reference.torment].hp));
   S.monsterHp=S.monsterHp/encounter.maxHp*maxHp;
   encounter.maxHp=maxHp;encounter.torment=index;
   const autoMax=autoMaxHp(S.autoKills,S.autoTorment);
+  if(S.autoRewardTorment==null && S.autoMonsterHp<autoMax) S.autoRewardTorment=S.autoTorment;
   S.autoMonsterHp=S.autoMonsterHp/autoMax*autoMaxHp(S.autoKills,index);
   S.autoTorment=index;
   for(const [progress,base] of [[S.tower,S.tower.floor<=TOWER_FLOORS?towerMaxHp(S.tower.floor):0],
-    [S.weeklyBoss,WEEKLY_BOSSES[S.weeklyBoss.index]?.hp||0]]){
+    [S.weeklyBoss,bossBaseHp(S.weeklyBoss.index)]]){
     if(base && progress.torment!==null){
       const oldMax=Math.round(base*TORMENTS[progress.torment].hp),newMax=Math.round(base*TORMENTS[index].hp);
+      if(progress.rewardTorment==null && progress.hp<oldMax) progress.rewardTorment=progress.torment;
       progress.hp=progress.hp/oldMax*newMax;
       progress.torment=index;
     }
@@ -1194,7 +1282,7 @@ const FULL_REWARD_MISSIONS=6, WEEKLY_DAYS=3, JOURNEY_CHAPTERS=52;
 
 const fresh = () => ({level:1,xp:0,coins:0,owned:[],eq:{},streak:0,kills:0,
   day:today(),done:{},bonus:{},lastActive:null,lastRest:null,monsterHp:monsterHp(0),log:[],active:pickMissions(),completedToday:0,
-  targets:{},missionTorments:{},missionTargetReferences:{},totalMissions:0,packsOpened:0,achievements:[],missionKills:0,autoKills:0,autoMonsterHp:monsterHp(0),autoTorment:0,battleUpdated:Date.now(),
+  targets:{},missionTorments:{},missionTargetReferences:{},exerciseEnabled:EXERCISES.map(e=>e.id),missionScale:100,skills:{},totalMissions:0,packsOpened:0,achievements:[],missionKills:0,autoKills:0,autoMonsterHp:monsterHp(0),autoTorment:0,battleUpdated:Date.now(),
   challengeClears:0,materials:0,activeDays:0,lastActivityDay:null,
   weeklyRewards:0,balanceVersion:1,unlimitedMissionsVersion:1,upgrades:{},attributes:{dmg:0,xp:0,coin:0},encounter:nextEncounter(0),
   missionDifficultyVersion:1,legacyMissions:{},shopStock:null,forgeRanks:{dmg:0,xp:0,coin:0},forgeLastWeek:null,forgeWeek:null,forgeWeekPurchases:0,
@@ -1211,6 +1299,9 @@ if(S.weapon){for(let w=0;w<S.weapon;w++)S.coins+=Math.round(50*Math.pow(1.5,w));
 S.targets ??= {};
 if(!S.missionTorments) S.missionTorments=Object.fromEntries(S.active.map(id=>[id,0]));
 S.missionTargetReferences ??= {};
+S.exerciseEnabled ??= EXERCISES.map(e=>e.id);
+S.missionScale ??= 100;
+S.skills ??= {};
 S.autoTorment ??= 0;
 S.totalMissions ??= 0;
 S.packsOpened ??= 0;
@@ -1340,7 +1431,7 @@ function claimJourneyRewards(torment=S.torment){
   const reached=Math.min(JOURNEY_CHAPTERS,Math.floor(S.activeDays/WEEKLY_DAYS));
   while(S.weeklyRewards<reached){
     const chapter=++S.weeklyRewards;
-    const coins=Math.round((35+3*chapter)*TORMENTS[torment].reward),materials=Math.round((3+Math.min(chapter,20))*TORMENTS[torment].reward);
+    const coins=Math.round((35+3*chapter)*TORMENTS[torment].reward),materials=materialReward((3+Math.min(chapter,20))*TORMENTS[torment].reward);
     S.coins+=coins;S.materials+=materials;
     log(`🌟 Travesía ${chapter}/${JOURNEY_CHAPTERS}: +${coins} monedas y +${materials} fragmentos`);
   }
@@ -1351,7 +1442,7 @@ function unlockAchievements(torment=S.torment){
       S.achievements.push(a.id);
       const reward=a.reward||{};
       if(reward.coins) S.coins+=Math.round(reward.coins*TORMENTS[torment].reward);
-      if(reward.materials) S.materials+=Math.round(reward.materials*TORMENTS[torment].reward);
+      if(reward.materials) S.materials+=materialReward(reward.materials*TORMENTS[torment].reward);
       if(reward.keys) S.tower.keys+=reward.keys;
       if(reward.item&&ITEM[reward.item]) addItem(reward.item);
       log(`🏆 Logro: ${a.name} · ${achievementRewardText(a,torment)}`);
@@ -1361,7 +1452,7 @@ function unlockAchievements(torment=S.torment){
 function achievementRewardText(a,torment=0){
   const reward=a.reward||{},parts=[`+${a.pct}% ${STAT_TXT[a.stat]}`];
   if(reward.coins) parts.push(`+${Math.round(reward.coins*TORMENTS[torment].reward)} 🪙`);
-  if(reward.materials) parts.push(`+${Math.round(reward.materials*TORMENTS[torment].reward)} 🔩`);
+  if(reward.materials) parts.push(`+${materialReward(reward.materials*TORMENTS[torment].reward)} 🔩`);
   if(reward.keys) parts.push(`+${reward.keys} 🔷 (torre)`);
   if(reward.item&&ITEM[reward.item]) parts.push(`🎁 ${ITEM[reward.item].name}`);
   return parts.join(' · ');
@@ -1374,11 +1465,21 @@ function missionDifficulty(ex){
 function missionTarget(ex){
   S.missionTorments[ex.id] ??= S.torment;
   if(!S.targets[ex.id]){
-    const base=target(ex,S.level)*DIFFICULTIES[missionDifficulty(ex)].target;
-    S.missionTargetReferences[ex.id]={target:base,torment:0};
+    const base=Math.max(1,target(ex,S.level)*DIFFICULTIES[missionDifficulty(ex)].target*S.missionScale/100);
+    S.missionTargetReferences[ex.id]={target:base,torment:0,scale:S.missionScale};
     S.targets[ex.id]=Math.ceil(base*(1+0.05*S.missionTorments[ex.id]));
   }
   return S.targets[ex.id];
+}
+function setMissionScale(scale){
+  if(![50,75,100,125,150].includes(scale)) return false;
+  for(const id of S.active){
+    missionTarget(byId(id));
+    const ref=S.missionTargetReferences[id] ??= {target:S.targets[id],torment:S.missionTorments[id],scale:S.missionScale};
+    S.targets[id]=Math.max(1,Math.ceil(ref.target*scale/(ref.scale??100)*(1+0.05*S.missionTorments[id])/(1+0.05*ref.torment)-1e-10));
+  }
+  S.missionScale=scale;
+  return true;
 }
 function rollDay(){
   const t=today(); if(S.day===t) return false;
@@ -1398,24 +1499,31 @@ function hit(dmg,arena='mission'){
   const automatic=arena==='auto';
   const hp=automatic?'autoMonsterHp':'monsterHp';
   const kills=automatic?'autoKills':'missionKills';
+  if(dmg<=0) return;
+  if(automatic) S.autoRewardTorment=Math.min(S.autoRewardTorment??S.autoTorment,S.autoTorment);
+  else S.encounter.rewardTorment=Math.min(S.encounter.rewardTorment??S.encounter.torment,S.encounter.torment);
   S[hp]-=dmg;
   while(S[hp]<=0){
     const encounter=automatic?null:S.encounter;
     const type=encounter?ENCOUNTER_TYPES[encounter.kind]:ENCOUNTER_TYPES.normal;
-    const torment=automatic?S.autoTorment:(encounter.torment??0);
+    const torment=automatic?(S.autoRewardTorment??S.autoTorment):(encounter.rewardTorment??encounter.torment);
     const difficulty=TORMENTS[torment];
     const loot=automatic?battleLoot():1;
     const reward=Math.round((10+S[kills]*2)*bonus('coin')*type.coins*loot*difficulty.reward);
-    const materials=Math.round(type.materials*difficulty.reward);
+    const materials=materialReward(type.materials*difficulty.reward);
     S.coins+=reward;gain(Math.round((20+S[kills]*3)*bonus('xp')*type.xp*loot*difficulty.reward));
     S.materials+=materials;
     const monster=automatic?MISSION_MONSTERS[autoEncounter(S.autoKills).species].name:encounter.legacy?MONSTERS[S[kills]%MONSTERS.length]:encounter.kind==='lucky'?'🍀 Goblin de la suerte':MISSION_MONSTERS[encounter.species].name;
     S[kills]++;S.kills++;
     if(automatic) S.challengeClears++;
     log(`💀 ${automatic?'Arena':'Misión'}: derrotaste a ${monster} (+${reward} 🪙${materials?`, +${materials} 🔩`:''})`);
-    if(automatic) S.autoTorment=S.torment;
+    if(automatic){S.autoTorment=S.torment;S.autoRewardTorment=null}
     else S.encounter=nextEncounter(S.missionKills,S.torment);
     S[hp]+=automatic?autoMaxHp(S.autoKills,S.autoTorment):S.encounter.maxHp;
+    if(S[hp]<(automatic?autoMaxHp(S.autoKills,S.autoTorment):S.encounter.maxHp)){
+      if(automatic) S.autoRewardTorment=S.autoTorment;
+      else S.encounter.rewardTorment=S.encounter.torment;
+    }
     unlockAchievements(torment);
   }
 }
@@ -1426,7 +1534,7 @@ function settleBattle(now=Date.now()){
   const ticks=Math.floor(capped/interval);
   if(ticks>0){
     const killsBefore=S.autoKills,coinsBefore=S.coins;
-    for(let i=0;i<ticks;i++) hit(battleDamage(),'auto');
+    for(let i=0;i<ticks;i++) hit(criticalDamage(battleDamage()),'auto');
     S.battleUpdated=elapsed>OFFLINE_LIMIT?now:now-(capped%interval);
     unlockAchievements(S.autoTorment);
     if(elapsed>=60000){
@@ -1451,29 +1559,34 @@ function attackTower(day=today()){
   const tower=S.tower;
   if(tower.floor>TOWER_FLOORS || tower.keys<1 || tower.lastAttack===day) return false;
   if(tower.torment===null){tower.torment=S.torment;tower.hp=Math.round(towerMaxHp(tower.floor)*TORMENTS[tower.torment].hp)}
-  const torment=tower.torment,difficulty=TORMENTS[torment];
-  tower.keys--;tower.lastAttack=day;tower.hp-=24*bonus('dmg');
+  tower.rewardTorment=Math.min(tower.rewardTorment??tower.torment,tower.torment);
+  const torment=tower.rewardTorment,difficulty=TORMENTS[torment];
+  tower.keys--;tower.lastAttack=day;tower.hp-=criticalDamage(24*bonus('dmg'));
   if(tower.hp<=0){
     const floor=tower.floor,coins=Math.round((20+floor*5)*bonus('coin')*difficulty.reward);
-    const xp=Math.round((25+floor*4)*bonus('xp')*difficulty.reward),materials=Math.round((2+Math.floor(floor/10))*difficulty.reward);
+    const xp=Math.round((25+floor*4)*bonus('xp')*difficulty.reward),materials=materialReward((2+Math.floor(floor/10))*difficulty.reward);
     S.coins+=coins;gain(xp);S.materials+=materials;S.kills++;S.challengeClears++;
-    tower.floor++;tower.hp=tower.floor<=TOWER_FLOORS?towerMaxHp(tower.floor):0;tower.torment=null;
+    tower.floor++;tower.hp=tower.floor<=TOWER_FLOORS?towerMaxHp(tower.floor):0;tower.torment=null;tower.rewardTorment=null;
     log(`🗼 Planta ${floor} superada: +${coins} monedas, +${xp} XP y +${materials} fragmentos`);
     unlockAchievements(torment);
   }
   return true;
 }
 function attackWeeklyBoss(day=today()){
-  const progress=S.weeklyBoss,boss=WEEKLY_BOSSES[progress.index],week=weekStart(day);
-  if(!boss || progress.lastAttackWeek===week) return false;
-  if(progress.torment===null){progress.torment=S.torment;progress.hp=Math.round(boss.hp*TORMENTS[progress.torment].hp)}
-  const torment=progress.torment,difficulty=TORMENTS[torment];
-  progress.lastAttackWeek=week;progress.hp-=40*bonus('dmg');
+  const progress=S.weeklyBoss,boss=bossFor(progress.index),week=weekStart(day);
+  if(progress.lastAttackWeek===week) return false;
+  if(progress.torment===null){progress.torment=S.torment;progress.hp=Math.round(bossBaseHp(progress.index)*TORMENTS[progress.torment].hp)}
+  progress.rewardTorment=Math.min(progress.rewardTorment??progress.torment,progress.torment);
+  const torment=progress.rewardTorment,difficulty=TORMENTS[torment];
+  const max=Math.round(bossBaseHp(progress.index)*TORMENTS[progress.torment].hp);
+  const resistance=bossResistance(boss,progress.hp,max,progress.hits||0);
+  progress.lastAttackWeek=week;progress.hits=(progress.hits||0)+1;
+  progress.hp-=criticalDamage(40*bonus('dmg'))*(1-resistance);
   if(progress.hp<=0){
     const rank=progress.index+1,coins=Math.round((150+rank*100)*bonus('coin')*difficulty.reward);
-    const xp=Math.round((100+rank*80)*bonus('xp')*difficulty.reward),materials=Math.round((10+rank*5)*difficulty.reward);
+    const xp=Math.round((100+rank*80)*bonus('xp')*difficulty.reward),materials=materialReward((10+rank*5)*difficulty.reward);
     S.coins+=coins;gain(xp);S.materials+=materials;S.kills++;S.challengeClears++;
-    progress.index++;progress.hp=WEEKLY_BOSSES[progress.index]?.hp||0;progress.torment=null;
+    progress.index++;progress.hp=bossBaseHp(progress.index);progress.torment=null;progress.rewardTorment=null;progress.hits=0;
     log(`👑 ${boss.name} derrotado: +${coins} monedas, +${xp} XP y +${materials} fragmentos`);
     unlockAchievements(torment);
   }
@@ -1545,7 +1658,7 @@ function completeMission(ex){
   S.done[ex.id]=tgt;
   const mult=streakMult()*(S.completedToday<FULL_REWARD_MISSIONS?1:0.25);
   gain(Math.round(units*ex.value*mult*bonus('xp')*reward*tormentReward));
-  hit(units*ex.value*bonus('dmg')*mult*reward);
+  hit(criticalDamage(units*ex.value*bonus('dmg')*mult*reward));
   S.bonus[ex.id]=1;gain(Math.round(30*mult*bonus('xp')*reward*tormentReward));S.coins+=Math.round(10*bonus('coin')*(S.completedToday<FULL_REWARD_MISSIONS?1:0.25)*reward*tormentReward);
   log(`✅ Misión completada: ${ex.name} (+bonus)`);
   S.completedToday++;
@@ -1556,7 +1669,7 @@ function completeMission(ex){
   if(S.lastActivityDay!==today()){S.activeDays++;S.lastActivityDay=today()}
   claimJourneyRewards(torment);
   unlockAchievements(torment);
-  const next=randomMission(S.active);
+  const next=randomMission(S.active,S.exerciseEnabled);
   S.active[S.active.indexOf(ex.id)]=next;
   delete S.done[ex.id];delete S.bonus[ex.id];delete S.targets[ex.id];delete S.legacyMissions[ex.id];delete S.missionTorments[ex.id];delete S.missionTargetReferences[ex.id];
   missionTarget(byId(next));
@@ -1569,13 +1682,58 @@ function completeMission(ex){
   save();render();
 }
 function save(){localStorage.setItem(KEY,JSON.stringify(S))}
+function validateBackup(data){
+  if(!data || data.format!=='fitquest-save' || data.version!==1 || !data.state || typeof data.state!=='object' || Array.isArray(data.state)) return false;
+  const s=data.state;
+  const numbers=['level','xp','coins','streak','kills','monsterHp','autoMonsterHp','missionKills','autoKills','battleUpdated','totalMissions','packsOpened','challengeClears','materials','activeDays','weeklyRewards','completedToday','missionScale','torment'];
+  if(numbers.some(key=>!Number.isFinite(s[key])||s[key]<0) || !Number.isInteger(s.level) || s.level<1 || !Number.isInteger(s.torment) || !TORMENTS[s.torment] || s.level<TORMENTS[s.torment].level) return false;
+  if(![50,75,100,125,150].includes(s.missionScale)) return false;
+  const maps=['eq','done','bonus','targets','missionTorments','missionTargetReferences','upgrades','attributes','forgeRanks','battleUpgrades','skills','legacyMissions','tower','weeklyBoss','encounter'];
+  if(maps.some(key=>!s[key]||typeof s[key]!=='object'||Array.isArray(s[key]))) return false;
+  if(!Array.isArray(s.owned)||!Array.isArray(s.achievements)||!Array.isArray(s.log)||!Array.isArray(s.active)||!Array.isArray(s.exerciseEnabled)) return false;
+  if(s.achievements.some(id=>typeof id!=='string')||s.log.some(entry=>typeof entry!=='string')) return false;
+  if(s.owned.some(id=>typeof id!=='string'||!Object.hasOwn(ITEM,itemTypeId(id))||!/^([^#]+)(#[1-9]\d*)?$/.test(id)) || new Set(s.owned).size!==s.owned.length ||
+     s.active.length!==SLOTS || new Set(s.active).size!==SLOTS || s.active.some(id=>!byId(id)) ||
+     s.exerciseEnabled.length<7 || new Set(s.exerciseEnabled).size!==s.exerciseEnabled.length || s.exerciseEnabled.some(id=>!byId(id))) return false;
+  if(Object.entries(s.eq).some(([slot,id])=>!EQ_SLOTS.some(entry=>entry.k===slot&&entry.g===itemById(id)?.g)||!s.owned.includes(id)) ||
+     new Set(Object.values(s.eq)).size!==Object.values(s.eq).length) return false;
+  if(Object.entries(s.skills).some(([id,rank])=>!Object.hasOwn(SKILLS,id)||!Number.isInteger(rank)||rank<0||rank>SKILL_MAX) ||
+     Object.values(s.skills).reduce((sum,rank)=>sum+rank,0)>s.level+Math.floor(s.level/10) ||
+     Object.entries(s.skills).some(([id,rank])=>rank>0 && SKILLS[id].requires && !(s.skills[SKILLS[id].requires]>0))) return false;
+  const nonnegative=map=>Object.values(map).every(value=>Number.isFinite(value)&&value>=0);
+  if(['done','bonus','targets','upgrades','attributes','forgeRanks','battleUpgrades'].some(key=>!nonnegative(s[key])) ||
+     Object.keys(ATTRIBUTES).some(key=>!Number.isFinite(s.attributes[key])||!Number.isFinite(s.forgeRanks[key])) ||
+     Object.keys(BATTLE_UPGRADES).some(key=>!Number.isInteger(s.battleUpgrades[key])||s.battleUpgrades[key]<0) ||
+     s.battleUpgrades.speed>20) return false;
+  const validTorment=value=>value===null || (Number.isInteger(value)&&!!TORMENTS[value]);
+  if(Object.values(s.missionTorments).some(value=>!validTorment(value)||value===null) ||
+     Object.values(s.missionTargetReferences).some(ref=>!ref||!Number.isFinite(ref.target)||ref.target<=0||!validTorment(ref.torment)||ref.torment===null||(ref.scale!=null&&![50,75,100,125,150].includes(ref.scale)))) return false;
+  if(!Number.isInteger(s.tower.floor)||s.tower.floor<1||s.tower.floor>TOWER_FLOORS+1||
+     !Number.isFinite(s.tower.hp)||s.tower.hp<0||!Number.isInteger(s.tower.keys)||s.tower.keys<0||
+     !Number.isInteger(s.weeklyBoss.index)||s.weeklyBoss.index<0||!Number.isFinite(s.weeklyBoss.hp)||s.weeklyBoss.hp<0||
+     !Object.hasOwn(ENCOUNTER_TYPES,s.encounter.kind)||!Number.isFinite(s.encounter.maxHp)||s.encounter.maxHp<=0||
+     !Number.isInteger(s.encounter.species)||!MISSION_MONSTERS[s.encounter.species]||
+     !validTorment(s.tower.torment)||!validTorment(s.weeklyBoss.torment)||
+     !Number.isInteger(s.encounter.torment)||!TORMENTS[s.encounter.torment]||
+     !Number.isInteger(s.autoTorment)||!TORMENTS[s.autoTorment]) return false;
+  if([s.encounter.rewardTorment,s.autoRewardTorment,s.tower.rewardTorment,s.weeklyBoss.rewardTorment].some(value=>value!=null&&!validTorment(value))) return false;
+  if(s.shopStock){
+    const stock=s.shopStock,validItems=items=>Array.isArray(items)&&items.every(id=>typeof id==='string'&&Object.hasOwn(ITEM,id));
+    if(typeof stock.day!=='string'||!Number.isInteger(stock.level)||stock.level<1||!validTorment(stock.torment)||stock.torment===null||
+       !validItems(stock.offers)||!validItems(stock.sold)||stock.offers.length>SHOP_SIZE||stock.sold.length>SHOP_SIZE) return false;
+    if(stock.variants!=null && (typeof stock.variants!=='object'||Array.isArray(stock.variants)||Object.entries(stock.variants).some(([key,items])=>!Number.isInteger(Number(key))||!TORMENTS[Number(key)]||!validItems(items)||items.length>SHOP_SIZE))) return false;
+    if(stock.soldSlots!=null && (typeof stock.soldSlots!=='object'||Array.isArray(stock.soldSlots)||Object.entries(stock.soldSlots).some(([slot,id])=>!Number.isInteger(Number(slot))||Number(slot)<0||Number(slot)>=SHOP_SIZE||!stock.sold.includes(id)))) return false;
+  }
+  return true;
+}
 if(legacyTicks){
   for(let i=0;i<legacyTicks;i++) hit(2*bonus('dmg'));
   log(`⌛ Progreso pendiente de la autobatalla anterior aplicado al encuentro de misiones.`);
 }
 
 const $=id=>document.getElementById(id);
-let dismantleConfirm=null, inventoryPage=0, lootTimer=null;
+let dismantleConfirm=null, inventoryPage=0, lootTimer=null, bulkConfirm=false;
+const selectedItems=new Set();
 const INVENTORY_PAGE_SIZE=12;
 function monsterArt(index){
   const colors=['#746b9b','#805c85','#77656f','#8a5270','#696d83','#704e9f','#526f82','#85556c'];
@@ -1703,7 +1861,7 @@ function journeyMarkup(){
   const percent=100*progress/WEEKLY_DAYS;
   const next=completed+1;
   const reward=completed===JOURNEY_CHAPTERS?'¡Has completado toda la travesía!':
-    `Próximo capítulo: +${Math.round((35+3*next)*TORMENTS[S.torment].reward)} monedas y +${Math.round((3+Math.min(next,20))*TORMENTS[S.torment].reward)} fragmentos`;
+    `Próximo capítulo: +${Math.round((35+3*next)*TORMENTS[S.torment].reward)} monedas y +${materialReward((3+Math.min(next,20))*TORMENTS[S.torment].reward)} fragmentos`;
   return `<div class="week-card"><div class="journey-summary"><div class="chapter">🌌 Crónicas del héroe · ${completed}/${JOURNEY_CHAPTERS}</div>
     <p>${completed===JOURNEY_CHAPTERS?'Puedes seguir jugando a tu ritmo.':`${progress}/${WEEKLY_DAYS} días de actividad para avanzar`}</p>
     <p class="reward">${reward}</p><small>Los días de actividad no tienen que ser consecutivos; descansar no borra el progreso.</small></div>
@@ -1767,7 +1925,7 @@ function render(liveOnly=false){
     el.innerHTML=`<span class="mission-difficulty" data-difficulty="${difficulty}">${DIFFICULTIES[difficulty].label} · ${TORMENTS[S.missionTorments[ex.id]].name}</span>
       <div class="mission-title"><span class="mission-icon" aria-hidden="true">${EXERCISE_ICONS[ex.id]}</span><div><strong>${ex.name}</strong><div class="mission-target">Objetivo: ${tgt} ${ex.unit}</div></div></div>
       ${d>0?`<p><small>Progreso: ${d}/${tgt} ${ex.unit} · completa lo restante.</small></p><div class="bar mis"><div style="width:${Math.min(100,100*d/tgt)}%"></div></div>`:''}
-      <div class="quest-rewards"><span aria-label="${Math.round(preview.damage*10)/10} de daño estimado" title="Daño estimado">⚔️ <span class="reward-value">${Math.round(preview.damage*10)/10}</span></span><span aria-label="${preview.xp} XP estimada" title="XP estimada">✨ <span class="reward-value">${preview.xp}</span> XP</span><span aria-label="${preview.coins} monedas estimadas" title="Oro estimado">🪙 <span class="reward-value">${preview.coins}</span> G</span></div>`;
+      <div class="quest-rewards"><span aria-label="${Math.round(preview.damage*10)/10} de daño base estimado sin crítico" title="Daño base estimado, sin crítico">⚔️ <span class="reward-value">${Math.round(preview.damage*10)/10}</span></span><span aria-label="${preview.xp} XP estimada" title="XP estimada">✨ <span class="reward-value">${preview.xp}</span> XP</span><span aria-label="${preview.coins} monedas estimadas" title="Oro estimado">🪙 <span class="reward-value">${preview.coins}</span> G</span></div>`;
     const complete=document.createElement('button');
     complete.type='button';complete.className='complete';complete.textContent='✓ Completado';
     complete.setAttribute('aria-label',`Completar misión de ${ex.name}`);
@@ -1793,7 +1951,51 @@ function render(liveOnly=false){
   }
   $('cnt').textContent=`(${S.completedToday} hoy · sin límite)`;
   $('weekly-progress').innerHTML=journeyMarkup();
-  renderChar();renderAttributes();renderShop();renderAchievements();renderTorment();renderTower();renderWeeklyBoss();renderBattleUpgrades();
+  renderChar();renderAttributes();renderSkills();renderExerciseSettings();renderShop();renderAchievements();renderTorment();renderTower();renderWeeklyBoss();renderBattleUpgrades();
+}
+function renderSkills(){
+  const box=$('skill-tree'),labels={dmg:'daño',xp:'XP',coin:'monedas de misiones y enemigos',crit:'probabilidad de crítico',critDamage:'daño crítico',materials:'fragmentos de recompensas'};
+  const focused=document.activeElement?.dataset.skill;
+  $('skill-points').textContent=`✨ Puntos disponibles: ${skillPoints()} · 🎯 Crítico: ${criticalChance()} % · daño crítico: ${150+skillBonus('critDamage')} %`;
+  box.replaceChildren();
+  for(const branch of SKILL_BRANCHES){
+    const column=document.createElement('div');column.className='skill-branch';
+    const heading=document.createElement('h3');heading.textContent=branch.name;column.appendChild(heading);
+    for(const node of branch.nodes){
+      const skill=SKILLS[node.id],rank=S.skills[node.id]||0,button=document.createElement('button');
+      button.className='skill-node';button.type='button';
+      button.dataset.active=String(rank>0);button.dataset.skill=node.id;
+      button.innerHTML=`<strong>${node.name} · ${rank}/${SKILL_MAX}</strong><small>+${node.amount}% ${labels[node.stat]} por punto${skill.requires&&!S.skills[skill.requires]?' · requiere nodo anterior':''}</small>`;
+      button.disabled=skillPoints()<1 || rank>=SKILL_MAX || !!(skill.requires&&!S.skills[skill.requires]);
+      button.onclick=()=>{
+        const unlocked=unlockSkill(node.id);save();render();
+        $('skill-status').textContent=unlocked?`${node.name} mejorado a ${S.skills[node.id]}.`:'No se puede mejorar esta habilidad.';
+      };
+      column.appendChild(button);
+    }
+    box.appendChild(column);
+  }
+  if(focused) box.querySelector(`[data-skill="${focused}"]:not(:disabled)`)?.focus({preventScroll:true});
+}
+function renderExerciseSettings(){
+  $('mission-scale').value=String(S.missionScale);
+  $('rest-day').disabled=S.lastRest===today();
+  $('rest-day').textContent=S.lastRest===today()?'🌿 Descanso registrado':'🌿 Registrar descanso de hoy';
+  const box=$('exercise-options');box.replaceChildren();
+  for(const ex of EXERCISES){
+    const label=document.createElement('label'),input=document.createElement('input');
+    input.type='checkbox';input.checked=S.exerciseEnabled.includes(ex.id);
+    input.setAttribute('aria-label',`Permitir ${ex.name} en nuevos encargos`);
+    input.onchange=()=>{
+      if(!input.checked && S.exerciseEnabled.length<=7){
+        input.checked=true;$('exercise-status').textContent='Debes mantener al menos siete ejercicios para generar encargos.';return;
+      }
+      if(input.checked) S.exerciseEnabled.push(ex.id);
+      else S.exerciseEnabled=S.exerciseEnabled.filter(id=>id!==ex.id);
+      save();$('exercise-status').textContent='Preferencias guardadas para los nuevos encargos.';
+    };
+    label.append(input,document.createTextNode(ex.name));box.appendChild(label);
+  }
 }
 function renderTorment(){
   const current=TORMENTS[S.torment],box=$('torment-options');
@@ -1824,7 +2026,7 @@ $('torment-options').addEventListener('click',event=>{
     renderTorment();$('torment-status').textContent='Ese tormento todavía no está disponible.';return;
   }
   save();render();
-  $('torment-status').textContent=`${TORMENTS[S.torment].name} aplicado a todo el juego.`;
+  $('torment-status').textContent=`${TORMENTS[S.torment].name} aplicado a todo el juego. El botín de un enemigo usa el tormento más bajo en el que recibió daño.`;
 });
 function renderBattleUpgrades(){
   const box=$('battle-upgrades');box.replaceChildren();
@@ -1959,6 +2161,11 @@ function renderChar(){
   const inventory=$('inventory');inventory.innerHTML='';
   const type=$('inventory-type').value;
   const matches=inventoryAvailable(S.owned,type);
+  const available=new Set(inventoryAvailable(S.owned));
+  for(const id of selectedItems) if(!available.has(id)){selectedItems.delete(id);bulkConfirm=false}
+  const bulk=$('dismantle-selected');
+  bulk.disabled=selectedItems.size===0;
+  bulk.textContent=bulkConfirm?`¿Confirmar ${selectedItems.size} objetos?`:`🔨 Desmantelar selección (${selectedItems.size})`;
   const pages=Math.max(1,Math.ceil(matches.length/INVENTORY_PAGE_SIZE));
   inventoryPage=Math.min(inventoryPage,pages-1);
   $('inventory-pagination').hidden=pages===1;
@@ -1974,6 +2181,14 @@ function renderChar(){
     row.ondragstart=event=>{event.dataTransfer.setData('application/x-fitquest-item',id);event.dataTransfer.effectAllowed='move'};
     row.ondragend=()=>render();
     row.innerHTML=`<strong>${GROUPS[item.g].icon} ${item.name}${upgradeLevel(id)?` +${upgradeLevel(id)}`:''}</strong><small>${TIER_ICONS[item.tier]} ${TIER_NAMES[item.tier]} · +${itemPercent(item)}% ${STAT_TXT[item.stat]}</small>`;
+    const comparable=EQ_SLOTS.filter(slot=>slot.g===item.g).map(slot=>({slot,item:itemById(S.eq[slot.k])}));
+    const comparison=document.createElement('small');
+    comparison.textContent=comparable.map(({slot,item:equipped})=>`${GROUPS[slot.g].label}${slot.n?' '+slot.n:''}: ${equipped?`${equipped.name} (+${itemPercent(equipped)}%); diferencia ${itemPercent(item)-itemPercent(equipped)>=0?'+':''}${itemPercent(item)-itemPercent(equipped)}%`:'vacío'}`).join(' · ');
+    const label=document.createElement('label'),checkbox=document.createElement('input');
+    checkbox.type='checkbox';checkbox.checked=selectedItems.has(id);
+    checkbox.setAttribute('aria-label',`Seleccionar ${item.name} para desmantelar`);
+    checkbox.onchange=()=>{if(checkbox.checked) selectedItems.add(id);else selectedItems.delete(id);bulkConfirm=false;renderChar()};
+    label.append(checkbox,document.createTextNode(' Seleccionar'));row.append(comparison,label);
     const actions=document.createElement('div');actions.className='item-actions';
     const select=document.createElement('button');select.textContent='Equipar';
     select.onclick=()=>equip(item);
@@ -2064,7 +2279,7 @@ function renderTower(){
     box.innerHTML='<h3>🗼 Torre de 100 plantas</h3><p>🏆 ¡Has conquistado la torre!</p>';
     return;
   }
-  const floor=tower.floor,torment=tower.torment??S.torment,difficulty=TORMENTS[torment];
+  const floor=tower.floor,torment=tower.torment??S.torment,difficulty=TORMENTS[torment],loot=TORMENTS[Math.min(tower.rewardTorment??torment,torment)];
   const max=Math.round(towerMaxHp(floor)*difficulty.hp),hp=tower.torment===null?max:tower.hp,species=(floor-1)%MISSION_MONSTERS.length;
   const kind=floor%10===0?'boss':floor%5===0?'elite':'normal';
   const damage=Math.round(24*bonus('dmg')*100)/100;
@@ -2078,7 +2293,7 @@ function renderTower(){
       <p>❤️ ${Math.max(0,Math.ceil(hp))} / ${max} · ⚔️ ${damage} daño</p>
       <div class="bar hp"><div style="width:${Math.max(0,100*hp/max)}%"></div></div>
       <p><small>La primera misión de cada día da 1 llave de torre. Cada ataque consume 1 llave; máximo 1 ataque diario. La vida se conserva.</small></p>
-      <p><small>Al superar la planta: ${Math.round((20+floor*5)*difficulty.reward)} monedas y ${Math.round((25+floor*4)*difficulty.reward)} XP antes de bonos · ${Math.round((2+Math.floor(floor/10))*difficulty.reward)} fragmentos.</small></p>
+      <p><small>Botín máximo actual (${loot.name}): ${Math.round((20+floor*5)*loot.reward)} monedas y ${Math.round((25+floor*4)*loot.reward)} XP antes de bonos · ${materialReward((2+Math.floor(floor/10))*loot.reward)} fragmentos. Puede bajar si atacas en un tormento menor.</small></p>
     </div></div>`;
   const button=document.createElement('button');button.type='button';button.className='complete';
   button.textContent=tower.lastAttack===today()?'Ya atacaste hoy':tower.keys<1?'Necesitas una llave de torre':'⚔️ Atacar · 1 🔷';
@@ -2090,26 +2305,24 @@ function renderTower(){
   box.querySelector('.challenge-details').appendChild(button);
 }
 function renderWeeklyBoss(){
-  const box=$('dungeon-bosses'),progress=S.weeklyBoss,boss=WEEKLY_BOSSES[progress.index];
-  if(!boss){
-    box.innerHTML='<h3>👑 Bosses semanales</h3><p>🏆 ¡Has derrotado a todos los bosses!</p>';
-    return;
-  }
-  const rank=progress.index+1,damage=Math.round(40*bonus('dmg')*100)/100;
-  const torment=progress.torment??S.torment,difficulty=TORMENTS[torment],max=Math.round(boss.hp*difficulty.hp);
+  const box=$('dungeon-bosses'),progress=S.weeklyBoss,boss=bossFor(progress.index);
+  const rank=progress.index+1,round=Math.floor(progress.index/WEEKLY_BOSSES.length)+1,position=progress.index%WEEKLY_BOSSES.length;
+  const torment=progress.torment??S.torment,difficulty=TORMENTS[torment],loot=TORMENTS[Math.min(progress.rewardTorment??torment,torment)],max=Math.round(bossBaseHp(progress.index)*difficulty.hp);
   const hp=progress.torment===null?max:progress.hp;
+  const damage=Math.round(40*bonus('dmg')*(1-bossResistance(boss,hp,max,progress.hits||0))*100)/100;
   box.innerHTML=`<div class="expedition-challenge">
-    ${challengeStage(boss.species,'boss',`Boss ${rank} / ${WEEKLY_BOSSES.length}`)}
+    ${challengeStage(boss.species,'boss',`Boss ${position+1} / ${WEEKLY_BOSSES.length} · vuelta ${round}`)}
     <div class="challenge-details">
-      <span class="challenge-pill">👑 Boss ${rank} / ${WEEKLY_BOSSES.length}</span>
+      <span class="challenge-pill">👑 Boss ${position+1} / ${WEEKLY_BOSSES.length} · vuelta ${round}</span>
       <h3>${boss.name}</h3>
       <span class="challenge-pill">🔥 ${difficulty.name}</span>
+      <p><small>✨ ${bossAbilityText(boss)}</small></p>
       <p>❤️ ${Math.max(0,Math.ceil(hp))} / ${max} · ⚔️ ${damage} daño</p>
       <div class="bar hp"><div style="width:${Math.max(0,100*hp/max)}%"></div></div>
       <p><small>Un ataque en total por semana, de lunes a domingo. La vida se conserva; el siguiente boss aparece al vencer al actual.</small></p>
-      <p><small>Victoria: ${Math.round((150+rank*100)*difficulty.reward)} monedas y ${Math.round((100+rank*80)*difficulty.reward)} XP antes de bonos · ${Math.round((10+rank*5)*difficulty.reward)} fragmentos.</small></p>
+      <p><small>Botín máximo actual (${loot.name}): ${Math.round((150+rank*100)*loot.reward)} monedas y ${Math.round((100+rank*80)*loot.reward)} XP antes de bonos · ${materialReward((10+rank*5)*loot.reward)} fragmentos. Puede bajar si atacas en un tormento menor.</small></p>
     </div></div>
-    <div class="boss-roster" aria-label="Progreso de bosses">${WEEKLY_BOSSES.map((entry,i)=>`<span>${i<progress.index?'✅':i===progress.index?'⚔️':'🔒'} ${entry.name}</span>`).join('')}</div>`;
+    <div class="boss-roster" aria-label="Progreso de bosses">${WEEKLY_BOSSES.map((entry,i)=>`<span>${i<position?'✅':i===position?'⚔️':'🔒'} ${entry.name}</span>`).join('')}</div>`;
   const button=document.createElement('button');button.type='button';button.className='complete';
   button.disabled=progress.lastAttackWeek===weekStart(today());
   button.textContent=button.disabled?'Ya atacaste esta semana':'⚔️ Atacar al boss';
@@ -2141,10 +2354,47 @@ function changeInventoryPage(direction){
 }
 $('inventory-prev').onclick=()=>changeInventoryPage(-1);
 $('inventory-next').onclick=()=>changeInventoryPage(1);
+$('mission-scale').onchange=event=>{
+  const updated=setMissionScale(Number(event.target.value));save();render();
+  $('exercise-status').textContent=updated?'Objetivos actualizados conservando el progreso.':'No se puede aplicar ese objetivo.';
+};
+$('rest-day').onclick=()=>{
+  rollDay();
+  S.lastRest=today();save();render();
+  $('exercise-status').textContent='Descanso registrado: protege tu racha sin conceder recompensas.';
+};
+$('export-save').onclick=()=>{
+  settleBattle();save();
+  const blob=new Blob([JSON.stringify({format:'fitquest-save',version:1,state:S},null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob),link=document.createElement('a');
+  link.href=url;link.download=`fitquest-${today()}.json`;link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
+  $('backup-status').textContent='Copia de la partida exportada.';
+};
+$('import-save').onclick=()=>$('import-file').click();
+$('import-file').onchange=async event=>{
+  const file=event.target.files[0];event.target.value='';
+  if(!file) return;
+  try{
+    const data=JSON.parse(await file.text());
+    if(!validateBackup(data)) throw new Error('El archivo no es una copia válida de FitQuest.');
+    if(!confirm('Esto reemplazará la partida actual. Exporta una copia antes si quieres conservarla. ¿Continuar?')) return;
+    localStorage.setItem(KEY,JSON.stringify(data.state));
+    location.reload();
+  }catch(error){$('backup-status').textContent=`No se ha importado la partida: ${error.message}`;}
+};
+$('dismantle-selected').onclick=()=>{
+  if(!selectedItems.size) return;
+  if(!bulkConfirm){bulkConfirm=true;renderChar();$('inventory-status').textContent='Confirma para destruir los objetos seleccionados y sus mejoras.';return}
+  settleBattle();
+  let count=0;
+  for(const id of selectedItems) if(dismantle(id)) count++;
+  selectedItems.clear();bulkConfirm=false;save();render();
+  $('inventory-status').textContent=`${count} objetos desmantelados.`;
+};
 $('reset').onclick=()=>{
   const b=$('reset');
   if(b.dataset.armed){clearTimeout(resetTimer);delete b.dataset.armed;b.textContent='Reiniciar partida';
-    clearTimeout(lootTimer);lootTimer=null;S=fresh();dismantleConfirm=null;inventoryPage=0;$('inventory-type').value='all';$('pack-result').textContent='';$('pack-stage').classList.remove('spinning','reveal');$('pack-reel').replaceChildren();$('pack-reel').style.transform='translateX(-64px)';$('mission-status').textContent='';$('torment-status').textContent='';save();render();return}
+    clearTimeout(lootTimer);lootTimer=null;S=fresh();dismantleConfirm=null;bulkConfirm=false;selectedItems.clear();inventoryPage=0;$('inventory-type').value='all';$('pack-result').textContent='';$('pack-stage').classList.remove('spinning','reveal');$('pack-reel').replaceChildren();$('pack-reel').style.transform='translateX(-64px)';$('mission-status').textContent='';$('torment-status').textContent='';save();render();return}
   b.dataset.armed=1;b.textContent='¿Seguro? Pulsa otra vez para borrar';
   resetTimer=setTimeout(()=>{delete b.dataset.armed;b.textContent='Reiniciar partida'},4000);
 };
@@ -2166,6 +2416,7 @@ setInterval(()=>{
     if(!$('character').hidden && (S.level!==previousLevel || S.achievements.length!==previousAchievements)) renderChar();
     if(!$('achievements').hidden && S.achievements.length!==previousAchievements) renderAchievements();
     if(S.level!==previousLevel) renderTorment();
+    if(S.level!==previousLevel && !$('skills').hidden) renderSkills();
     if(!$('dungeons').hidden && (S.level!==previousLevel || S.achievements.length!==previousAchievements)){
       renderTower();renderWeeklyBoss();
     }
@@ -2180,6 +2431,7 @@ window.addEventListener('storage',event=>{
   if(event.key!==KEY || event.newValue===null) return;
   try{S=JSON.parse(event.newValue)}
   catch(error){alert('No se puede leer la partida actualizada en otra pestaña.');throw error}
+  if(!S.skills || !S.exerciseEnabled || S.missionScale==null){location.reload();return}
   migrateRemovedDungeons();
   $('torment-status').textContent='';
   render();

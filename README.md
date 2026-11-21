@@ -4,7 +4,9 @@ Juego incremental de ejercicio en casa. Abre `index.html` en un navegador
 moderno; no necesita instalación ni conexión. La partida se guarda en el
 almacenamiento local del navegador y no se sincroniza entre dispositivos,
 navegadores o ubicaciones del archivo. Borrar los datos del navegador puede
-eliminarla.
+eliminarla. Usa **Exportar partida** para guardar una copia JSON y **Importar
+partida** para restaurarla; importar reemplaza la partida actual tras pedir
+confirmación. Se aceptan las copias exportadas por esta versión.
 
 ## Cómo jugar
 
@@ -39,10 +41,12 @@ eliminarla.
   posteriores dan el 25 % de XP, daño y monedas de misión. El botín de
   monstruos no se reduce. La primera misión del día da una llave de torre.
   Esto evita que acumular ejercicio sea necesario para progresar.
-  Ya no hay un botón de descanso semanal para proteger la racha; los descansos
-  registrados antes de esta versión se
-  respetan al actualizar. La racha puede reiniciarse tras un día sin actividad,
-  pero descansar es siempre más importante que mantenerla.
+  En la configuración del tablón puedes excluir ejercicios, manteniendo al
+  menos siete para generar misiones, y ajustar los objetivos al 50, 75, 100,
+  125 o 150 %. El ajuste modifica los objetivos actuales conservando el
+  progreso; los ejercicios excluidos dejan de aparecer en nuevas misiones.
+  Registrar un día de descanso protege la racha, sin otorgar monedas, XP ni
+  progreso de actividad. Una racha ya perdida no se recupera.
 - **Encuentros de misiones:** cada enemigo tiene vida según su especie.
   Tras cada cinco victorias aparece un élite y, tras cada diez, un jefe
   en su lugar. En los demás encuentros hay un 5 % de probabilidad de
@@ -100,7 +104,10 @@ eliminarla.
   Desmantela objetos no equipados con
   dos pulsaciones: dan 2, 5, 12, 25, 40, 65 o 100 fragmentos según su rareza. El inventario
   se puede filtrar por tipo y muestra hasta 12 objetos por página; al cambiar
-  de página la vista baja hasta el final del inventario.
+  de página la vista baja hasta el final del inventario. Cada objeto se compara
+  con los huecos compatibles equipados. También puedes seleccionar varios
+  objetos, incluso en distintas páginas, y confirmar su desmantelamiento conjunto;
+  los objetos equipados quedan excluidos.
   En ordenador, personaje y entrenamiento se muestran arriba y el inventario
   ocupa el ancho completo debajo. En pantallas amplias, como 1680 × 1050,
   los textos y controles aumentan de tamaño.
@@ -121,6 +128,15 @@ eliminarla.
   (incluidos los de misión, arena, torre y bosses), los días de actividad,
   las victorias de arena y de desafío, los sobres, los logros y capítulos registrados,
   y la racha actual.
+- **Árbol de habilidades:** al llegar a cada nivel se obtiene un punto,
+  incluidos los niveles existentes al actualizar; el nivel inicial también da
+  uno. En los niveles múltiplos de diez se reciben dos puntos en total. Las
+  cuatro ramas ofrecen daño, crítico, monedas, XP y fragmentos de recompensas.
+  Cada nodo admite 20 rangos y requiere un punto en el nodo anterior de su rama.
+  Los bonos de daño, monedas y XP se suman a los demás bonos; los de fragmentos
+  afectan a enemigos, logros y travesía, no al desmantelamiento. Los golpes
+  críticos pueden producirse en misiones, arena, torre y bosses, tienen una
+  probabilidad máxima del 75 % y causan inicialmente el 150 % del daño.
 - **Logros:** desbloquean mejoras permanentes al alcanzar sus objetivos. Las
   misiones se cuentan desde esta versión; los niveles y monstruos derrotados
   de partidas antiguas sí se reconocen. Hay nuevos hitos incrementales para
@@ -168,11 +184,14 @@ eliminarla.
   fragmentos y abre la siguiente planta; el daño sobrante no se traslada.
   La planta 100 completa la torre. El ataque causa 24 de daño base, con los
   bonos generales de daño.
-- **Bosses semanales:** hay ocho enemigos en orden. Se permite un único ataque
+- **Bosses semanales:** hay doce enemigos en orden. Se permite un único ataque
   en total por semana natural (lunes a domingo, hora local); la vida se
   conserva entre semanas. Al derrotar al boss se reciben monedas, XP y
   fragmentos y se abre el siguiente. El ataque causa 40 de daño base con los
-  bonos generales. Vencer al último completa el desafío.
+  bonos generales. Cada boss tiene una resistencia propia; algunas se activan
+  según su vida o en ataques alternos. Al vencer al último comienza otra vuelta
+  con un 50 % más de vida base por vuelta y recompensas crecientes. Quienes ya
+  habían vencido a los ocho bosses anteriores continúan desde el noveno.
 - **Modos retirados:** las expediciones del vacío y las mazmorras por nivel
   dejan de estar disponibles. Los encuentros pendientes se interrumpen y no
   otorgan recompensas adicionales; sus datos permanecen en la partida.
@@ -194,7 +213,11 @@ eliminarla.
   El cambio se aplica inmediatamente a las misiones, los enemigos de misión,
   la arena, la torre y los bosses. Se conserva el progreso absoluto de las
   misiones y el porcentaje de vida restante de cada enemigo. El combate
-  automático pendiente se calcula antes del cambio. La vida y
+  automático pendiente se calcula antes del cambio. Las recompensas de cada
+  enemigo y sus logros asociados usan el tormento más bajo en el que recibió
+  daño; así no se incrementa su botín al subir el tormento justo antes de vencer.
+  En enemigos ya empezados se conserva como mínimo el tormento guardado al
+  actualizar. La vida y
   los fragmentos se redondean al entero más próximo; las monedas y la XP se
   redondean tras aplicar también sus bonos habituales.
 - **Progresión a largo plazo:** hay logros por 7, 30, 90, 180 y 365 días

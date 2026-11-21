@@ -26,7 +26,7 @@ function game(saved) {
 }
 
 test('navigation starts in adventure and selects one accessible tab', () => {
-  const sections = ['adventure', 'character', 'store', 'achievements', 'packs', 'battle', 'dungeons', 'torment'];
+  const sections = ['adventure', 'character', 'skills', 'store', 'achievements', 'packs', 'battle', 'dungeons', 'torment'];
   assert.deepEqual([...html.matchAll(/data-section="([^"]+)"/g)].map(match => match[1]), sections);
   assert.match(html, /id="tab-adventure"[^>]*aria-selected="true"/);
   assert.match(html, /<section id="adventure" role="tabpanel" aria-labelledby="tab-adventure">/);
@@ -423,7 +423,7 @@ test('mission board omits manual changes and the visible activity log', () => {
 });
 
 test('journey places milestones under chapter progress and reset at the bottom', () => {
-  assert.match(html, /id="journey">[\s\S]*?id="weekly-progress"><\/div>\s*<\/div>\s*<div class="reset-footer"><button id="reset"[^>]*>Reiniciar partida<\/button><\/div>\s*<\/section>/);
+  assert.match(html, /id="journey">[\s\S]*?id="weekly-progress"><\/div>\s*<\/div>\s*<div class="reset-footer">[\s\S]*?<button id="reset"[^>]*>Reiniciar partida<\/button><\/div>\s*<\/section>/);
   assert.equal((html.match(/id="reset"/g) || []).length, 1);
   assert.match(script, /class="chapter-progress"><h3>[\s\S]*?class="bar mis"[\s\S]*?class="milestones"/);
 });
@@ -808,10 +808,10 @@ test('weekly bosses retain health, enforce one attack per week and advance once'
       attackWeeklyBoss('2026-01-12')) return false;
     S.weeklyBoss.index=WEEKLY_BOSSES.length-1; S.weeklyBoss.hp=1; S.weeklyBoss.torment=0;
     if(!attackWeeklyBoss('2026-01-19') || S.weeklyBoss.index!==WEEKLY_BOSSES.length ||
-      S.weeklyBoss.hp!==0 || attackWeeklyBoss('2026-01-26')) return false;
+      S.weeklyBoss.hp!==bossBaseHp(WEEKLY_BOSSES.length) || !attackWeeklyBoss('2026-01-26')) return false;
     save(); return true;
   })()`),true);
-  assert.equal(game(restored.saved()).run('S.weeklyBoss.index'),8);
+  assert.equal(game(restored.saved()).run('S.weeklyBoss.index'),12);
 });
 
 test('torment unlocks by level and rejects locked or invalid selections', () => {
@@ -906,7 +906,7 @@ test('mission monsters immediately scale health and rewards with torment', () =>
     selectTorment(12);
     if(S.encounter.torment!==12 || S.encounter.maxHp!==4250 || S.monsterHp!==2125) return false;
     S.monsterHp=1;hit(1);
-    if(S.coins!==Math.round(10*bonus('coin')*22.5) || S.encounter.torment!==12) return false;
+    if(S.coins!==Math.round(10*bonus('coin')) || S.encounter.torment!==12) return false;
     const max=S.encounter.maxHp;S.monsterHp=max/3;
     selectTorment(0);selectTorment(12);
     return S.encounter.maxHp===max && Math.abs(S.monsterHp-max/3)<1e-8;
@@ -921,7 +921,7 @@ test('changing torment settles pending arena progress before switching', () => {
     const damage=battleDamage();
     if(!selectTorment(12,11000) || S.autoMonsterHp!==(20-damage)*85 || S.autoTorment!==12) return false;
     S.autoMonsterHp=1;
-    const highCoins=Math.round(10*bonus('coin')*22.5);
+    const highCoins=Math.round(10*bonus('coin'));
     settleBattle(21000);
     if(S.coins!==highCoins || S.autoTorment!==12 ||
       Math.abs(S.autoMonsterHp-(autoMaxHp(1,12)-(damage-1)))>1e-8) return false;
@@ -990,6 +990,90 @@ test('switching shop torment cannot reset the ten daily purchase slots', () => {
       if(S.shopStock.offers.length!==10 || S.shopStock.offers.some(id=>!S.shopStock.sold.includes(id))) return false;
     }
     return S.shopStock.sold.length===10 && Object.keys(S.shopStock.soldSlots).length===10;
+  })()`),true);
+});
+
+test('skill points accrue retroactively with two points total every tenth level', () => {
+  const first=game();
+  assert.equal(first.run(`(() => {
+    S=fresh();S.level=10;S.battleUpdated=1000;
+    if(skillPoints()!==11 || unlockSkill('blade',1000) || !unlockSkill('might',1000) || !unlockSkill('blade',1000)) return false;
+    if(skillPoints()!==9 || statBreakdown('dmg').skills!==5) return false;
+    S.level=20;
+    if(skillPoints()!==20) return false;
+    save();return true;
+  })()`),true);
+  assert.equal(game(first.saved()).run(`skillPoints()===20 && S.skills.might===1 && S.skills.blade===1`),true);
+});
+
+test('critical and fragment skills affect combat and rewards', () => {
+  const g=game();
+  assert.equal(g.run(`(() => {
+    S=fresh();S.level=20;S.battleUpdated=1000;
+    unlockSkill('precision',1000);unlockSkill('impact',1000);
+    unlockSkill('fortune',1000);unlockSkill('prosperity',1000);unlockSkill('salvage',1000);
+    if(criticalChance()!==1 || materialReward(100)!==102) return false;
+    Math.random=()=>0;
+    if(Math.abs(criticalDamage(100)-153)>1e-8) return false;
+    Math.random=()=>0.5;
+    return criticalDamage(100)===100;
+  })()`),true);
+});
+
+test('mission preferences update targets without drift and preserve partial progress', () => {
+  const g=game();
+  assert.equal(g.run(`(() => {
+    S=fresh();S.level=120;const ex=byId(S.active[0]),initial=missionTarget(ex);S.done[ex.id]=3;
+    if(!setMissionScale(50)||missionTarget(ex)!==Math.ceil(initial/2)||S.done[ex.id]!==3) return false;
+    selectTorment(12);if(missionTarget(ex)!==Math.ceil(initial*.5*1.6-1e-10)) return false;
+    for(let i=0;i<10;i++){setMissionScale(75);setMissionScale(50)}
+    setMissionScale(100);selectTorment(0);
+    if(missionTarget(ex)!==initial || S.done[ex.id]!==3 || setMissionScale(0)) return false;
+    S.exerciseEnabled=EXERCISES.slice(0,7).map(ex=>ex.id);
+    return S.exerciseEnabled.includes(randomMission(S.exerciseEnabled.slice(0,6),S.exerciseEnabled));
+  })()`),true);
+});
+
+test('backup validation accepts exported state and rejects damaged or incompatible saves', () => {
+  const g=game();
+  assert.equal(g.run(`(() => {
+    S=fresh();const backup={format:'fitquest-save',version:1,state:JSON.parse(JSON.stringify(S))};
+    if(!validateBackup(backup)) return false;
+    backup.state.level=-1;if(validateBackup(backup)) return false;
+    backup.state.level=1;backup.state.battleUpgrades.speed=999;if(validateBackup(backup)) return false;
+    backup.state.battleUpgrades.speed=0;backup.state.skills.blade=1;if(validateBackup(backup)) return false;
+    backup.state.skills={};backup.state.owned=['missing'];if(validateBackup(backup)) return false;
+    backup.state.owned=[];backup.version=2;return !validateBackup(backup);
+  })()`),true);
+});
+
+test('torment rewards are capped by the lowest difficulty used for enemy damage', () => {
+  const g=game();
+  assert.equal(g.run(`(() => {
+    S=fresh();S.level=120;S.achievements=ACHIEVEMENTS.map(a=>a.id);S.battleUpdated=1000;
+    hit(25);selectTorment(12,1000);S.monsterHp=1;hit(1);
+    if(S.coins!==Math.round(10*bonus('coin'))) return false;
+    S=fresh();S.level=120;S.achievements=ACHIEVEMENTS.map(a=>a.id);S.battleUpdated=1000;
+    S.tower.floor=100;S.tower.hp=towerMaxHp(100);S.tower.keys=2;if(!attackTower('2026-01-05')) return false;
+    selectTorment(12,1000);S.tower.hp=1;const coins=S.coins;
+    if(!attackTower('2026-01-06')||S.coins-coins!==Math.round(520*bonus('coin'))) return false;
+    S=fresh();S.level=120;S.achievements=ACHIEVEMENTS.map(a=>a.id);S.battleUpdated=1000;
+    selectTorment(12,1000);S.monsterHp=1;hit(1);
+    return S.coins===Math.round(10*bonus('coin')*22.5);
+  })()`),true);
+});
+
+test('bosses have distinct resistance conditions and cycle to stronger new encounters', () => {
+  const g=game();
+  assert.equal(g.run(`(() => {
+    const opening=WEEKLY_BOSSES[1],alternate=WEEKLY_BOSSES[2],wounded=WEEKLY_BOSSES[4];
+    if(bossResistance(opening,90,100,0)!==.1||bossResistance(opening,50,100,0)!==0 ||
+      bossResistance(alternate,90,100,0)!==.15||bossResistance(alternate,90,100,1)!==0 ||
+      bossResistance(wounded,90,100,0)!==0||bossResistance(wounded,50,100,0)!==.2) return false;
+    S=fresh();S.achievements=ACHIEVEMENTS.map(a=>a.id);S.weeklyBoss.index=WEEKLY_BOSSES.length-1;
+    S.weeklyBoss.torment=0;S.weeklyBoss.hp=1;
+    if(!attackWeeklyBoss('2026-01-05')) return false;
+    return S.weeklyBoss.index===WEEKLY_BOSSES.length && S.weeklyBoss.hp===Math.round(WEEKLY_BOSSES[0].hp*1.5);
   })()`),true);
 });
 
@@ -1072,7 +1156,7 @@ test('tower torment changes immediately and persists health and rewards', () => 
   })()`),true);
 });
 
-test('boss torment changes immediately and uses new rewards on later weeks', () => {
+test('boss torment changes immediately but rewards cannot exceed the lowest attacked torment', () => {
   const g=game();
   assert.equal(g.run(`(() => {
     S=fresh(); S.level=40; S.achievements=ACHIEVEMENTS.map(a=>a.id);
@@ -1085,10 +1169,10 @@ test('boss torment changes immediately and uses new rewards on later weeks', () 
   })()`),true);
   const restored=game(g.saved());
   assert.equal(restored.run(`(() => {
-    const coins=Math.round(250*bonus('coin')*3.5),xp=Math.round(180*bonus('xp')*3.5);
+    const coins=Math.round(250*bonus('coin')*1.8),xp=Math.round(180*bonus('xp')*1.8);
     S.weeklyBoss.hp=1;
     return attackWeeklyBoss('2026-01-12') && S.coins===coins && S.xp===xp &&
-      S.materials===Math.round(15*3.5) && S.weeklyBoss.index===1 && S.weeklyBoss.torment===null;
+      S.materials===Math.round(15*1.8) && S.weeklyBoss.index===1 && S.weeklyBoss.torment===null;
   })()`),true);
 });
 
