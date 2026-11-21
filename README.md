@@ -148,18 +148,22 @@ confirmación. Se aceptan las copias exportadas por esta versión.
   completadas, travesía y progreso de desafíos. Las compras de tienda del día
   siguen contando; sus nuevas ofertas usan el nivel 1. Es recomendable
   exportar una copia antes de prestigiar.
-  El mapa tiene diez ramas conectadas de diez nodos: daño, XP, monedas,
-  fragmentos, una rama universal, probabilidad y daño crítico, daño y botín
-  de autobatalla y tiempo sin conexión. Cada nodo cuesta un punto y exige el
-  anterior de su rama. Las mejoras de multiplicador se suman dentro del
+  El mapa tiene 200 nodos pequeños y 20 mejoras mayores en diez ramas: daño,
+  XP, monedas, fragmentos, una rama universal, probabilidad y daño crítico,
+  daño y botín de autobatalla y tiempo sin conexión. Los nodos se agrupan
+  alrededor de las mejoras mayores. Cada nodo cuesta un punto: los originales
+  mantienen sus requisitos; cada eco exige el nodo original correspondiente y
+  cada mejora mayor exige el quinto o décimo nodo original de su rama.
+  Las mejoras de multiplicador se suman dentro del
   prestigio y se multiplican por los demás bonos; los críticos añaden puntos
   al porcentaje existente (la probabilidad sigue limitada al 75 %). Los nodos
-  de vigilia añaden 30 minutos por nodo al límite sin conexión. El multiplicador de monedas
+  de vigilia añaden el tiempo indicado al límite sin conexión. El multiplicador de monedas
   también afecta a recompensas de travesía y logros; el de fragmentos no
   afecta al desmantelamiento. Redistribuir devuelve todos los puntos gratis.
   Pasa el ratón o enfoca un nodo para ver sus efectos y requisitos; un clic o
   la activación con teclado lo desbloquea. Se puede desplazar el mapa
-  arrastrándolo con el ratón, con las barras o mediante gestos táctiles.
+  arrastrándolo con el ratón, con el teclado o mediante gestos táctiles; las
+  barras de desplazamiento están ocultas.
 - **Árbol de habilidades:** al llegar a cada nivel se obtiene un punto,
   incluidos los niveles existentes al actualizar; el nivel inicial también da
   uno. En los niveles múltiplos de diez se reciben dos puntos en total. Las

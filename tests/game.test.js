@@ -1370,6 +1370,58 @@ test('prestige saves migrate legacy state and reject corrupt points or paths', (
   })()`),true);
 });
 
+test('expanded prestige map preserves the original nodes and has reachable non-overlapping clusters', () => {
+  const g=game();
+  assert.equal(g.run(`(() => {
+    if(PRESTIGE_NODES.length!==220||PRESTIGE_NODES.filter(n=>n.major).length!==20||
+       new Set(PRESTIGE_NODES.map(n=>n.id)).size!==220) return false;
+    for(const branch of PRESTIGE_BRANCHES) for(let i=1;i<=10;i++){
+      const node=PRESTIGE_BY_ID[branch.id+'-'+i];
+      const amount=branch.stat==='crit'?1:branch.stat==='critDamage'?5:branch.stat==='offline'?.5:PRESTIGE_AMOUNTS[i-1];
+      if(!node||node.amount!==amount||node.requires!==(i===1?null:branch.id+'-'+(i-1))||
+         PRESTIGE_BY_ID[branch.id+'-extra-'+i].requires!==node.id) return false;
+    }
+    for(const [i,node] of PRESTIGE_NODES.entries()){
+      if(node.requires&&!PRESTIGE_BY_ID[node.requires]) return false;
+      const radius=node.major?29:18;
+      if(node.x-radius<0||node.y-radius<0||node.x+radius>2200||node.y+radius>2200) return false;
+      for(const other of PRESTIGE_NODES.slice(i+1)){
+        if(Math.hypot(node.x-other.x,node.y-other.y)<radius+(other.major?29:18)) return false;
+      }
+    }
+    ACHIEVEMENTS.length=0;S=fresh();S.battleUpdated=1000;S.prestige={count:1,points:220,nodes:[]};
+    for(const node of PRESTIGE_NODES) if(!unlockPrestige(node.id,1000)) return false;
+    return prestigePointsAvailable()===0&&validateBackup({format:'fitquest-save',version:1,state:S});
+  })()`),true);
+});
+
+test('legacy prestige saves retain bonuses and new nodes require their original paths', () => {
+  const old=game();
+  old.run(`S=fresh();S.battleUpdated=1000;S.prestige={count:1,points:110,nodes:PRESTIGE_BRANCHES.flatMap(b=>Array.from({length:10},(_,i)=>b.id+'-'+(i+1)))};save()`);
+  const restored=game(old.saved());
+  assert.equal(restored.run(`(() => {
+    ACHIEVEMENTS.length=0;
+    if(!validateBackup({format:'fitquest-save',version:1,state:S})||prestigePointsAvailable()!==10||
+       Math.abs(prestigeMultiplier('dmg')-23.8)>1e-8||prestigeValue('crit')!==10||
+       prestigeValue('critDamage')!==50||prestigeValue('offline')!==5) return false;
+    if(!unlockPrestige('dmg-extra-1',1000)||!unlockPrestige('dmg-major-1',1000)||
+       !unlockPrestige('crit-extra-1',1000)||!unlockPrestige('critDamage-major-1',1000)||
+       !unlockPrestige('arenaDamage-major-2',1000)||!unlockPrestige('arenaLoot-extra-1',1000)||
+       !unlockPrestige('offline-extra-1',1000)||!unlockPrestige('offline-major-1',1000)) return false;
+    if(Math.abs(prestigeMultiplier('dmg')-24.9)>1e-8||prestigeValue('crit')!==10.5||
+       prestigeValue('critDamage')!==70||prestigeMultiplier('arenaDamage')!==14.2||
+       Math.abs(prestigeMultiplier('arenaLoot')-12.5)>1e-8||prestigeValue('offline')!==6.25) return false;
+    save();return validateBackup({format:'fitquest-save',version:1,state:S});
+  })()`),true);
+  const reloaded=game(restored.saved());
+  assert.equal(reloaded.run(`(() => {
+    if(prestigePointsAvailable()!==2||prestigeValue('offline')!==6.25) return false;
+    if(!resetPrestigeTree(1000)||prestigePointsAvailable()!==110||
+       unlockPrestige('dmg-extra-1',1000)||unlockPrestige('dmg-major-1',1000)) return false;
+    S.prestige.nodes=['dmg-extra-1'];return !validateBackup({format:'fitquest-save',version:1,state:S});
+  })()`),true);
+});
+
 test('repeated prestige accumulates points and completed branches stack multiplicatively', () => {
   const g=game();
   assert.equal(g.run(`(() => {
