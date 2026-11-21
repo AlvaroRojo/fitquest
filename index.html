@@ -9,8 +9,6 @@
   *{box-sizing:border-box}
   body{font-family:system-ui,sans-serif;background:radial-gradient(ellipse at 10% 0%,#302056,#10152b 48%,#080b19 100%);color:#e9ecff;margin:0;padding:16px;min-height:100vh}
   body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:-1;background:repeating-linear-gradient(0deg,transparent 0 59px,#887aff0a 60px),repeating-linear-gradient(90deg,transparent 0 59px,#887aff0a 60px);mask-image:linear-gradient(transparent,#000)}
-  body::after{content:"";position:fixed;inset:0;z-index:1000;pointer-events:none;opacity:var(--torment-fire,0);transition:opacity .4s;box-shadow:inset 0 0 18px 5px #f55c09aa,inset 0 0 3px 1px #ffcd7b;background-image:radial-gradient(ellipse at 50% 0%,#ffb234dd,#e34413aa 35%,transparent 72%),radial-gradient(ellipse at 50% 100%,#ffb234dd,#e34413aa 35%,transparent 72%),radial-gradient(ellipse at 0% 50%,#ffb234dd,#e34413aa 35%,transparent 72%),radial-gradient(ellipse at 100% 50%,#ffb234dd,#e34413aa 35%,transparent 72%);background-size:58px 25px,71px 30px,25px 63px,30px 71px;background-position:top left,bottom left,top left,top right;background-repeat:repeat-x,repeat-x,repeat-y,repeat-y;animation:torment-fire 2.4s ease-in-out infinite alternate}
-  @keyframes torment-fire{from{filter:brightness(.85)}to{filter:brightness(1.25)}}
   h2{font-size:1.1em;margin:.4em 0 .7em;color:#b9d1ff;letter-spacing:.04em}
   .subtitle,small,.muted{color:#acb5d3}
   .card{position:relative;background:linear-gradient(135deg,#222749f2,#10182df5);border:1px solid #55547d;border-radius:14px;padding:16px;margin-bottom:12px;box-shadow:0 12px 30px #03061388,inset 0 1px #ffffff12}
@@ -1762,7 +1760,6 @@ function render(liveOnly=false){
 function renderTorment(){
   const current=TORMENTS[S.torment],box=$('torment-options');
   const focused=document.activeElement?.dataset.torment;
-  document.documentElement.style.setProperty('--torment-fire',String(S.torment?0.15+0.85*S.torment/12:0));
   $('torment-current').textContent=current.name;
   $('torment-hp').textContent=`×${current.hp}`;
   $('torment-reward').textContent=`×${current.reward}`;

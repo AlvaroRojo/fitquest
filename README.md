@@ -175,8 +175,7 @@ eliminarla.
   otorgan recompensas adicionales; sus datos permanecen en la partida.
 - **Tormento global:** en la pestaña **Tormento**, todos los rangos están
   visibles para comparar sus efectos y seleccionar uno disponible. El santuario muestra
-  la dificultad activa; el borde de la pantalla brilla con intensidad creciente
-  según el rango. Los rangos bloqueados indican el nivel necesario.
+  la dificultad activa; los rangos bloqueados indican el nivel necesario.
   Hay Normal y doce rangos,
   desbloqueados cada diez niveles desde el 10 hasta el 120. Los rangos I a XII
   multiplican la vida enemiga por 1,75/2,5/4/6/8/11/15/21/30/42/60/85 y
