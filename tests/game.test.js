@@ -26,7 +26,7 @@ function game(saved) {
 }
 
 test('navigation starts in adventure and selects one accessible tab', () => {
-  const sections = ['adventure', 'character', 'statistics', 'skills', 'store', 'achievements', 'packs', 'battle', 'dungeons', 'torment'];
+  const sections = ['adventure', 'character', 'statistics', 'skills', 'passives', 'store', 'achievements', 'packs', 'battle', 'dungeons', 'torment'];
   assert.deepEqual([...html.matchAll(/data-section="([^"]+)"/g)].map(match => match[1]), sections);
   assert.match(html, /id="tab-adventure"[^>]*aria-selected="true"/);
   assert.match(html, /<section id="adventure" role="tabpanel" aria-labelledby="tab-adventure">/);
@@ -1040,6 +1040,71 @@ test('skill points accrue retroactively with two points total every tenth level'
     save();return true;
   })()`),true);
   assert.equal(game(first.saved()).run(`skillPoints()===16 && S.skills.might===5 && S.skills.blade===1`),true);
+});
+
+test('passive tree grants retroactive independent points and enforces rank prerequisites', () => {
+  const old=game();
+  old.run(`S=fresh();S.level=70;delete S.passives;delete S.subclass;S.battleUpdated=1000;save()`);
+  const restored=game(old.saved());
+  assert.equal(restored.run(`(() => {
+    if(passivePoints()!==21 || skillPoints()!==77 || !validateBackup({format:'fitquest-save',version:1,state:${JSON.stringify(old.saved())}})) return false;
+    S.level=49;if(passivePoints()!==0 || unlockPassive('war1',1000)) return false;
+    S.level=50;if(passivePoints()!==1 || unlockPassive('war2',1000) || !unlockPassive('war1',1000) || unlockPassive('war1',1000)) return false;
+    S.level=70;for(let i=0;i<2;i++) if(!unlockPassive('war1',1000)) return false;
+    return unlockPassive('war2',1000) && passiveSpent()===4 && passivePoints()===17 && statBreakdown('dmg').passives===13;
+  })()`),true);
+});
+
+test('passive subclasses are exclusive, affect gameplay, persist and can change after redistribution', () => {
+  const g=game();
+  assert.equal(g.run(`(() => {
+    S=fresh();S.level=69;S.battleUpdated=1000;
+    if(chooseSubclass('champion',1000)) return false;
+    for(const id of ['war1','war2','war3','war4']) for(let i=0;i<5;i++) if(!unlockPassive(id,1000)) return false;
+    if(!chooseSubclass('champion',1000) || chooseSubclass('oracle',1000) || statBreakdown('dmg').passives!==90) return false;
+    if(battleDamage()!==3.8 || !validateBackup({format:'fitquest-save',version:1,state:S})) return false;
+    save();return true;
+  })()`),true);
+  const restored=game(g.saved());
+  assert.equal(restored.run(`(() => {
+    if(S.subclass!=='champion' || passivePoints()!==0 || statBreakdown('dmg').passives!==90) return false;
+    resetPassives(1000);
+    if(S.subclass!==null || passivePoints()!==20) return false;
+    for(const id of ['hunt1','hunt2','hunt3','hunt4']) for(let i=0;i<5;i++) if(!unlockPassive(id,1000)) return false;
+    if(!chooseSubclass('assassin',1000) || criticalChance()!==20 || criticalBonus()!==75) return false;
+    resetPassives(1000);
+    for(const id of ['wealth1','wealth2','wealth3','wealth4']) for(let i=0;i<5;i++) if(!unlockPassive(id,1000)) return false;
+    if(!chooseSubclass('oracle',1000) || materialReward(100)!==135 || statBreakdown('xp').passives!==20) return false;
+    save();return true;
+  })()`),true);
+  assert.equal(game(restored.saved()).run(`S.subclass==='oracle' && passivePoints()===0 && materialReward(100)===135`),true);
+});
+
+test('passive backup validation rejects locked, invalid or overspent progress', () => {
+  const g=game();
+  assert.equal(g.run(`(() => {
+    S=fresh();S.level=60;const backup=()=>({format:'fitquest-save',version:1,state:S});
+    S.passives={war2:1};if(validateBackup(backup())) return false;
+    S.passives={war1:6};if(validateBackup(backup())) return false;
+    S.passives={war1:5,hunt1:5,wealth1:2};if(validateBackup(backup())) return false;
+    S.passives={war1:5};S.subclass='oracle';if(validateBackup(backup())) return false;
+    S.subclass='unknown';if(validateBackup(backup())) return false;
+    S.passives={war1:1};S.subclass=null;S.level=49;
+    return !validateBackup(backup());
+  })()`),true);
+});
+
+test('passive upgrades settle arena progress before applying bonuses and affect challenge attacks', () => {
+  const g=game();
+  assert.equal(g.run(`(() => {
+    ACHIEVEMENTS.length=0;S=fresh();S.level=50;S.battleUpdated=1000;S.autoMonsterHp=50;S.tower.keys=1;
+    if(!unlockPassive('war1',11000) || Math.abs(S.autoMonsterHp-48)>1e-8) return false;
+    if(Math.abs(battleDamage()-2.06)>1e-8) return false;
+    S.tower.hp=100;S.tower.torment=0;
+    if(!attackTower('2026-01-05') || Math.abs(S.tower.hp-(100-24*1.03))>1e-8) return false;
+    resetPassives(21000);
+    return Math.abs(S.autoMonsterHp-(48-2.06))<1e-8 && battleDamage()===2 && passivePoints()===1;
+  })()`),true);
 });
 
 test('critical and fragment skills affect combat and rewards', () => {

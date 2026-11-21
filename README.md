@@ -150,6 +150,17 @@ confirmación. Se aceptan las copias exportadas por esta versión.
   probabilidad máxima del 75 % y causan inicialmente el 150 % del daño.
   Los críticos visibles muestran un impacto y su daño en misiones, arena,
   torre y bosses; el progreso acumulado sin conexión no reproduce golpes pasados.
+- **Pasivas ancestrales:** se desbloquean al nivel 50 y dan un punto independiente
+  por nivel a partir de ese nivel, también retroactivamente. Las cuatro ramas
+  tienen veinte mejoras de hasta cinco rangos; para desbloquear la siguiente se
+  necesitan tres rangos en la anterior. Sus bonos se suman a los de habilidades,
+  equipo y logros, y el crítico conserva su límite del 75 %.
+  Con 20 puntos invertidos se elige una subclase sin coste adicional:
+  Campeón (+30 puntos porcentuales de daño), Asesino (+10 puntos de probabilidad
+  y +30 de daño crítico) u Oráculo (+20 puntos de XP, monedas y fragmentos de
+  recompensas). Solo puede elegirse una; redistribuir pasivas es gratuito y
+  permite elegir otra, sin afectar al árbol de habilidades original. Las copias
+  de seguridad antiguas siguen siendo compatibles.
 - **Logros:** desbloquean mejoras permanentes al alcanzar sus objetivos. Las
   misiones se cuentan desde esta versión; los niveles y monstruos derrotados
   de partidas antiguas sí se reconocen. Hay nuevos hitos incrementales para
