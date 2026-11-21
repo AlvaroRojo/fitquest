@@ -271,7 +271,7 @@ test('daily shop uses weighted rarities among eligible tiers', () => {
     return counts;
   })()`));
   assert.equal(counts.reduce((a,b)=>a+b,0),20000);
-  for(const [count,weight] of counts.map((count,i)=>[count,[.60,.25,.12,.03][i]])) {
+  for(const [count,weight] of counts.map((count,i)=>[count,[.60/.99,.25/.99,.11/.99,.03/.99][i]])) {
     assert.ok(Math.abs(count/20000-weight)<.02, `Unexpected counts: ${counts}`);
   }
 });
@@ -1426,7 +1426,7 @@ test('combat reward per enemy health rises with torment and divine drops remain 
   assert.equal(g.run(`(() => {
     for(let i=1;i<TORMENTS.length;i++) if(combatReward(i)/TORMENTS[i].hp<=combatReward(i-1)/TORMENTS[i-1].hp) return false;
     const normal=packOdds(PACKS[3],120,0)[6],high=packOdds(PACKS[3],120,12)[6];
-    return normal===.05 && high>normal && high<.2 && monsterHp(1000)<500000 && monsterHp(1000)>100000;
+    return normal===.015 && high>normal && high<.033 && monsterHp(1000)<500000 && monsterHp(1000)>100000;
   })()`),true);
 });
 
@@ -1876,6 +1876,7 @@ test('packs enforce level and price and retain duplicate items without refunds',
     if(openPack('basic')!==null || openPack('missing')!==null || S.coins!==99) return false;
     S.coins=1000;
     if(openPack('silver')!==null || S.coins!==1000) return false;
+    S.level=10;
     Math.random=()=>0;
     if(!openPack('basic') || S.coins!==900 || S.owned[0]!=='sword_0_0' || S.packsOpened!==1) return false;
     const message=openPack('basic');
@@ -1893,12 +1894,12 @@ test('packs enforce level and price and retain duplicate items without refunds',
 test('pack draws include high unlocked tiers and retain duplicate copies', () => {
   const g=game();
   assert.equal(g.run(`(() => {
-    S=fresh(); S.level=40; S.coins=10000; S.achievements=ACHIEVEMENTS.map(a=>a.id);
+    S=fresh(); S.level=60; S.coins=10000; S.achievements=ACHIEVEMENTS.map(a=>a.id);
     Math.random=()=>0.9999999999999999;
     if(!openPack('arcane') || ITEM[S.owned[0]].tier!==6 || S.coins!==8200) return false;
     if(!openPack('arcane') || S.coins!==6400 || S.owned.length!==2 || itemById(S.owned[1]).tier!==6) return false;
-    S.level=30; S.owned=[];
-    if(!openPack('arcane') || ITEM[S.owned[0]].tier!==5) return false;
+    S.level=39; S.owned=[];
+    if(!openPack('silver') || ITEM[S.owned[0]].tier!==5) return false;
     S.materials=0;
     if(!dismantle(S.owned[0]) || S.materials!==65) return false;
     return true;
@@ -1908,7 +1909,7 @@ test('pack draws include high unlocked tiers and retain duplicate copies', () =>
 test('duplicate items equip, upgrade and dismantle independently and survive reload', () => {
   const g=game();
   assert.equal(g.run(`(() => {
-    S=fresh(); S.coins=1000; S.materials=100; S.achievements=ACHIEVEMENTS.map(a=>a.id);
+    S=fresh(); S.level=10; S.coins=1000; S.materials=100; S.achievements=ACHIEVEMENTS.map(a=>a.id);
     Math.random=()=>0;
     const first=drawPack('basic').item.id,second=drawPack('basic').item.id;
     if(first!=='sword_0_0' || second!=='sword_0_0#1') return false;

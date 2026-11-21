@@ -54,14 +54,14 @@ function simulate(profile) {
         attackWeeklyBoss();
         selectTorment(unlocked);
         for(let i=0;i<3;i++){
-          const pack=S.level>=30?'arcane':S.level>=15?'gold':'basic';
+          const pack=S.level>=60?'arcane':S.level>=40?'gold':S.level>=20?'silver':'basic';
           const item=drawPack(pack)?.item;
           if(!item) break;
           const slots=EQ_SLOTS.filter(slot=>slot.g===item.g);
           if(slots.some(slot=>!S.eq[slot.k]) ||
              (slots.length===1 && itemPercent(item)>itemPercent(itemById(S.eq[slots[0].k])))) autoEquipItem(item.id);
         }
-        const tier=TIER_NAMES.findLastIndex((_,i)=>S.level>=TIER_LVL[i]&&CRAFT_COST[i]<=S.materials/2);
+        const tier=TIER_NAMES.findLastIndex((_,i)=>S.level>=CRAFT_LEVEL[i]&&CRAFT_COST[i]<=S.materials/2);
         if(tier>=0){
           const group=['sword','shield','boots','chest','pants','ring','necklace','earring']
             .find(g=>!Object.values(S.eq).some(id=>itemById(id)?.g===g&&itemById(id).tier>=tier));

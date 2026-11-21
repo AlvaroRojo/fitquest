@@ -65,7 +65,7 @@ confirmación. Se aceptan las copias exportadas por esta versión.
   ofertas, manteniendo las compras y un máximo de diez compras al día. Cada
   selección de tormento conserva sus ofertas hasta medianoche, salvo ajustes
   para evitar duplicados con las compras. La rareza se sortea para
-  cada objeto con pesos base 60/25/12/3/1/0,4/0,1
+  cada objeto con pesos base 60/25/11/3/0,8/0,18/0,02
   (común/poco común/raro/legendario/mítico/ancestral/divino), modificados
   por el tormento al generar las ofertas;
   se excluyen las rarezas aún no desbloqueadas y se redistribuyen sus pesos.
@@ -116,9 +116,12 @@ confirmación. Se aceptan las copias exportadas por esta versión.
   a su estadística. El coste es 5 + 3 por nivel de mejora actual + 2 por
   índice de rareza (común 0 a divino 6). Desmantelar elimina el objeto y sus
   mejoras. En la tienda puedes fabricar un objeto aleatorio del tipo y rareza
-  elegidos, siempre que la rareza esté desbloqueada. Los costes por rareza
-  son 10, 30, 70, 150, 300, 600 y 1200 fragmentos; desmantelar el resultado
-  siempre devuelve menos de lo invertido.
+  elegidos. Las rarezas común, poco común, rara, legendaria, mítica, ancestral
+  y divina requieren respectivamente los niveles 1, 10, 20, 40, 40, 60 y 60
+  para fabricarse; cuestan 10, 30, 70, 400, 1200, 3000 y 8000 fragmentos.
+  Desmantelar el resultado siempre devuelve menos de lo invertido. Estos niveles
+  de fabricación son independientes de los desbloqueos de tienda y sobres;
+  los objetos ya conseguidos se conservan.
   Hay 218 objetos en siete rarezas; los sobres ofrecen otra forma de
   conseguirlos.
 - **Entrenamiento del héroe:** en la pestaña Personaje puedes comprar rangos
@@ -185,11 +188,17 @@ confirmación. Se aceptan las copias exportadas por esta versión.
   desde esta versión avanzan con nuevas victorias de arena, torre y bosses.
   Sus recompensas de llaves ahora dan llaves de torre.
 - **Sobres:** hay cuatro tipos, comprados únicamente con monedas del juego:
-  aventurero (100, nivel 1), plata (300, nivel 5), dorado (800, nivel 15)
-  y arcano (1800, nivel 30). Las siete rarezas se desbloquean en los niveles
+  aventurero (100, nivel 10), plata (300, nivel 20), dorado (800, nivel 40)
+  y arcano (1800, nivel 60). Las siete rarezas se desbloquean en los niveles
   1, 5, 10, 15, 20, 30 y 40; solo pueden salir objetos disponibles al nivel
   actual. Cada sobre tiene distintos pesos y los más caros favorecen las
-  rarezas altas. Los pesos de rarezas bloqueadas se excluyen y los restantes
+  rarezas altas. En Normal, con todas las rarezas disponibles, las
+  probabilidades de común a divino son:
+  aventurero 55/26/13/4,5/1,1/0,35/0,05 %;
+  plata 40/30/20/7/2/0,8/0,2 %;
+  dorado 22/27/30/14/5/1,7/0,3 %;
+  arcano 10/20/30/22/11/5,5/1,5 %.
+  Los pesos de rarezas bloqueadas se excluyen y los restantes
   se normalizan; el tormento favorece las rarezas altas y las probabilidades
   actuales se muestran antes de comprar. Tras 20 sobres consecutivos sin
   legendario o superior, el siguiente garantiza una de esas rarezas; la
@@ -261,7 +270,7 @@ confirmación. Se aceptan las copias exportadas por esta versión.
   para mejorar la recompensa por vida derrotada al subir el tormento.
   Cada rango también añade un 5 % al objetivo de las misiones. Los
   sobres y la selección diaria de la tienda favorecen más las rarezas altas:
-  el peso de cada rareza se multiplica por `(1 + 0,05 × rango) ^ índice`,
+  el peso de cada rareza se multiplica por `(1 + 0,02 × rango) ^ índice`,
   excluyendo las rarezas bloqueadas por nivel y normalizando después.
   Las monedas y fragmentos de logros y capítulos también aumentan; las llaves,
   los objetos y los porcentajes

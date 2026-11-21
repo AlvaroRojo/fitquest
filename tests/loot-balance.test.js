@@ -28,7 +28,7 @@ function game(saved) {
 test('twenty misses guarantee the next eligible pack globally and persist', () => {
   const g = game();
   assert.equal(g.run(`(() => {
-    S=fresh();S.level=15;S.coins=10000;S.achievements=ACHIEVEMENTS.map(a=>a.id);
+    S=fresh();S.level=20;S.coins=10000;S.achievements=ACHIEVEMENTS.map(a=>a.id);
     Math.random=()=>0;
     for(let i=0;i<20;i++){
       const result=drawPack(i%2?'silver':'basic');
@@ -39,8 +39,8 @@ test('twenty misses guarantee the next eligible pack globally and persist', () =
   const restored = game(g.saved());
   assert.equal(restored.run(`(() => {
     if(S.packMisses!==20) return false;
-    const result=drawPack('gold');
-    return result.tier===3 && S.packMisses===0;
+    const result=drawPack('silver');
+    return result.tier>=3 && S.packMisses===0;
   })()`), true);
 });
 
@@ -70,7 +70,7 @@ test('effective odds condition only unlocked high tiers and preserve ordinary od
 test('pre-unlock packs remain accessible and failures do not change guarantee progress', () => {
   const g = game();
   assert.equal(g.run(`(() => {
-    S=fresh();S.coins=10000;S.achievements=ACHIEVEMENTS.map(a=>a.id);
+    S=fresh();S.level=10;S.coins=10000;S.achievements=ACHIEVEMENTS.map(a=>a.id);
     Math.random=()=>0;
     for(let i=0;i<22;i++) if(!drawPack('basic')) return false;
     if(S.packMisses!==20 || drawPack('silver') || S.packMisses!==20) return false;
@@ -84,17 +84,63 @@ test('pre-unlock packs remain accessible and failures do not change guarantee pr
 test('naturally finding a high rarity resets the global counter', () => {
   const g = game();
   assert.equal(g.run(`(() => {
-    S=fresh();S.level=40;S.coins=10000;S.packMisses=19;
+    S=fresh();S.level=60;S.coins=10000;S.packMisses=19;
     S.achievements=ACHIEVEMENTS.map(a=>a.id);
     Math.random=()=>0.9999999999999999;
     return drawPack('arcane').tier===6 && S.packMisses===0;
   })()`), true);
 });
 
+test('pack and store probabilities match the agreed values at normal and torment XII', () => {
+  const g=game();
+  assert.equal(g.run(`(() => {
+    const weights=[
+      [55,26,13,4.5,1.1,.35,.05],[40,30,20,7,2,.8,.2],
+      [22,27,30,14,5,1.7,.3],[10,20,30,22,11,5.5,1.5]
+    ];
+    for(let i=0;i<PACKS.length;i++){
+      const pack=PACKS[i],odds=packOdds(pack,120,0);
+      if(odds.some((p,t)=>Math.abs(p-weights[i][t]/100)>1e-12)) return false;
+      if(drawPack(pack.id)!==null) return false;
+    }
+    const shopNormal=[60,25,11,3,.8,.18,.02];
+    if(SHOP_WEIGHTS.some((w,t)=>Math.abs(w-shopNormal[t])>1e-12)) return false;
+    const arcane=packOdds(PACKS[3],120,12);
+    if(Math.abs(arcane[6]*100-3.20)>.01 ||
+       Math.abs(arcane.slice(3).reduce((a,b)=>a+b,0)*100-52.52)>.01) return false;
+    const store=SHOP_WEIGHTS.map((w,t)=>rarityWeight(w,t,12));
+    const total=store.reduce((a,b)=>a+b,0);
+    return Math.abs(store[6]/total*100-.06)<.01;
+  })()`),true);
+});
+
+test('pack levels and crafting levels are enforced without taking existing items', () => {
+  const g=game();
+  assert.equal(g.run(`(() => {
+    S=fresh();S.coins=100000;S.materials=100000;S.achievements=ACHIEVEMENTS.map(a=>a.id);
+    Math.random=()=>0;
+    for(const pack of PACKS){
+      S.level=pack.level-1;const count=S.packsOpened,coins=S.coins;
+      if(drawPack(pack.id)!==null||S.packsOpened!==count||S.coins!==coins) return false;
+      S.level=pack.level;if(!drawPack(pack.id)) return false;
+    }
+    if(PACKS.map(pack=>pack.level).join(',')!=='10,20,40,60') return false;
+    if(CRAFT_LEVEL.join(',')!=='1,10,20,40,40,60,60') return false;
+    for(let tier=1;tier<CRAFT_LEVEL.length;tier++){
+      S.level=CRAFT_LEVEL[tier]-1;const materials=S.materials;
+      if(craftItem('sword',tier)!==null||S.materials!==materials) return false;
+      S.level=CRAFT_LEVEL[tier];if(!craftItem('sword',tier)) return false;
+    }
+    S.level=1;save();return S.owned.some(id=>itemById(id).tier===6);
+  })()`),true);
+  const restored=game(g.saved());
+  assert.equal(restored.run(`S.owned.some(id=>itemById(id).tier===6)`),true);
+});
+
 test('crafting costs more than dismantling, respects unlocks and creates independent copies', () => {
   const g = game();
   assert.equal(g.run(`(() => {
-    S=fresh();S.level=1;S.materials=10000;Math.random=()=>0;
+    S=fresh();S.level=1;S.materials=20000;Math.random=()=>0;
     if(CRAFT_COST.some((cost,tier)=>cost<=TIER_FRAGMENTS[tier] || (tier && cost<=CRAFT_COST[tier-1]))) return false;
     const before=S.materials;
     if(craftItem('sword',1)||craftItem('missing',0)||craftItem('sword',-1)||
@@ -102,7 +148,7 @@ test('crafting costs more than dismantling, respects unlocks and creates indepen
     const a=craftItem('sword',0),b=craftItem('sword',0);
     if(a.id===b.id||a.g!=='sword'||a.tier!==0||b.g!=='sword'||b.tier!==0) return false;
     if(!dismantle(a.id)||S.materials!==before-2*CRAFT_COST[0]+TIER_FRAGMENTS[0]) return false;
-    S.level=40;
+    S.level=60;
     for(let tier=0;tier<TIER_NAMES.length;tier++){
       const item=craftItem('ring',tier);
       if(!item||item.g!=='ring'||item.tier!==tier) return false;
@@ -131,13 +177,14 @@ test('forge controls show unlocked costs and save a crafted item immediately', (
     }
     const $=id=>elements[id]??=(element(id==='craft-type'||id==='craft-tier'?'select':'div'));
     const document={createElement:tag=>element(tag)};
-    S=fresh();S.level=5;S.materials=60;Math.random=()=>0;
+    S=fresh();S.level=10;S.materials=60;Math.random=()=>0;
   `);
   g.run(script.slice(script.indexOf('function renderShop(){'), script.indexOf('function renderAchievements(){')));
   assert.equal(g.run(`(() => {
     renderShop();
     const tier=$('craft-tier'),button=$('craft-button');
-    if(tier.children.length!==2 || !tier.children[1].textContent.includes('30 fragmentos')) return false;
+    if(tier.children.length!==7 || !tier.children[1].textContent.includes('30 fragmentos') ||
+       tier.children[1].disabled || !tier.children[2].disabled || !tier.children[2].textContent.includes('nivel 20')) return false;
     tier.value='1';tier.onchange();
     if(!$('craft-info').textContent.includes('Desmantelar: 5') || button.disabled) return false;
     button.onclick();

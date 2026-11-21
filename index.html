@@ -1109,12 +1109,13 @@ function addItem(id){
   return instance;
 }
 const SHOP_SIZE=10, FORGE_WEEKLY_LIMIT=10;
-const SHOP_WEIGHTS=[60,25,12,3,1,.4,.1];
+const SHOP_WEIGHTS=[60,25,11,3,.8,.18,.02];
 const FORGE={dmg:{name:'Filo eterno',icon:'⚔️'},xp:{name:'Sabiduría arcana',icon:'📘'},coin:{name:'Prosperidad dorada',icon:'🪙'}};
-const CRAFT_COST=[10,30,70,150,300,600,1200];
+const CRAFT_LEVEL=[1,10,20,40,40,60,60];
+const CRAFT_COST=[10,30,70,400,1200,3000,8000];
 function craftItem(group,tier){
   if(!Object.hasOwn(GROUPS,group)||!Number.isInteger(tier)||tier<0||tier>=TIER_NAMES.length||
-     S.level<TIER_LVL[tier]||S.materials<CRAFT_COST[tier]) return null;
+     S.level<CRAFT_LEVEL[tier]||S.materials<CRAFT_COST[tier]) return null;
   const pool=ITEMS.filter(item=>item.g===group&&item.tier===tier);
   if(!pool.length) return null;
   const item=pool[Math.floor(Math.random()*pool.length)];
@@ -1336,17 +1337,17 @@ function autoEncounter(kills){
   return {species:kills%MISSION_MONSTERS.length,kind:kills%10===9?'boss':kills%5===4?'elite':'normal'};
 }
 const PACKS=[
-  {id:'basic',name:'Sobre aventurero',icon:'📦',level:1,cost:100,weights:[60,25,12,3,1,.4,.1]},
-  {id:'silver',name:'Sobre de plata',icon:'🥈',level:5,cost:300,weights:[25,40,25,8,2,.8,.2]},
-  {id:'gold',name:'Sobre dorado',icon:'🥇',level:15,cost:800,weights:[5,15,35,30,10,4,1]},
-  {id:'arcane',name:'Sobre arcano',icon:'🔮',level:30,cost:1800,weights:[1,4,10,30,30,20,5]}
+  {id:'basic',name:'Sobre aventurero',icon:'📦',level:10,cost:100,weights:[55,26,13,4.5,1.1,.35,.05]},
+  {id:'silver',name:'Sobre de plata',icon:'🥈',level:20,cost:300,weights:[40,30,20,7,2,.8,.2]},
+  {id:'gold',name:'Sobre dorado',icon:'🥇',level:40,cost:800,weights:[22,27,30,14,5,1.7,.3]},
+  {id:'arcane',name:'Sobre arcano',icon:'🔮',level:60,cost:1800,weights:[10,20,30,22,11,5.5,1.5]}
 ];
 const PACK_GUARANTEE_MISSES=20, PACK_HIGH_TIER=3;
 const packReelLayout=width=>{
   const padding=Math.ceil((width/2+40)/136)+1;
   return {start:padding,winner:padding+24+Math.floor(Math.random()*29),padding,offset:Math.floor(Math.random()*81)-40,duration:3800+Math.floor(Math.random()*1401)};
 };
-const rarityWeight=(weight,tier,torment)=>weight*Math.pow(1+0.05*torment,tier);
+const rarityWeight=(weight,tier,torment)=>weight*Math.pow(1+0.02*torment,tier);
 function packOdds(pack,level,torment=0){
   const eligible=pack.weights.map((weight,tier)=>level>=TIER_LVL[tier]?rarityWeight(weight,tier,torment):0);
   const total=eligible.reduce((sum,weight)=>sum+weight,0);
@@ -2671,11 +2672,11 @@ function renderShop(){
   if(Object.hasOwn(GROUPS,previousType)) type.value=previousType;
   tier.replaceChildren();
   TIER_NAMES.forEach((name,index)=>{
-    if(S.level<TIER_LVL[index]) return;
     const option=document.createElement('option');option.value=String(index);
-    option.textContent=`${TIER_ICONS[index]} ${name} · ${CRAFT_COST[index]} fragmentos`;tier.appendChild(option);
+    option.disabled=S.level<CRAFT_LEVEL[index];
+    option.textContent=`${TIER_ICONS[index]} ${name} · ${CRAFT_COST[index]} fragmentos${option.disabled?` · nivel ${CRAFT_LEVEL[index]}`:''}`;tier.appendChild(option);
   });
-  if(previousTier!==''&&Number(previousTier)<TIER_NAMES.length&&S.level>=TIER_LVL[Number(previousTier)]) tier.value=previousTier;
+  if(previousTier!==''&&Number(previousTier)<TIER_NAMES.length&&S.level>=CRAFT_LEVEL[Number(previousTier)]) tier.value=previousTier;
   const selectedTier=Number(tier.value),cost=CRAFT_COST[selectedTier],button=$('craft-button');
   $('craft-info').textContent=`Fragmentos disponibles: ${S.materials} · Coste: ${cost} · Desmantelar: ${TIER_FRAGMENTS[selectedTier]}`;
   button.textContent=`Fabricar · ${cost} fragmentos`;button.disabled=S.materials<cost;
