@@ -128,23 +128,35 @@
   .prestige-map-scroll.dragging{cursor:grabbing;user-select:none}
   .prestige-zoom{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin:8px 0}
   .prestige-zoom button{margin:0}
-  .prestige-canvas{position:relative;width:2800px;height:2800px;overflow:clip}
-  .prestige-map{position:absolute;left:0;top:0;width:2800px;height:2800px;transform-origin:top left;background:
-    radial-gradient(circle at 50% 50%,#8f5fb52e 0,#44305220 18%,transparent 42%),
-    radial-gradient(circle at 30% 35%,#e09a291c,transparent 28%),
-    radial-gradient(circle at 70% 65%,#426db124,transparent 32%),
+  .prestige-canvas{position:relative;width:3500px;height:3500px;overflow:clip}
+  .prestige-map{position:absolute;left:0;top:0;width:3500px;height:3500px;transform-origin:top left;background:
+    radial-gradient(ellipse at 50% 50%,#b77fd63d 0,#51336a26 18%,transparent 42%),
+    radial-gradient(ellipse at 23% 32%,#c06a4155,transparent 26%),
+    radial-gradient(ellipse at 76% 65%,#357bc65c,transparent 30%),
+    radial-gradient(ellipse at 68% 20%,#823f9155,transparent 23%),
     radial-gradient(circle,#f9dfad88 1px,transparent 1.5px) 0 0/97px 101px,
     radial-gradient(circle,#9884b488 1px,transparent 1.5px) 31px 48px/71px 83px,
-    radial-gradient(circle at center,#252031,#090b14 75%)}
+    radial-gradient(circle at center,#252031,#070914 75%)}
+  .prestige-map::before{content:"";position:absolute;inset:0;pointer-events:none;background:
+    radial-gradient(circle,#fff6d8dd 1.5px,transparent 2.5px) 23px 15px/173px 191px,
+    radial-gradient(circle,#99ddffbb 1px,transparent 2px) 64px 93px/137px 149px,
+    radial-gradient(ellipse at 35% 45%,#dc88e522,transparent 28%),
+    radial-gradient(ellipse at 78% 72%,#60d4ef22,transparent 24%);
+    animation:prestige-stars 5s ease-in-out infinite alternate}
+  @keyframes prestige-stars{from{opacity:.2}to{opacity:.85}}
   .prestige-map svg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
-  .prestige-map line{stroke:#947b55;stroke-opacity:.55;stroke-width:2}
-  .prestige-map line.active{stroke:#ffcf74;stroke-opacity:1;stroke-width:3}
+  .prestige-link{fill:none;stroke:#bb9a68;stroke-opacity:.7;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
+  .prestige-link.echo{stroke:#ae91c9;stroke-dasharray:3 5;stroke-width:2}
+  .prestige-link.ascension{stroke:#70b9ce}
+  .prestige-link.active{stroke:#ffcf74;stroke-opacity:1;stroke-width:4}
+  .prestige-link.highlight{stroke:#fff1b0;stroke-opacity:1;stroke-width:5;filter:drop-shadow(0 0 5px #ffcf74)}
   .prestige-orbit{fill:#15111dbb;stroke:#ad854b;stroke-opacity:.5;stroke-width:2}
   .prestige-orbit-inner{fill:none;stroke:#a78a64;stroke-opacity:.28;stroke-width:1;stroke-dasharray:3 7}
   .prestige-orbit.ascension{fill:#122238bb;stroke:#6ad7e7;stroke-opacity:.8}
   .prestige-orbit-inner.ascension{stroke:#86dfeb;stroke-opacity:.55}
   .prestige-center,.prestige-node{position:absolute;transform:translate(-50%,-50%);display:grid;place-items:center;border-radius:50%;margin:0}
-  .prestige-center{width:90px;height:90px;left:50%;top:50%;border:3px double #f5d28f;background:radial-gradient(circle,#7b528d,#241d31 70%);font-size:2rem;box-shadow:0 0 32px #c79be066,inset 0 0 15px #f7d8a844}
+  .prestige-center{width:90px;height:90px;left:50%;top:50%;border:3px double #f5d28f;background:radial-gradient(circle,#7b528d,#241d31 70%);font-size:2rem;box-shadow:0 0 32px #c79be066,inset 0 0 15px #f7d8a844;animation:prestige-heart 4s ease-in-out infinite alternate}
+  @keyframes prestige-heart{from{box-shadow:0 0 24px #c79be066,inset 0 0 15px #f7d8a844}to{box-shadow:0 0 55px #c79be0bb,inset 0 0 24px #f7d8a888}}
   .prestige-node{width:36px;height:36px;padding:0;border:2px solid #8e7650;background:radial-gradient(circle,#443750,#181622 75%);font-size:.9rem;z-index:1}
   .prestige-node.prestige-major{width:58px;height:58px;font-size:1.35rem;border:4px double #cda56a;background:radial-gradient(circle,#755454,#201a2a 75%);z-index:2}
   .prestige-node.prestige-ascension{border-color:#72cada;background:radial-gradient(circle,#3b6575,#161b30 75%)}
@@ -794,7 +806,7 @@
   <div class="card">
     <h2>🌟 Árbol de prestigio</h2>
     <p>Desde el nivel 50, prestigiar concede 1 punto por cada 10 niveles. Pasa el ratón o enfoca un nodo para ver sus efectos; pulsa para desbloquearlo. Arrastra el mapa y usa la rueda para acercar o alejar.</p>
-    <p>✨ Explora 10 constelaciones de ascensión: sus nodos azules combinan dos poderes y culminan en un legado.</p>
+    <p>✨ Explora 10 constelaciones de ascensión: sus nodos azules combinan dos poderes y culminan en un legado. Las líneas punteadas llevan a los ecos; al señalar un nodo se ilumina su conexión.</p>
     <p>Se reinician nivel, XP, habilidades, pasivas, subclase, tormento y todo el equipo, incluidas sus mejoras. Se conservan racha, recursos, logros, atributos, forja, arena y desafíos.</p>
     <div class="prestige-summary"><strong id="prestige-points"></strong><button id="prestige-start" type="button"></button><button id="prestige-reset" type="button">↺ Redistribuir prestigio</button></div>
     <p id="prestige-multipliers"></p>
@@ -1557,7 +1569,7 @@ const PRESTIGE_BRANCHES=[
   {id:'offline',name:'Vigilia',icon:'⏳',stat:'offline'}
 ];
 const PRESTIGE_AMOUNTS=[20,30,40,60,80,120,150,180,210,250];
-const PRESTIGE_MAP_SIZE=2800, PRESTIGE_MAP_CENTER=PRESTIGE_MAP_SIZE/2, PRESTIGE_ORBIT_RADIUS=68;
+const PRESTIGE_MAP_SIZE=3500, PRESTIGE_MAP_CENTER=PRESTIGE_MAP_SIZE/2, PRESTIGE_ORBIT_RADIUS=68, PRESTIGE_ECHO_RADIUS=115;
 const PRESTIGE_ASCENSIONS=[
   {name:'Conquistador estelar',icon:'🔥',effects:[['dmg',25],['critDamage',4]]},
   {name:'Cronista infinito',icon:'📜',effects:[['xp',25],['offline',.25]]},
@@ -1571,38 +1583,44 @@ const PRESTIGE_ASCENSIONS=[
   {name:'Guardián del tiempo',icon:'⌛',effects:[['offline',.25],['arenaDamage',25]]}
 ];
 const PRESTIGE_CLUSTERS=PRESTIGE_BRANCHES.flatMap((branch,b)=>[0,1].map(group=>{
-  const angle=-Math.PI/2+b*2*Math.PI/PRESTIGE_BRANCHES.length,radius=300+group*440;
-  return {branch,group,x:PRESTIGE_MAP_CENTER+radius*Math.cos(angle),y:PRESTIGE_MAP_CENTER+radius*Math.sin(angle)};
+  const angle=-Math.PI/2+b*2*Math.PI/PRESTIGE_BRANCHES.length,radius=470+group*470;
+  return {branch,group,angle,x:PRESTIGE_MAP_CENTER+radius*Math.cos(angle),y:PRESTIGE_MAP_CENTER+radius*Math.sin(angle)};
 }));
 const PRESTIGE_ASCENSION_CLUSTERS=PRESTIGE_BRANCHES.map((branch,b)=>{
   const angle=-Math.PI/2+b*2*Math.PI/PRESTIGE_BRANCHES.length;
-  return {branch,ascension:PRESTIGE_ASCENSIONS[b],x:PRESTIGE_MAP_CENTER+1140*Math.cos(angle),y:PRESTIGE_MAP_CENTER+1140*Math.sin(angle)};
+  return {branch,angle,ascension:PRESTIGE_ASCENSIONS[b],x:PRESTIGE_MAP_CENTER+1410*Math.cos(angle),y:PRESTIGE_MAP_CENTER+1410*Math.sin(angle)};
 });
-const PRESTIGE_NODES=[...PRESTIGE_CLUSTERS.flatMap(({branch,group,x,y})=>{
+const PRESTIGE_NODES=[...PRESTIGE_CLUSTERS.flatMap(({branch,group,angle:branchAngle,x,y})=>{
   const small=Array.from({length:10},(_,i)=>{
-    const index=group*5+Math.floor(i/2)+1,isExtra=i%2===1,angle=-Math.PI/2+i*Math.PI/5;
+    const position=Math.floor(i/2),index=group*5+position+1,isExtra=i%2===1;
+    const angle=branchAngle+Math.PI-position*Math.PI/4+(isExtra?.28:0),radius=isExtra?PRESTIGE_ECHO_RADIUS:PRESTIGE_ORBIT_RADIUS;
     const value=PRESTIGE_AMOUNTS[index-1],amount=branch.stat==='crit'?(isExtra?.5:1):
       branch.stat==='critDamage'?(isExtra?3:5):branch.stat==='offline'?(isExtra?.25:.5):isExtra?Math.round(value/2):value;
     return {id:isExtra?`${branch.id}-extra-${index}`:`${branch.id}-${index}`,
       name:`${branch.name} ${isExtra?'eco ':''}${index}`,icon:branch.icon,stat:branch.stat,amount,
       requires:isExtra?`${branch.id}-${index}`:index>1?`${branch.id}-${index-1}`:null,
-      x:x+PRESTIGE_ORBIT_RADIUS*Math.cos(angle),y:y+PRESTIGE_ORBIT_RADIUS*Math.sin(angle)};
+      x:x+radius*Math.cos(angle),y:y+radius*Math.sin(angle)};
   });
   const amount=branch.stat==='crit'?2:branch.stat==='critDamage'?20:branch.stat==='offline'?1:group?180:100;
   return [...small,{id:`${branch.id}-major-${group+1}`,name:`${branch.name}: ${group?'apoteosis':'maestría'}`,
     icon:branch.icon,stat:branch.stat,amount,major:true,requires:`${branch.id}-${group*5+5}`,x,y}];
-}),...PRESTIGE_ASCENSION_CLUSTERS.flatMap(({branch,ascension,x,y})=>{
+}),...PRESTIGE_ASCENSION_CLUSTERS.flatMap(({branch,ascension,angle:branchAngle,x,y})=>{
   const effects=scale=>ascension.effects.map(([stat,amount])=>({stat,amount:amount*scale}));
   const small=Array.from({length:10},(_,i)=>{
-    const angle=-Math.PI/2+i*Math.PI/5;
+    const angle=branchAngle+Math.PI+i*Math.PI/5;
     return {id:`${branch.id}-ascension-${i+1}`,name:`${ascension.name} ${i+1}`,icon:ascension.icon,
       effects:effects(i<5?1:2),requires:i?`${branch.id}-ascension-${i}`:`${branch.id}-major-2`,
+      via:i?null:`${branch.id}-10`,
       x:x+PRESTIGE_ORBIT_RADIUS*Math.cos(angle),y:y+PRESTIGE_ORBIT_RADIUS*Math.sin(angle)};
   });
   return [...small,{id:`${branch.id}-ascension-major`,name:`${ascension.name}: legado`,icon:ascension.icon,
     effects:effects(4),major:true,requires:`${branch.id}-ascension-10`,x,y}];
 })];
 const PRESTIGE_BY_ID=Object.fromEntries(PRESTIGE_NODES.map(node=>[node.id,node]));
+const prestigeLinkPoints=node=>[
+  node.requires?PRESTIGE_BY_ID[node.requires]:{x:PRESTIGE_MAP_CENTER,y:PRESTIGE_MAP_CENTER},
+  ...(node.via?[PRESTIGE_BY_ID[node.via]]:[]),node
+];
 const prestigeEffects=node=>node.effects||[node];
 function prestigeTotal(stat,includeAll=false){
   const owned=new Set(S.prestige.nodes);
@@ -2609,6 +2627,9 @@ function prestigeNodeState(node){
 }
 function showPrestigeNode(node,button){
   selectedPrestige=node.id;
+  const map=$('prestige-map');
+  map.querySelector('.prestige-link.highlight')?.classList.remove('highlight');
+  map.querySelector(`[data-prestige-link="${node.id}"]`)?.classList.add('highlight');
   const detail=$('prestige-detail'),tooltip=$('prestige-tooltip');
   const content=`<strong>${node.icon} ${node.name}</strong><span>${prestigeNodeDescription(node)}</span><span>${prestigeNodeState(node)}</span>`;
   detail.innerHTML=content;tooltip.innerHTML=content;tooltip.hidden=false;
@@ -2626,11 +2647,12 @@ function renderPrestige(){
   $('prestige-reset').disabled=!S.prestige.nodes.length;
   const orbits=[...PRESTIGE_CLUSTERS,...PRESTIGE_ASCENSION_CLUSTERS].map(cluster=>{
     const style=cluster.ascension?' ascension':'';
-    return `<circle class="prestige-orbit${style}" cx="${cluster.x}" cy="${cluster.y}" r="88"/><circle class="prestige-orbit-inner${style}" cx="${cluster.x}" cy="${cluster.y}" r="${PRESTIGE_ORBIT_RADIUS}"/>`;
+    return `<circle class="prestige-orbit${style}" cx="${cluster.x}" cy="${cluster.y}" r="${cluster.ascension?88:135}"/><circle class="prestige-orbit-inner${style}" cx="${cluster.x}" cy="${cluster.y}" r="${PRESTIGE_ORBIT_RADIUS}"/>`;
   }).join('');
   const lines=PRESTIGE_NODES.map(node=>{
-    const parent=node.requires?PRESTIGE_BY_ID[node.requires]:{x:PRESTIGE_MAP_CENTER,y:PRESTIGE_MAP_CENTER};
-    return `<line x1="${parent.x}" y1="${parent.y}" x2="${node.x}" y2="${node.y}" class="${S.prestige.nodes.includes(node.id)?'active':''}"/>`;
+    const points=prestigeLinkPoints(node).map(point=>`${point.x},${point.y}`).join(' ');
+    const style=`prestige-link${node.id.includes('-extra-')?' echo':''}${node.effects?' ascension':''}${S.prestige.nodes.includes(node.id)?' active':''}`;
+    return `<polyline points="${points}" class="${style}" data-prestige-link="${node.id}"/>`;
   }).join('');
   map.innerHTML=`<svg viewBox="0 0 ${PRESTIGE_MAP_SIZE} ${PRESTIGE_MAP_SIZE}" aria-hidden="true">${orbits}${lines}</svg><div class="prestige-center" aria-hidden="true">🌌</div>`;
   for(const node of PRESTIGE_NODES){
@@ -2642,9 +2664,9 @@ function renderPrestige(){
     button.setAttribute('aria-pressed',String(unlocked));
     button.setAttribute('aria-describedby','prestige-tooltip');
     button.onmouseenter=()=>{if(!prestigeDrag?.moved) showPrestigeNode(node,button)};
-    button.onmouseleave=()=>{$('prestige-tooltip').hidden=true};
+    button.onmouseleave=()=>{$('prestige-tooltip').hidden=true;map.querySelector('.prestige-link.highlight')?.classList.remove('highlight')};
     button.onfocus=()=>showPrestigeNode(node,button);
-    button.onblur=()=>{$('prestige-tooltip').hidden=true};
+    button.onblur=()=>{$('prestige-tooltip').hidden=true;map.querySelector('.prestige-link.highlight')?.classList.remove('highlight')};
     button.onclick=()=>{
       selectedPrestige=node.id;
       if(unlockPrestige(node.id)){save();render();$('prestige-status').textContent=`${node.name} desbloqueado.`}

@@ -1395,6 +1395,36 @@ test('expanded prestige map preserves the original nodes and has reachable non-o
   })()`),true);
 });
 
+test('prestige links follow their prerequisites without crossing unrelated nodes or paths', () => {
+  const g=game();
+  assert.equal(g.run(`(() => {
+    const segments=[];
+    for(const node of PRESTIGE_NODES){
+      const points=prestigeLinkPoints(node);
+      if(points[points.length-1]!==node || (node.requires&&points[0]!==PRESTIGE_BY_ID[node.requires])) return false;
+      if(node.via&&PRESTIGE_BY_ID[node.requires].requires!==node.via) return false;
+      for(let i=1;i<points.length;i++){
+        const a=points[i-1],b=points[i],dx=b.x-a.x,dy=b.y-a.y,den=dx*dx+dy*dy;
+        if(!den) return false;
+        for(const other of PRESTIGE_NODES){
+          if(other===a||other===b) continue;
+          const t=Math.max(0,Math.min(1,((other.x-a.x)*dx+(other.y-a.y)*dy)/den));
+          if(Math.hypot(other.x-a.x-t*dx,other.y-a.y-t*dy)<(other.major?29:18)+1) return false;
+        }
+        segments.push({a,b});
+      }
+    }
+    const cross=(a,b,c)=>(b.x-a.x)*(c.y-a.y)-(b.y-a.y)*(c.x-a.x);
+    for(let i=0;i<segments.length;i++) for(let j=i+1;j<segments.length;j++){
+      const p=segments[i],q=segments[j];
+      if([p.a,p.b].some(a=>[q.a,q.b].some(b=>Math.hypot(a.x-b.x,a.y-b.y)<.001))) continue;
+      if(cross(p.a,p.b,q.a)*cross(p.a,p.b,q.b)<-1e-5&&
+         cross(q.a,q.b,p.a)*cross(q.a,q.b,p.b)<-1e-5) return false;
+    }
+    return true;
+  })()`),true);
+});
+
 test('prestige zoom is limited and adapts to a larger viewport', () => {
   const elements=Object.fromEntries(['prestige-scroll','prestige-canvas','prestige-map','prestige-zoom-out',
     'prestige-zoom-in','prestige-zoom-reset','prestige-tooltip'].map(id=>[id,{
@@ -1404,18 +1434,19 @@ test('prestige zoom is limited and adapts to a larger viewport', () => {
   const scroll=elements['prestige-scroll'];
   Object.assign(scroll,{clientWidth:1000,clientHeight:680,scrollLeft:900,scrollTop:900});
   let resize;
+  const size=game().run('PRESTIGE_MAP_SIZE');
   const context=vm.createContext({
-    $:id=>elements[id],PRESTIGE_MAP_SIZE:2800,
+    $:id=>elements[id],PRESTIGE_MAP_SIZE:size,
     ResizeObserver:class {constructor(callback){resize=callback;} observe(){}}
   });
   vm.runInContext(script.slice(script.indexOf("const prestigeScroll=$('prestige-scroll');"),script.indexOf('let prestigeDrag=')),context);
   vm.runInContext('setPrestigeZoom(.1)',context);
   assert.equal(vm.runInContext('prestigeZoom',context),.5);
   assert.equal(elements['prestige-zoom-out'].disabled,true);
-  assert.equal(elements['prestige-canvas'].style.width,'1400px');
-  scroll.clientWidth=2100;resize();
+  assert.equal(elements['prestige-canvas'].style.width,`${size*.5}px`);
+  scroll.clientWidth=size*.75;resize();
   assert.equal(vm.runInContext('prestigeZoom',context),.75);
-  assert.equal(elements['prestige-canvas'].style.width,'2100px');
+  assert.equal(elements['prestige-canvas'].style.width,`${size*.75}px`);
   assert.equal(elements['prestige-zoom-out'].disabled,true);
   vm.runInContext('setPrestigeZoom(2)',context);
   assert.equal(vm.runInContext('prestigeZoom',context),1.5);

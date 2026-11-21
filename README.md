@@ -166,7 +166,8 @@ confirmación. Se aceptan las copias exportadas por esta versión.
   también afecta a recompensas de travesía y logros; el de fragmentos no
   afecta al desmantelamiento. Redistribuir devuelve todos los puntos gratis.
   Pasa el ratón o enfoca un nodo para ver sus efectos y requisitos; un clic o
-  la activación con teclado lo desbloquea. Se puede desplazar el mapa
+  la activación con teclado lo desbloquea. Su conexión se ilumina y las líneas
+  punteadas identifican los ecos. Se puede desplazar el mapa
   arrastrándolo con el ratón, con el teclado o mediante gestos táctiles; las
   barras de desplazamiento están ocultas. La rueda del ratón acerca o aleja
   el mapa alrededor del cursor y los botones de zoom también funcionan en móvil.
