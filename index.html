@@ -668,8 +668,6 @@
   <h2>📜 Tablón de encargos <small id="cnt"></small></h2>
   <div id="missions" class="quest-board"></div>
   <p id="mission-status" class="mission-status" role="status" aria-live="polite"></p>
-  <button id="rest-day" type="button">🌿 Registrar descanso</button>
-  <p id="rest-status" role="status" aria-live="polite"></p>
 </div>
 <div class="card" id="journey">
   <h2>🗺️ Travesía del héroe</h2>
@@ -1471,7 +1469,7 @@ const FULL_REWARD_MISSIONS=6, WEEKLY_DAYS=3, JOURNEY_CHAPTERS=52, REST_WEEKLY_LI
 const journeyDaysRequired=round=>WEEKLY_DAYS+round;
 
 const fresh = () => ({level:1,xp:0,coins:0,owned:[],eq:{},streak:0,kills:0,
-  day:today(),done:{},bonus:{},lastActive:null,lastRest:null,restWeek:null,restDays:[],monsterHp:monsterHp(0),log:[],active:pickMissions(),completedToday:0,
+  day:today(),done:{},bonus:{},lastActive:null,lastRest:null,monsterHp:monsterHp(0),log:[],active:pickMissions(),completedToday:0,
   targets:{},missionTorments:{},missionTargetReferences:{},exerciseEnabled:EXERCISES.map(e=>e.id),missionScale:100,skills:{},skillStyle:null,passives:{},subclass:null,arenaBalanceVersion:1,levelBalanceVersion:1,totalMissions:0,packsOpened:0,packMisses:0,achievements:[],missionKills:0,autoKills:0,autoMonsterHp:monsterHp(0),autoTorment:0,battleUpdated:Date.now(),
   challengeClears:0,materials:0,activeDays:0,lastActivityDay:null,
   weeklyRewards:0,journeyRound:0,journeyStartDays:0,balanceVersion:1,unlimitedMissionsVersion:1,upgrades:{},attributes:{dmg:0,xp:0,coin:0},encounter:nextEncounter(0),
@@ -1506,8 +1504,6 @@ S.lastActivityDay ??= null;
 S.weeklyRewards ??= 0;
 S.journeyRound ??= 0;
 S.journeyStartDays ??= 0;
-S.restWeek ??= S.lastRest?weekStart(S.lastRest):null;
-S.restDays ??= S.lastRest?[S.lastRest]:[];
 S.upgrades ??= {};
 S.attributes ??= {dmg:0,xp:0,coin:0};
 S.shopStock ??= null;
@@ -1706,16 +1702,6 @@ function rollDay(){
   const last=Math.max(S.lastActive?+new Date(S.lastActive):0,S.lastRest?+new Date(S.lastRest):0);
   if(!last || (new Date(t)-last)/864e5>1) S.streak=0;
   S.day=t;S.bonus={};S.completedToday=0;
-  return true;
-}
-function registerRest(){
-  rollDay();
-  const day=today(),week=weekStart(day);
-  if(S.lastRest===day || S.lastActive===day) return false;
-  const days=S.restWeek===week?S.restDays:[];
-  if(days.length>=REST_WEEKLY_LIMIT) return false;
-  S.restWeek=week;S.restDays=[...days,day];S.lastRest=day;
-  log('🌿 Día de descanso registrado. La racha queda protegida.');
   return true;
 }
 const streakMult = () => 1+Math.min(0.3,S.streak*0.02);
@@ -2346,16 +2332,9 @@ function render(liveOnly=false){
     $('missions').appendChild(el);
   }
   $('cnt').textContent=`(${S.completedToday} hoy · sin límite)`;
-  const restUsed=S.restWeek===weekStart(today())?S.restDays.length:0;
-  $('rest-day').disabled=S.lastRest===today()||S.lastActive===today()||restUsed>=REST_WEEKLY_LIMIT;
-  $('rest-status').textContent=`Descansos esta semana: ${restUsed}/${REST_WEEKLY_LIMIT} · No otorgan XP ni cuentan como actividad.`;
   $('weekly-progress').innerHTML=journeyMarkup();
   renderChar();renderAttributes();renderSkills();renderPassives();renderShop();renderAchievements();renderTorment();renderTower();renderWeeklyBoss();renderBattleUpgrades();
 }
-$('rest-day').onclick=()=>{
-  if(registerRest()){save();render()}
-  else $('rest-status').textContent='No se puede registrar un descanso hoy.';
-};
 $('weekly-progress').addEventListener('click',event=>{
   if(event.target.id==='journey-next-round'&&startJourneyRound()){save();render()}
 });
@@ -2891,7 +2870,7 @@ window.addEventListener('storage',event=>{
   catch(error){alert('No se puede leer la partida actualizada en otra pestaña.');throw error}
   if(!S.skills || !S.passives || !S.exerciseEnabled || S.missionScale==null ||
      S.packMisses==null || S.journeyRound==null || S.journeyStartDays==null ||
-     !S.restDays || S.tower?.round==null || S.weeklyBoss?.weekAttacks==null){location.reload();return}
+     S.tower?.round==null || S.weeklyBoss?.weekAttacks==null){location.reload();return}
   migrateRemovedDungeons();
   $('torment-status').textContent='';
   render();

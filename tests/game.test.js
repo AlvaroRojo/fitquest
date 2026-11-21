@@ -549,13 +549,12 @@ test('active mission targets and partial progress persist across day changes', (
   assert.equal(restored.run('S.targets[S.active[4]]'),g.run('S.targets[S.active[4]]'));
 });
 
-test('mission board offers rest without restoring exercise customization', () => {
+test('mission board omits rest controls and exercise customization', () => {
   const board = html.match(/<h2>📜 Tablón de encargos[\s\S]*?<\/div>\s*<div class="card" id="journey">/)[0];
   assert.doesNotMatch(board, /Reglas y bienestar|Elige una misión/);
   assert.doesNotMatch(html, /Tu ejercicio real es el daño/);
   assert.doesNotMatch(html, /id="rest"|\$\('rest'\)/);
-  assert.doesNotMatch(board, /personalizar ejercicios|mission-scale|exercise-options/i);
-  assert.match(board, /id="rest-day"/);
+  assert.doesNotMatch(board, /personalizar ejercicios|mission-scale|exercise-options|rest-day|rest-status|Descansos esta semana/i);
 });
 
 test('inventory removes bulk selection but keeps per-item dismantling', () => {
@@ -621,29 +620,6 @@ test('previously recorded rest still protects streak during migration', () => {
     S.day=date(yesterday); S.lastRest=date(yesterday); S.lastActive=date(twoDaysAgo); S.streak=3;
     rollDay(); return S.streak===3;
   })()`),true);
-});
-
-test('two rest days protect streak without granting activity or rewards and reset each week', () => {
-  const g=game();
-  assert.equal(g.run(`(() => {
-    const RealDate=Date;let clock=RealDate.parse('2026-01-05T12:00:00Z');
-    Date=class extends RealDate {
-      constructor(...args){super(...(args.length?args:[clock]))}
-      static now(){return clock}
-    };
-    const day=value=>{clock=RealDate.parse(value+'T12:00:00Z')};
-    S=fresh();S.streak=5;S.lastActive='2026-01-04';
-    const coins=S.coins,xp=S.xp;
-    if(!registerRest()||registerRest()||S.streak!==5||S.activeDays!==0||S.coins!==coins||S.xp!==xp) return false;
-    day('2026-01-06');if(!registerRest()||S.streak!==5) return false;
-    day('2026-01-07');if(registerRest()||S.streak!==5) return false;
-    S.lastActive='2026-01-07';S.streak=6;
-    day('2026-01-08');if(registerRest()) return false;
-    day('2026-01-12');if(!registerRest()||S.restDays.length!==1||S.streak!==0) return false;
-    save();return true;
-  })()`),true);
-  const restored=game(g.saved());
-  assert.equal(restored.run(`S.restDays.length===1 && S.restDays[0]==='2026-01-12' && S.restWeek==='2026-01-12'`),true);
 });
 
 test('mission damage preview and actual damage include all character modifiers', () => {

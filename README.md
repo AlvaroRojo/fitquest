@@ -44,11 +44,8 @@ confirmación. Se aceptan las copias exportadas por esta versión.
   monstruos no se reduce. La primera misión del día da una llave de torre.
   Esto evita que acumular ejercicio sea necesario para progresar.
   El tablón usa los ejercicios y objetivos guardados en la partida, pero no
-  muestra controles para personalizarlos. Se pueden registrar hasta dos días
-  de descanso por semana natural: protegen la racha sin dar recompensas ni
-  contar como días de actividad. No se registra descanso en un día con misión
-  ya completada; un descanso registrado no impide hacer una misión después.
-  Las preferencias y descansos anteriores se conservan al actualizar.
+  muestra controles para personalizarlos ni para registrar descansos. Las
+  preferencias y descansos anteriores se conservan al actualizar.
 - **Encuentros de misiones:** cada enemigo tiene vida según su especie.
   Tras cada cinco victorias aparece un élite y, tras cada diez, un jefe
   en su lugar. En los demás encuentros hay un 5 % de probabilidad de
