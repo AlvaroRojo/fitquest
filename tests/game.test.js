@@ -74,6 +74,34 @@ test('navigation starts in adventure and selects one accessible tab', () => {
   assert.equal(panels.adventure.hidden, false);
 });
 
+test('hero status animates actual gains without animating initial or unchanged values', () => {
+  const g=game();
+  g.run(`const elements=Object.fromEntries(['hero-status','lvl','coins','streak','xpbar','xp-progress','xptxt'].map(id=>[id,{
+    textContent:'',style:{},attributes:{},offsetWidth:1,
+    classList:{values:new Set(),add(name){this.values.add(name)},remove(name){this.values.delete(name)}},
+    setAttribute(name,value){this.attributes[name]=value}
+  }]));const $=id=>elements[id];S=fresh();`);
+  g.run(script.slice(script.indexOf('let previousStatus=null;'),script.indexOf('function render(liveOnly=')));
+  assert.equal(g.run(`(() => {
+    renderStatus();
+    if(elements['lvl'].classList.values.size || elements['coins'].classList.values.size ||
+       elements['xp-progress'].attributes['aria-valuenow']!=='0') return false;
+    S.xp=50;S.coins=4;S.streak=1;renderStatus();
+    if(!elements['coins'].classList.values.has('status-gain') ||
+       !elements['streak'].classList.values.has('status-gain') ||
+       !elements['xptxt'].classList.values.has('status-gain') ||
+       elements['xp-progress'].attributes['aria-valuetext']!=='50 de 100 XP') return false;
+    for(const element of Object.values(elements)) element.classList.values.clear();
+    renderStatus();
+    if(Object.values(elements).some(element=>element.classList.values.size)) return false;
+    S.level=2;S.xp=0;renderStatus();
+    if(!elements['hero-status'].classList.values.has('level-up') || !elements['lvl'].classList.values.has('status-gain')) return false;
+    for(const element of Object.values(elements)) element.classList.values.clear();
+    S=fresh();renderStatus();
+    return !Object.values(elements).some(element=>element.classList.values.size);
+  })()`),true);
+});
+
 test('migrates existing saves without changing equipment or progress', () => {
   const old = {
     level: 5, xp: 20, coins: 77, owned: ['sword_0_0'],

@@ -181,6 +181,24 @@
   .status-card{padding:14px 20px;background:linear-gradient(105deg,#41302b,#232235 68%,#18313a);border-color:#b6905c}
   .status-card .row{margin-bottom:8px;color:#ffe4ae;font-weight:600}
   .status-card .bar{height:10px;margin-bottom:4px}
+  .status-card{isolation:isolate;overflow:hidden;border-color:#d8aa6a;background:radial-gradient(ellipse at 12% 0%,#a56b5066,transparent 36%),radial-gradient(ellipse at 84% 100%,#598e9566,transparent 36%),linear-gradient(105deg,#382635,#171a30 53%,#153034);box-shadow:inset 0 0 0 1px #ffe2a233,inset 0 1px #fff3,0 6px 18px #0008,0 0 16px #cd9c5133}
+  .status-card::before{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;background:radial-gradient(circle at 8% 30%,#ffdfa688 0 1px,transparent 2px),radial-gradient(circle at 36% 75%,#9efbe688 0 1px,transparent 2px),radial-gradient(circle at 72% 25%,#ffe4af99 0 1px,transparent 2px),radial-gradient(circle at 92% 70%,#9debe588 0 1px,transparent 2px);animation:status-stars 4s ease-in-out infinite alternate}
+  .status-card::after{content:"";position:absolute;inset:0;z-index:2;pointer-events:none;opacity:0;background:linear-gradient(110deg,transparent 10%,#ffe9ac77 50%,transparent 90%)}
+  .status-card.level-up::after{animation:status-level-up 1.15s ease-out}
+  .status-card .row>*{position:relative;min-width:0;padding:0 10px;border-radius:7px;box-shadow:inset 0 0 0 1px #e6bf7866,inset 0 1px #fff2;background:linear-gradient(120deg,#5b3b38bb,#222437cc);font-variant-numeric:tabular-nums}
+  .status-card #lvl{color:#ffe7ab;text-shadow:0 0 10px #f4ba6288}
+  .status-card #lvl::before{content:"✦";margin-right:6px;color:#ffd77e}
+  .status-card #coins{color:#ffe4a0}
+  .status-card #streak{color:#ffd2af}
+  .status-card .xp{position:relative;border:1px solid #6dbeb4;background:#080e1a;box-shadow:inset 0 1px 5px #000,0 0 9px #59e6c344}
+  .status-card .xp>div{position:relative;overflow:hidden;background:linear-gradient(90deg,#2c9e8d,#74f4d0 75%,#e0ffce);box-shadow:0 0 12px #61ffd8}
+  .status-card .xp>div::after{content:"";position:absolute;inset:0;background:linear-gradient(110deg,transparent 20%,#ffffffcc 48%,transparent 70%);transform:translateX(-120%);animation:status-xp-shine 4s ease-in-out infinite}
+  .status-card #xptxt{color:#bbf6df;font-variant-numeric:tabular-nums;text-shadow:0 0 8px #62dcb677}
+  .status-card .status-gain{animation:status-gain .8s ease-out}
+  @keyframes status-stars{0%{opacity:.35}100%{opacity:.9}}
+  @keyframes status-xp-shine{0%,55%{transform:translateX(-120%)}90%,100%{transform:translateX(120%)}}
+  @keyframes status-level-up{0%{opacity:0;transform:translateX(-55%)}25%{opacity:1}100%{opacity:0;transform:translateX(55%)}}
+  @keyframes status-gain{0%,100%{filter:none;transform:scale(1)}35%{filter:brightness(1.7) drop-shadow(0 0 8px #ffd879);transform:scale(1.05)}}
   .navigation{gap:8px;padding:8px;background:linear-gradient(120deg,#241f2b,#161c2b);border-color:#785d49}
   .navigation button{min-height:48px;border-radius:9px;border-color:#685344;background:linear-gradient(145deg,#39313a,#242534);font-weight:700;letter-spacing:.01em}
   .navigation button:hover:not(:disabled){background:linear-gradient(145deg,#6e503e,#3b3143)}
@@ -587,9 +605,9 @@
 </style>
 </head>
 <body>
-<div class="card status-card">
+<div class="card status-card" id="hero-status">
   <div class="row"><b id="lvl"></b><span id="coins"></span><span id="streak"></span></div>
-  <div class="bar xp"><div id="xpbar"></div></div>
+  <div class="bar xp" id="xp-progress" role="progressbar" aria-label="Experiencia del nivel" aria-valuemin="0" aria-valuemax="100"><div id="xpbar"></div></div>
   <small id="xptxt"></small>
 </div>
 
@@ -2138,14 +2156,34 @@ for(const button of navigationButtons){
     navigationButtons[next].focus();
   });
 }
-function render(liveOnly=false){
-  const dayChanged=rollDay();
-  unlockAchievements();
+let previousStatus=null;
+function flashStatus(id,className='status-gain'){
+  const element=$(id);
+  element.classList.remove(className);
+  void element.offsetWidth;
+  element.classList.add(className);
+}
+function renderStatus(){
+  const needed=xpNeeded(S.level),percent=Math.max(0,Math.min(100,100*S.xp/needed));
   $('lvl').textContent=`Nivel ${S.level}`;
   $('coins').textContent=`🪙 ${S.coins}`;
   $('streak').textContent=`🔥 Racha ${S.streak} (x${streakMult().toFixed(2)})`;
-  $('xpbar').style.width=100*S.xp/xpNeeded(S.level)+'%';
-  $('xptxt').textContent=`XP ${S.xp}/${xpNeeded(S.level)}`;
+  $('xpbar').style.width=percent+'%';
+  $('xptxt').textContent=`XP ${S.xp}/${needed}`;
+  $('xp-progress').setAttribute('aria-valuenow',String(Math.round(percent*100)/100));
+  $('xp-progress').setAttribute('aria-valuetext',`${S.xp} de ${needed} XP`);
+  if(previousStatus){
+    if(S.level>previousStatus.level){flashStatus('hero-status','level-up');flashStatus('lvl')}
+    if(S.coins>previousStatus.coins) flashStatus('coins');
+    if(S.streak>previousStatus.streak) flashStatus('streak');
+    if(S.level>previousStatus.level || (S.level===previousStatus.level && S.xp>previousStatus.xp)) flashStatus('xptxt');
+  }
+  previousStatus={level:S.level,xp:S.xp,coins:S.coins,streak:S.streak};
+}
+function render(liveOnly=false){
+  const dayChanged=rollDay();
+  unlockAchievements();
+  renderStatus();
   const encounter=S.encounter,type=ENCOUNTER_TYPES[encounter.kind];
   const mn=encounter.legacy?MONSTERS[S.missionKills%MONSTERS.length].split(' ').slice(1).join(' '):encounter.kind==='lucky'?'Goblin de la suerte':MISSION_MONSTERS[encounter.species].name;
   $('mIcon').innerHTML=missionMonsterArt(encounter);$('mName').textContent=mn;
