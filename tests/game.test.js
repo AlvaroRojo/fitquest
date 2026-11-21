@@ -26,12 +26,12 @@ function game(saved) {
 }
 
 test('navigation starts in adventure and selects one accessible tab', () => {
-  const sections = ['adventure', 'character', 'statistics', 'skills', 'passives', 'store', 'achievements', 'packs', 'battle', 'dungeons', 'torment'];
+  const sections = ['adventure', 'character', 'statistics', 'paragon', 'store', 'achievements', 'packs', 'battle', 'dungeons', 'torment'];
   assert.deepEqual([...html.matchAll(/data-section="([^"]+)"/g)].map(match => match[1]), sections);
   assert.match(html, /data-section="adventure"[^>]*>📜 Misiones<\/button>/);
   assert.match(html, /id="tab-adventure"[^>]*aria-selected="true"/);
   assert.match(html, /<section id="adventure" role="tabpanel" aria-labelledby="tab-adventure">/);
-  const panels = Object.fromEntries(sections.map(id => [id, { hidden: id !== 'adventure' }]));
+  const panels = Object.fromEntries([...sections,'skills','passives','prestige'].map(id => [id, { hidden: !['adventure','skills'].includes(id) }]));
   const element = dataset => ({
     dataset, attributes: {}, handlers: {},
     addEventListener(type, handler) { this.handlers[type] = handler; },
@@ -40,11 +40,13 @@ test('navigation starts in adventure and selects one accessible tab', () => {
   });
   let focused;
   const tabs = sections.map(section => element({ section }));
+  const paragonTabs = ['skills','passives','prestige'].map(paragon => element({ paragon }));
   const context = vm.createContext({
     document: {
       querySelectorAll: selector => {
-        assert.equal(selector, '.navigation [role="tab"]');
-        return tabs;
+        if(selector==='.navigation [role="tab"]') return tabs;
+        assert.equal(selector, '.paragon-tabs [role="tab"]');
+        return paragonTabs;
       },
     },
     $: id => panels[id],
@@ -72,6 +74,16 @@ test('navigation starts in adventure and selects one accessible tab', () => {
   tabs.at(-1).handlers.keydown({ key: 'Home', preventDefault() {} });
   assert.equal(focused, tabs[0]);
   assert.equal(panels.adventure.hidden, false);
+  for(const selectedTab of paragonTabs){
+    selectedTab.handlers.click();
+    for(const tab of paragonTabs){
+      assert.equal(tab.attributes['aria-selected'],String(tab===selectedTab));
+      assert.equal(panels[tab.dataset.paragon].hidden,tab!==selectedTab);
+    }
+  }
+  paragonTabs[2].handlers.keydown({key:'Home',preventDefault(){}});
+  assert.equal(focused,paragonTabs[0]);
+  assert.equal(panels.skills.hidden,false);
 });
 
 test('hero status animates actual gains without animating initial or unchanged values', () => {
@@ -1248,19 +1260,23 @@ test('passive tree grants retroactive independent points and enforces rank prere
   })()`),true);
 });
 
-test('passive subclasses are exclusive, affect gameplay, persist and can change after redistribution', () => {
+test('passive subclasses can change without redistribution, affect gameplay and persist', () => {
   const g=game();
   assert.equal(g.run(`(() => {
     S=fresh();S.level=69;S.battleUpdated=1000;
     if(chooseSubclass('champion',1000)) return false;
     for(const id of ['war1','war2','war3','war4']) for(let i=0;i<5;i++) if(!unlockPassive(id,1000)) return false;
-    if(!chooseSubclass('champion',1000) || chooseSubclass('oracle',1000) || statBreakdown('dmg').passives!==90) return false;
+    if(!chooseSubclass('champion',1000) || chooseSubclass('champion',1000) || statBreakdown('dmg').passives!==90) return false;
     if(battleDamage()!==3.8 || !validateBackup({format:'fitquest-save',version:1,state:S})) return false;
     save();return true;
   })()`),true);
   const restored=game(g.saved());
   assert.equal(restored.run(`(() => {
     if(S.subclass!=='champion' || passivePoints()!==0 || statBreakdown('dmg').passives!==90) return false;
+    const ranks=JSON.stringify(S.passives);
+    if(!chooseSubclass('oracle',1000)||S.subclass!=='oracle'||JSON.stringify(S.passives)!==ranks||
+       passivePoints()!==0||statBreakdown('dmg').passives!==60||statBreakdown('xp').passives!==20) return false;
+    save();
     resetPassives(1000);
     if(S.subclass!==null || passivePoints()!==20) return false;
     for(const id of ['hunt1','hunt2','hunt3','hunt4']) for(let i=0;i<5;i++) if(!unlockPassive(id,1000)) return false;
@@ -1279,6 +1295,20 @@ test('subclass descriptions use percent signs and successful actions do not show
   const renderer=script.slice(script.indexOf('function renderPassives(){'),script.indexOf('function renderTorment(){'));
   assert.doesNotMatch(renderer,/seleccionada\.|mejorada a/);
   assert.match(renderer,/No se puede seleccionar esta subclase/);
+});
+
+test('switching subclass settles pending combat with the previous bonuses and persists', () => {
+  const g=game();
+  assert.equal(g.run(`(() => {
+    ACHIEVEMENTS.length=0;S=fresh();S.level=69;S.battleUpdated=1000;
+    S.passives={war1:5,war2:5,war3:5,war4:5};S.subclass='champion';S.autoMonsterHp=1000;
+    const before=battleDamage();
+    if(chooseSubclass('missing',11000)||S.battleUpdated!==1000) return false;
+    if(!chooseSubclass('oracle',11000)||Math.abs(S.autoMonsterHp-(1000-before))>1e-8||
+       battleDamage()>=before||passiveSpent()!==20) return false;
+    save();return true;
+  })()`),true);
+  assert.equal(game(g.saved()).run(`S.subclass==='oracle'&&passiveSpent()===20`),true);
 });
 
 test('passive backup validation rejects locked, invalid or overspent progress', () => {

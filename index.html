@@ -121,6 +121,7 @@
   .inventory-item .item-actions button{margin:0;padding:7px 3px;font-size:.78rem;overflow-wrap:anywhere}
   .skill-controls{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:8px 0 14px;padding:10px;border:1px solid #806346;border-radius:10px;background:linear-gradient(120deg,#392e35,#211e2c)}
   .skill-controls button{margin:0}
+  .paragon-tabs button[aria-selected="true"]{border-color:#f4ca80;background:linear-gradient(135deg,#a16a38,#583440)}
   .skill-tree{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
   .skill-branch{display:grid;gap:8px;align-content:start;padding:12px;border:1px solid #806448;border-radius:12px;background:linear-gradient(145deg,#30253b,#151b2d)}
   .skill-branch h3{margin:0;color:#ffdcab;text-align:center}
@@ -617,8 +618,7 @@
   <button type="button" role="tab" id="tab-adventure" data-section="adventure" aria-controls="adventure" aria-selected="true">📜 Misiones</button>
   <button type="button" role="tab" id="tab-character" data-section="character" aria-controls="character" aria-selected="false" tabindex="-1">🧙 Personaje</button>
   <button type="button" role="tab" id="tab-statistics" data-section="statistics" aria-controls="statistics" aria-selected="false" tabindex="-1">📊 Estadísticas</button>
-  <button type="button" role="tab" id="tab-skills" data-section="skills" aria-controls="skills" aria-selected="false" tabindex="-1">🌳 Habilidades</button>
-  <button type="button" role="tab" id="tab-passives" data-section="passives" aria-controls="passives" aria-selected="false" tabindex="-1">✨ Pasivas</button>
+  <button type="button" role="tab" id="tab-paragon" data-section="paragon" aria-controls="paragon" aria-selected="false" tabindex="-1">🌌 Parangón</button>
   <button type="button" role="tab" id="tab-store" data-section="store" aria-controls="store" aria-selected="false" tabindex="-1">🛒 Tienda</button>
   <button type="button" role="tab" id="tab-achievements" data-section="achievements" aria-controls="achievements" aria-selected="false" tabindex="-1">🏆 Logros</button>
   <button type="button" role="tab" id="tab-packs" data-section="packs" aria-controls="packs" aria-selected="false" tabindex="-1">🎁 Sobres</button>
@@ -717,7 +717,16 @@
   <div class="card"><h2>📊 Estadísticas globales</h2><div id="statistics-content"></div></div>
 </section>
 
-<section id="skills" role="tabpanel" aria-labelledby="tab-skills" hidden>
+<section id="paragon" role="tabpanel" aria-labelledby="tab-paragon" hidden>
+  <div class="card">
+    <h2>🌌 Parangón</h2>
+    <div class="skill-controls paragon-tabs" role="tablist" aria-label="Árboles de Parangón">
+      <button type="button" role="tab" id="tab-skills" data-paragon="skills" aria-controls="skills" aria-selected="true">🌳 Habilidades</button>
+      <button type="button" role="tab" id="tab-passives" data-paragon="passives" aria-controls="passives" aria-selected="false" tabindex="-1">✨ Pasivas</button>
+      <button type="button" role="tab" id="tab-prestige" data-paragon="prestige" aria-controls="prestige" aria-selected="false" tabindex="-1">🌟 Prestigio</button>
+    </div>
+  </div>
+<section id="skills" role="tabpanel" aria-labelledby="tab-skills">
   <div class="card">
     <h2>🌳 Árbol de habilidades</h2>
     <p>Un punto por nivel; los niveles múltiplos de 10 otorgan dos en total. Para desbloquear un nodo nuevo necesitas 5 rangos en el anterior.</p>
@@ -736,7 +745,7 @@
     <h2>✨ Árbol de pasivas ancestrales</h2>
     <div class="passive-intro">
       <p>Se desbloquea al nivel 50. Obtienes un punto por nivel desde el 50, incluso si ya lo superaste.</p>
-      <p>Necesitas 3 rangos en el nodo anterior para desbloquear el siguiente. Con 20 puntos invertidos eliges una subclase; redistribuye para cambiarla.</p>
+      <p>Necesitas 3 rangos en el nodo anterior para desbloquear el siguiente. Con 20 puntos invertidos eliges una subclase y puedes cambiarla sin redistribuir.</p>
       <p id="passive-points"></p>
       <p id="passives-next"></p>
     </div>
@@ -746,6 +755,13 @@
     <p id="passive-status" role="status" aria-live="polite"></p>
     <div id="passive-tree" class="skill-tree"></div>
   </div>
+</section>
+<section id="prestige" role="tabpanel" aria-labelledby="tab-prestige" hidden>
+  <div class="card">
+    <h2>🌟 Árbol de prestigio</h2>
+    <p>Próximamente. El prestigio todavía no está disponible y no reinicia tu partida.</p>
+  </div>
+</section>
 </section>
 
 <section id="store" role="tabpanel" aria-labelledby="tab-store" hidden>
@@ -1050,7 +1066,7 @@ function unlockPassive(id,now=Date.now()){
   settleBattle(now);S.passives[id]=rank+1;return true;
 }
 function chooseSubclass(id,now=Date.now()){
-  if(!Object.hasOwn(PASSIVE_CLASSES,id)||S.level<50||passiveSpent()<PASSIVE_CLASS_REQUIRED||S.subclass!==null) return false;
+  if(!Object.hasOwn(PASSIVE_CLASSES,id)||S.level<50||passiveSpent()<PASSIVE_CLASS_REQUIRED||S.subclass===id) return false;
   settleBattle(now);S.subclass=id;return true;
 }
 function resetPassives(now=Date.now()){
@@ -2152,6 +2168,15 @@ function selectSection(button){
   }
   render();
 }
+const paragonButtons=Array.from(document.querySelectorAll('.paragon-tabs [role="tab"]'));
+function selectParagon(button){
+  for(const option of paragonButtons){
+    const selected=option===button;
+    option.setAttribute('aria-selected',String(selected));
+    option.tabIndex=selected?0:-1;
+    $(option.dataset.paragon).hidden=!selected;
+  }
+}
 function animateHit(id){
   const icon=$(id);
   icon.classList.remove('flash');
@@ -2280,6 +2305,21 @@ for(const button of navigationButtons){
     event.preventDefault();
     selectSection(navigationButtons[next]);
     navigationButtons[next].focus();
+  });
+}
+for(const button of paragonButtons){
+  button.addEventListener('click',()=>selectParagon(button));
+  button.addEventListener('keydown',event=>{
+    const index=paragonButtons.indexOf(button);
+    let next;
+    if(event.key==='ArrowRight') next=(index+1)%paragonButtons.length;
+    else if(event.key==='ArrowLeft') next=(index+paragonButtons.length-1)%paragonButtons.length;
+    else if(event.key==='Home') next=0;
+    else if(event.key==='End') next=paragonButtons.length-1;
+    else return;
+    event.preventDefault();
+    selectParagon(paragonButtons[next]);
+    paragonButtons[next].focus();
   });
 }
 let previousStatus=null;
@@ -2426,9 +2466,9 @@ function renderPassives(){
   for(const [id,subclass] of Object.entries(PASSIVE_CLASSES)){
     const button=document.createElement('button');button.type='button';button.className='passive-class';
     button.dataset.subclass=id;button.setAttribute('aria-pressed',String(S.subclass===id));
-    const wasted=id==='assassin'&&!S.subclass?Math.max(0,10-(75-criticalChance())):0;
+    const wasted=id==='assassin'&&S.subclass!==id?Math.max(0,10-(75-criticalChance())):0;
     button.innerHTML=`<strong>${subclass.name}</strong><small>${subclass.description}${wasted?` · ⚠️ ${wasted}% supera el límite de crítico`:''}</small>`;
-    button.disabled=locked||spent<PASSIVE_CLASS_REQUIRED||S.subclass!==null;
+    button.disabled=locked||spent<PASSIVE_CLASS_REQUIRED||S.subclass===id;
     button.onclick=()=>{
       if(wasted&&!confirm(`El límite de crítico es 75 %. Esta subclase desperdiciará ${wasted} %. ¿Continuar?`)) return;
       if(!chooseSubclass(id)){$('passive-status').textContent='No se puede seleccionar esta subclase.';return}
@@ -2894,8 +2934,8 @@ setInterval(()=>{
     if(!$('character').hidden && (S.level!==previousLevel || S.achievements.length!==previousAchievements)) renderChar();
     if(!$('achievements').hidden && S.achievements.length!==previousAchievements) renderAchievements();
     if(S.level!==previousLevel) renderTorment();
-    if(S.level!==previousLevel && !$('skills').hidden) renderSkills();
-    if(S.level!==previousLevel && !$('passives').hidden) renderPassives();
+    if(S.level!==previousLevel && !$('paragon').hidden && !$('skills').hidden) renderSkills();
+    if(S.level!==previousLevel && !$('paragon').hidden && !$('passives').hidden) renderPassives();
     if(!$('dungeons').hidden && (S.level!==previousLevel || S.achievements.length!==previousAchievements)){
       renderTower();renderWeeklyBoss();
     }

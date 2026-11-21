@@ -135,6 +135,9 @@ confirmación. Se aceptan las copias exportadas por esta versión.
   daño e intervalo de arena, daño base de desafíos y estilo activo. La pestaña
   **Estadísticas** organiza más de 60 datos guardados y derivados en paneles
   visuales de aventura, combate, héroe, equipo, economía, habilidades y logros.
+- **Parangón:** reúne los árboles de habilidades y pasivas ancestrales.
+  La tercera pestaña reserva espacio para prestigio, que aún no está
+  implementado ni reinicia la partida.
 - **Árbol de habilidades:** al llegar a cada nivel se obtiene un punto,
   incluidos los niveles existentes al actualizar; el nivel inicial también da
   uno. En los niveles múltiplos de diez se reciben dos puntos en total. Las
@@ -173,9 +176,10 @@ confirmación. Se aceptan las copias exportadas por esta versión.
   Con 20 puntos invertidos se elige una subclase sin coste adicional:
   Campeón (+30 % de daño), Asesino (+10 % de probabilidad y +30 % de daño
   crítico) u Oráculo (+20 % de XP, monedas y fragmentos de recompensas).
-  Estas mejoras se suman a los demás bonos. Solo puede elegirse una;
-  redistribuir pasivas es gratuito y
-  permite elegir otra, sin afectar al árbol de habilidades original. Las copias
+  Estas mejoras se suman a los demás bonos. Solo una puede estar activa;
+  se puede cambiar gratuitamente entre subclases sin redistribuir los puntos.
+  Redistribuir pasivas sigue siendo gratuito, elimina la subclase activa y no
+  afecta al árbol de habilidades original. Las copias
   de seguridad antiguas siguen siendo compatibles.
 - **Logros:** desbloquean mejoras permanentes al alcanzar sus objetivos. Las
   misiones se cuentan desde esta versión; los niveles y monstruos derrotados
