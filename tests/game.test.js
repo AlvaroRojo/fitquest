@@ -833,9 +833,9 @@ test('torment unlocks by level and rejects locked or invalid selections', () => 
 });
 
 test('torment sanctuary displays unlocks and saves the selected difficulty', () => {
-  const elements=Object.fromEntries(['torment-current','torment-hp','torment-reward','torment-target','torment-emblem',
+  const elements=Object.fromEntries(['torment-current','torment-hp','torment-reward','torment-target',
     'torment-options','torment-status'].map(id=>[id,{textContent:''}]));
-  elements['torment-emblem'].style={setProperty(name,value){this[name]=value}};
+  const style={setProperty(name,value){this[name]=value}};
   const box=elements['torment-options'];
   box.children=[];
   box.replaceChildren=()=>{box.children=[]};
@@ -848,7 +848,7 @@ test('torment sanctuary displays unlocks and saves the selected difficulty', () 
   const context=vm.createContext({
     S:state,
     TORMENTS:[{name:'Normal',level:1,hp:1,reward:1},{name:'Tormento I',level:10,hp:1.75,reward:1.4},{name:'Tormento II',level:20,hp:2.5,reward:1.8}],
-    document:{activeElement:null,createElement:()=>({dataset:{},setAttribute(name,value){this[name]=value}})},
+    document:{documentElement:{style},activeElement:null,createElement:()=>({dataset:{},setAttribute(name,value){this[name]=value}})},
     $:id=>elements[id],
     selectTorment:index=>{if(state.level<[1,10,20][index]) return false;state.torment=index;return true},
     save:()=>{saves++},
@@ -857,7 +857,7 @@ test('torment sanctuary displays unlocks and saves the selected difficulty', () 
   vm.runInContext(script.slice(script.indexOf('function renderTorment(){'),script.indexOf('function renderBattleUpgrades(){')),context);
   vm.runInContext('renderTorment()',context);
   assert.equal(elements['torment-current'].textContent,'Normal');
-  assert.equal(elements['torment-emblem'].style['--flame-scale'],'1');
+  assert.equal(style['--torment-fire'],'0');
   assert.equal(box.children.length,3);
   assert.equal(box.children[0]['aria-pressed'],'true');
   assert.equal(box.children[1].disabled,false);
@@ -870,7 +870,7 @@ test('torment sanctuary displays unlocks and saves the selected difficulty', () 
   assert.equal(saves,1);
   assert.equal(state.torment,1);
   assert.equal(elements['torment-current'].textContent,'Tormento I');
-  assert.equal(elements['torment-emblem'].style['--flame-scale'],'1.05');
+  assert.ok(Number(style['--torment-fire'])>0);
   assert.equal(elements['torment-hp'].textContent,'×1.75');
   assert.equal(elements['torment-reward'].textContent,'×1.4');
   assert.equal(elements['torment-target'].textContent,'+5%');
@@ -879,9 +879,9 @@ test('torment sanctuary displays unlocks and saves the selected difficulty', () 
   state.level=20;
   vm.runInContext('renderTorment()',context);
   click(box.children[2]);
-  assert.equal(elements['torment-emblem'].style['--flame-scale'],'1.1');
+  assert.ok(Number(style['--torment-fire'])>0.15+0.85/12);
   click(box.children[0]);
-  assert.equal(elements['torment-emblem'].style['--flame-scale'],'1');
+  assert.equal(style['--torment-fire'],'0');
 });
 
 test('missions keep their target and reward until replaced, then use new torment', () => {
