@@ -7,6 +7,7 @@
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='15' fill='%231a1b30'/%3E%3Cpath d='M13 11l38 39M51 11L13 50' stroke='%23f6d69c' stroke-width='6' stroke-linecap='round'/%3E%3Cpath d='M9 49l10 10M45 59l10-10' stroke='%23dc8c61' stroke-width='5'/%3E%3C/svg%3E">
 <style>
   *{box-sizing:border-box}
+  html{scrollbar-gutter:stable}
   body{font-family:system-ui,sans-serif;background:radial-gradient(ellipse at 10% 0%,#302056,#10152b 48%,#080b19 100%);color:#e9ecff;margin:0;padding:16px;min-height:100vh}
   body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:-1;background:repeating-linear-gradient(0deg,transparent 0 59px,#887aff0a 60px),repeating-linear-gradient(90deg,transparent 0 59px,#887aff0a 60px);mask-image:linear-gradient(transparent,#000)}
   h2{font-size:1.1em;margin:.4em 0 .7em;color:#b9d1ff;letter-spacing:.04em}
@@ -355,10 +356,11 @@
   #shop-status:empty{display:none}
   @media(min-width:1000px){
     body{padding:10px}
-    .status-card{padding:8px 16px;margin-bottom:10px}
+    .status-card{padding:5px 12px;margin-bottom:6px}
     .status-card .row{margin-bottom:5px}
-    .navigation{padding:7px;margin-bottom:10px}
-    .navigation button{min-height:48px;padding:9px}
+    .navigation{padding:5px;margin-bottom:6px}
+    .navigation button{min-height:36px;padding:5px;font-size:clamp(.75rem,.9vw,.88rem);white-space:nowrap}
+    main .card{padding:10px}
     #adventure:not([hidden]),#character:not([hidden]){display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px;align-items:start}
     #character:not([hidden]){grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:stretch;gap:8px}
     #adventure:not([hidden]){grid-template-columns:minmax(0,2fr) minmax(0,3fr);gap:10px;align-items:stretch}
@@ -384,12 +386,9 @@
     #weekly-progress .milestone{padding:5px 8px;font-size:.9rem}
     #character>.card{padding:10px}
     #character>.card:last-child{grid-column:1/-1}
-    #character .card h2{margin-bottom:6px;font-size:1.05rem}
+    #character .card h2{margin-bottom:6px;font-size:1.2rem}
     #character .hero-power{margin:0 0 7px;padding:6px 9px}
     #character .hero-power strong{font-size:1rem}
-    body:has(#character:not([hidden])) .status-card{padding:5px 12px;margin-bottom:6px}
-    body:has(#character:not([hidden])) .navigation{padding:5px;margin-bottom:6px}
-    body:has(#character:not([hidden])) .navigation button{min-height:36px;padding:5px;font-size:clamp(.65rem,.9vw,.88rem);white-space:nowrap}
     #character .hero-layout{grid-template-areas:"helmet hero chest" "arms hero shield" "sword hero pants" "boots hero .";gap:4px}
     #character .hero-layout .slot,#character .jewelry-slots .slot{min-height:42px;padding:3px;font-size:.7rem}
     #character .slot b{font-size:1.3em}
@@ -410,9 +409,6 @@
     #achievement-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:10px}
     #inventory .inventory-item{margin:0}
     #achievement-list .achievement{padding:12px;border:1px solid #78604f;border-radius:10px}
-    body:has(#adventure:not([hidden])) .status-card,body:has(#store:not([hidden])) .status-card,body:has(#torment:not([hidden])) .status-card{padding:5px 12px;margin-bottom:6px}
-    body:has(#adventure:not([hidden])) .navigation,body:has(#store:not([hidden])) .navigation,body:has(#torment:not([hidden])) .navigation{padding:5px;margin-bottom:6px}
-    body:has(#adventure:not([hidden])) .navigation button,body:has(#store:not([hidden])) .navigation button,body:has(#torment:not([hidden])) .navigation button{min-height:36px;padding:5px;font-size:clamp(.65rem,.9vw,.88rem);white-space:nowrap}
     #adventure>.card{padding:10px}
     #adventure .card h2{margin-bottom:6px}
     #adventure .encounter-stage{min-height:190px}
@@ -439,7 +435,7 @@
     #store .forge-options{gap:5px}
     #torment .torment-sanctuary{padding:10px;margin-bottom:0}
     #torment .torment-hero{grid-template-columns:minmax(0,1fr) 70px;gap:8px}
-    #torment .torment-sanctuary h2{margin:2px 0;font-size:1.35rem}
+    #torment .torment-sanctuary h2{margin:2px 0;font-size:1.2rem}
     #torment .torment-emblem{width:60px;height:60px}
     #torment .torment-emblem::before{inset:5px}
     #torment .torment-emblem::after{inset:10px}
@@ -458,9 +454,10 @@
   @media(min-width:1500px) and (min-height:850px){
     html{font-size:17px}
     body{padding:12px}
-    body:has(#adventure:not([hidden])) .status-card,body:has(#character:not([hidden])) .status-card,body:has(#store:not([hidden])) .status-card,body:has(#torment:not([hidden])) .status-card{padding:8px 16px;margin-bottom:8px}
-    body:has(#adventure:not([hidden])) .navigation,body:has(#character:not([hidden])) .navigation,body:has(#store:not([hidden])) .navigation,body:has(#torment:not([hidden])) .navigation{padding:7px;margin-bottom:8px}
-    body:has(#adventure:not([hidden])) .navigation button,body:has(#character:not([hidden])) .navigation button,body:has(#store:not([hidden])) .navigation button,body:has(#torment:not([hidden])) .navigation button{min-height:44px;padding:8px;font-size:.95rem}
+    .status-card{padding:8px 16px;margin-bottom:8px}
+    .navigation{padding:7px;margin-bottom:8px}
+    .navigation button{min-height:44px;padding:8px;font-size:.95rem}
+    main .card{padding:14px}
     #adventure>.card,#character>.card{padding:14px}
     #adventure .card h2,#character .card h2{margin-bottom:9px;font-size:1.2rem}
     #adventure .encounter-stage{min-height:260px}
@@ -488,15 +485,15 @@
     #character .attribute button{padding:7px}
     #character .global-stats h3{font-size:1rem}
     #character .global-stats th,#character .global-stats td{padding:4px 8px;font-size:.9rem}
-    #store .armory-card{padding:16px}
+    #store .armory-card{padding:14px}
     #store .armory-section{margin-top:10px;padding:12px}
     #shop,#store .forge-options{gap:8px}
     #shop .shop-offer,.forge-option{gap:6px;padding:10px;font-size:1.05rem}
     #shop .shop-offer small,#store .forge-option small{font-size:.9rem}
     #shop .shop-offer button,.forge-option button{padding:7px}
-    #torment .torment-sanctuary{padding:16px}
+    #torment .torment-sanctuary{padding:14px}
     #torment .torment-hero{grid-template-columns:minmax(0,1fr) 100px}
-    #torment .torment-sanctuary h2{font-size:1.6rem}
+    #torment .torment-sanctuary h2{font-size:1.2rem}
     #torment .torment-emblem{width:85px;height:85px}
     #torment .torment-emblem span{font-size:2.7rem}
     #torment .torment-current,#torment .torment-stat{padding:8px 11px}
@@ -514,7 +511,7 @@
     html{font-size:16px}
     #adventure .quest-board .mission{padding:8px;gap:4px}
     #adventure .quest-board .complete{min-height:36px;padding:5px}
-    #torment .torment-sanctuary{padding:12px}
+    #torment .torment-sanctuary{padding:14px}
     #torment .torment-hero{grid-template-columns:minmax(0,1fr) 75px}
     #torment .torment-emblem{width:65px;height:65px}
     #torment .torment-current,#torment .torment-stat{padding:5px 8px}

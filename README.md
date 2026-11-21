@@ -10,6 +10,7 @@ eliminarla.
 
 - **Navegación:** utiliza el menú superior para cambiar de sección. También
   puedes usar las flechas, Inicio y Fin del teclado entre las pestañas.
+  En ordenador, la cabecera y el menú mantienen el mismo tamaño en todas ellas.
 - **Misiones y monstruos:** pulsa **Completado** solo después de realizar el
   objetivo indicado. Hay seis misiones activas: dos suaves, dos intermedias y
   dos intensas. Al completar una aparece otra aleatoria del mismo nivel.
