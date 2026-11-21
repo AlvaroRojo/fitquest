@@ -105,9 +105,8 @@ confirmación. Se aceptan las copias exportadas por esta versión.
   Desmantela objetos no equipados con
   dos pulsaciones: dan 2, 5, 12, 25, 40, 65 o 100 fragmentos según su rareza. El inventario
   se puede filtrar por tipo y muestra hasta 12 objetos por página; al cambiar
-  de página la vista baja hasta el final del inventario. Cada objeto se compara
-  con los huecos compatibles equipados. Los objetos no equipados se desmantelan
-  individualmente desde su propia tarjeta.
+  de página la vista baja hasta el final del inventario. Los objetos no
+  equipados se desmantelan individualmente desde su propia tarjeta.
   En ordenador, personaje y entrenamiento se muestran arriba y el inventario
   ocupa el ancho completo debajo. En pantallas amplias, como 1680 × 1050,
   los textos y controles aumentan de tamaño.

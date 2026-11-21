@@ -2593,10 +2593,6 @@ function renderChar(){
     row.ondragstart=event=>{event.dataTransfer.setData('application/x-fitquest-item',id);event.dataTransfer.effectAllowed='move'};
     row.ondragend=()=>render();
     row.innerHTML=`<strong>${GROUPS[item.g].icon} ${item.name}${upgradeLevel(id)?` +${upgradeLevel(id)}`:''}</strong><small>${TIER_ICONS[item.tier]} ${TIER_NAMES[item.tier]} · +${itemPercent(item)}% ${STAT_TXT[item.stat]}</small>`;
-    const comparable=EQ_SLOTS.filter(slot=>slot.g===item.g).map(slot=>({slot,item:itemById(S.eq[slot.k])}));
-    const comparison=document.createElement('small');
-    comparison.textContent=comparable.map(({slot,item:equipped})=>`${GROUPS[slot.g].label}${slot.n?' '+slot.n:''}: ${equipped?`${equipped.name} (+${itemPercent(equipped)}%); diferencia ${itemPercent(item)-itemPercent(equipped)>=0?'+':''}${itemPercent(item)-itemPercent(equipped)}%`:'vacío'}`).join(' · ');
-    row.append(comparison);
     const actions=document.createElement('div');actions.className='item-actions';
     const select=document.createElement('button');select.textContent='Equipar';
     select.onclick=()=>equip(item);
