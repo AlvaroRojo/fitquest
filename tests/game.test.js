@@ -26,7 +26,7 @@ function game(saved) {
 }
 
 test('navigation starts in adventure and selects one accessible tab', () => {
-  const sections = ['adventure', 'character', 'skills', 'store', 'achievements', 'packs', 'battle', 'dungeons', 'torment'];
+  const sections = ['adventure', 'character', 'statistics', 'skills', 'store', 'achievements', 'packs', 'battle', 'dungeons', 'torment'];
   assert.deepEqual([...html.matchAll(/data-section="([^"]+)"/g)].map(match => match[1]), sections);
   assert.match(html, /id="tab-adventure"[^>]*aria-selected="true"/);
   assert.match(html, /<section id="adventure" role="tabpanel" aria-labelledby="tab-adventure">/);
@@ -246,11 +246,12 @@ test('character inventory hides equipped items and filters only by type', () => 
   assert.match(script, /b\.className=it\?'slot is-equipped':'slot'/);
 });
 
-test('character displays arena victories and total bonuses without source breakdown', () => {
-  assert.match(html, /Victorias de arena<\/th><td id="stat-arena"/);
-  const bonuses=script.slice(script.indexOf("$('bonuses').innerHTML="),script.indexOf("$('materials').textContent="));
-  assert.match(bonuses,/bonus\(stat\)/);
-  assert.doesNotMatch(bonuses,/b\.(attributes|equipment|forge|achievements)/);
+test('character displays combat stats and global progress has its own menu', () => {
+  assert.match(html, /id="hero-stats"/);
+  assert.match(html, /id="tab-statistics"/);
+  assert.match(script, /\['Victorias de arena',S\.autoKills\]/);
+  assert.match(script, /function renderHeroStats\(\)[\s\S]*?bonus\(stat\)/);
+  assert.doesNotMatch(html, /id="bonuses"/);
 });
 
 test('inventory excludes equipped instances but retains unequipped copies and rarity order', () => {
@@ -423,7 +424,7 @@ test('mission board omits manual changes and the visible activity log', () => {
 });
 
 test('journey places milestones under chapter progress and reset at the bottom', () => {
-  assert.match(html, /id="journey">[\s\S]*?id="weekly-progress"><\/div>\s*<\/div>\s*<div class="reset-footer">[\s\S]*?<button id="reset"[^>]*>Reiniciar partida<\/button><\/div>\s*<\/section>/);
+  assert.match(html, /id="journey">[\s\S]*?id="weekly-progress"><\/div>\s*<\/div>\s*<div class="reset-footer">[\s\S]*?<button id="reset"[^>]*>Reiniciar partida<\/button>[\s\S]*?<\/section>/);
   assert.equal((html.match(/id="reset"/g) || []).length, 1);
   assert.match(script, /class="chapter-progress"><h3>[\s\S]*?class="bar mis"[\s\S]*?class="milestones"/);
 });
@@ -998,26 +999,58 @@ test('skill points accrue retroactively with two points total every tenth level'
   const first=game();
   assert.equal(first.run(`(() => {
     S=fresh();S.level=10;S.battleUpdated=1000;
-    if(skillPoints()!==11 || unlockSkill('blade',1000) || !unlockSkill('might',1000) || !unlockSkill('blade',1000)) return false;
-    if(skillPoints()!==9 || statBreakdown('dmg').skills!==5) return false;
+    if(skillPoints()!==11 || unlockSkill('blade',1000)) return false;
+    for(let i=0;i<5;i++) if(!unlockSkill('might',1000)) return false;
+    if(!unlockSkill('blade',1000) || skillPoints()!==5 || statBreakdown('dmg').skills!==13) return false;
     S.level=20;
-    if(skillPoints()!==20) return false;
+    if(skillPoints()!==16) return false;
     save();return true;
   })()`),true);
-  assert.equal(game(first.saved()).run(`skillPoints()===20 && S.skills.might===1 && S.skills.blade===1`),true);
+  assert.equal(game(first.saved()).run(`skillPoints()===16 && S.skills.might===5 && S.skills.blade===1`),true);
 });
 
 test('critical and fragment skills affect combat and rewards', () => {
   const g=game();
   assert.equal(g.run(`(() => {
     S=fresh();S.level=20;S.battleUpdated=1000;
-    unlockSkill('precision',1000);unlockSkill('impact',1000);
-    unlockSkill('fortune',1000);unlockSkill('prosperity',1000);unlockSkill('salvage',1000);
-    if(criticalChance()!==1 || materialReward(100)!==102) return false;
+    for(let i=0;i<5;i++) unlockSkill('precision',1000);
+    unlockSkill('impact',1000);
+    for(let i=0;i<5;i++) unlockSkill('fortune',1000);
+    for(let i=0;i<5;i++) unlockSkill('prosperity',1000);
+    unlockSkill('salvage',1000);
+    if(criticalChance()!==5 || materialReward(100)!==102) return false;
     Math.random=()=>0;
     if(Math.abs(criticalDamage(100)-153)>1e-8) return false;
     Math.random=()=>0.5;
     return criticalDamage(100)===100;
+  })()`),true);
+});
+
+test('new nodes require five ranks but legacy unlocked nodes remain usable and restorable', () => {
+  const first=game();
+  first.run(`S=fresh();S.level=30;S.skills={might:1,blade:1,fury:1,legend:1,berserker:1};S.skillStyle='berserker';save()`);
+  const restored=game(first.saved());
+  assert.equal(restored.run(`(() => {
+    if(!validateBackup({format:'fitquest-save',version:1,state:S})) return false;
+    if(!unlockSkill('legend')||S.skills.legend!==2||S.skillStyle!=='berserker') return false;
+    resetSkills();
+    if(!unlockSkill('might') || unlockSkill('blade')) return false;
+    for(let i=1;i<5;i++) if(!unlockSkill('might')) return false;
+    return unlockSkill('blade') && !unlockSkill('fury');
+  })()`),true);
+});
+
+test('critical feedback reports only actual critical damage for manual and arena attacks', () => {
+  const g=game();
+  assert.equal(g.run(`(() => {
+    S=fresh();S.level=30;S.skills.precision=20;S.tower.keys=1;S.achievements=ACHIEVEMENTS.map(a=>a.id);S.battleUpdated=1000;
+    Math.random=()=>0;let damage=null;
+    if(!attackTower('2026-01-05',value=>damage=value) || damage!==24*bonus('dmg')*1.5) return false;
+    const result=settleBattle(11000);
+    if(result.ticks!==1 || result.lastCritical!==battleDamage()*1.5) return false;
+    Math.random=()=>.99;damage=null;
+    if(!attackWeeklyBoss('2026-01-05',value=>damage=value) || damage!==null) return false;
+    return settleBattle(21000).lastCritical===null;
   })()`),true);
 });
 
@@ -1026,11 +1059,11 @@ test('skill specializations, critical cap and refunds preserve arena timing and 
   assert.equal(g.run(`(() => {
     S=fresh();S.level=200;S.achievements=ACHIEVEMENTS.map(a=>a.id);S.battleUpdated=1000;
     for(const id of ['precision','impact','focus','execution','deadeye']){
-      const count=id==='precision'||id==='focus'?20:id==='deadeye'?18:1;
+      const count=id==='precision'||id==='focus'?20:id==='deadeye'?18:5;
       for(let i=0;i<count;i++) if(!unlockSkill(id,1000)) return false;
     }
     if(criticalChance()!==75 || !unlockSkill('hunter',1000) || S.skillStyle!=='hunter' ||
-       criticalChance()!==75 || criticalBonus()!==33) return false;
+       criticalChance()!==75 || criticalBonus()!==65) return false;
     const hunter=bonus('dmg');
     if(!selectSkillStyle(null,1000) || hunter>=bonus('dmg') || selectSkillStyle('berserker',1000)) return false;
     const total=S.level+Math.floor(S.level/10);

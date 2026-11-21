@@ -126,16 +126,18 @@ confirmación. Se aceptan las copias exportadas por esta versión.
   para evitar que el oro y el daño se disparen sin control. Estos bonos se suman a los del
   equipo, forja y logros y se aplican también a la arena, la torre y los bosses. El panel
   de estadísticas muestra el bono total.
-  Bajo el entrenamiento se muestran las misiones, los monstruos derrotados
-  (incluidos los de misión, arena, torre y bosses), los días de actividad,
-  las victorias de arena y de desafío, los sobres, los logros y capítulos registrados,
-  y la racha actual.
+  Bajo el entrenamiento se muestran los bonos efectivos, críticos, fragmentos,
+  daño e intervalo de arena, daño base de desafíos y estilo activo. La pestaña
+  **Estadísticas** reúne el progreso de aventura, combate y colección a partir
+  de los datos ya guardados, sin inventar historiales anteriores.
 - **Árbol de habilidades:** al llegar a cada nivel se obtiene un punto,
   incluidos los niveles existentes al actualizar; el nivel inicial también da
   uno. En los niveles múltiplos de diez se reciben dos puntos en total. Las
   cuatro ramas ofrecen daño, crítico, monedas, XP y fragmentos de recompensas.
-  Los nodos normales admiten 20 rangos y requieren un punto en el nodo anterior
-  de su rama. Instinto letal permite llegar al 75 % de probabilidad crítica.
+  Los nodos normales admiten 20 rangos y requieren cinco puntos en el nodo
+  anterior para desbloquearse. Los nodos ya desbloqueados en partidas antiguas
+  mantienen sus rangos y pueden seguir mejorándose; al redistribuirlos se aplican
+  los requisitos nuevos. Instinto letal permite llegar al 75 % de probabilidad crítica.
   También hay tres especializaciones de un punto: Berserker (+30 % daño,
   −20 % XP y monedas), Cazador (+15 puntos de crítico, +25 puntos de daño
   crítico, críticos que ignoran la resistencia de bosses y −15 % daño) y
@@ -148,6 +150,8 @@ confirmación. Se aceptan las copias exportadas por esta versión.
   afectan a enemigos, logros y travesía, no al desmantelamiento. Los golpes
   críticos pueden producirse en misiones, arena, torre y bosses, tienen una
   probabilidad máxima del 75 % y causan inicialmente el 150 % del daño.
+  Los críticos visibles muestran un impacto y su daño en misiones, arena,
+  torre y bosses; el progreso acumulado sin conexión no reproduce golpes pasados.
 - **Logros:** desbloquean mejoras permanentes al alcanzar sus objetivos. Las
   misiones se cuentan desde esta versión; los niveles y monstruos derrotados
   de partidas antiguas sí se reconocen. Hay nuevos hitos incrementales para
