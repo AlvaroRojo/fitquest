@@ -228,8 +228,6 @@
   #character .character-stat{border-color:#99724e;background:linear-gradient(145deg,#342c37,#161c2b)}
   #character .attribute{border-color:#9a7651;background:linear-gradient(120deg,#45372f,#222332)}
   #character .attribute button{border-color:#ba9061;background:linear-gradient(135deg,#815638,#493146)}
-  #inventory .inventory-item.is-equipped{border-width:2px;box-shadow:inset 0 0 18px #e8b65b44,0 0 14px #e8b65b55}
-  .equipped-badge{display:inline-block;margin-left:4px;padding:1px 6px;border:1px solid #d5a955;border-radius:999px;background:#604722;color:#ffdf97;font-size:.7rem;font-weight:700;vertical-align:middle}
   .week-card{background:linear-gradient(120deg,#1d4544,#29243b);border-color:#599a8e}
   .bar{background:#0b0e18;box-shadow:inset 0 1px 4px #0009}
   .bar>div{border-radius:inherit}
@@ -270,7 +268,6 @@
   .loot-tier[data-tier="5"]{--loot-color:#ff8c7c;--loot-glow:#ee4a4277}
   .loot-tier[data-tier="6"]{--loot-color:#9cfff0;--loot-glow:#4be5dc88}
   #inventory .inventory-item.loot-tier,#shop .shop-offer.loot-tier{border-color:var(--loot-color);background:radial-gradient(ellipse at 90% 0%,var(--loot-glow),transparent 65%),linear-gradient(145deg,#352d3b,#171c2b);box-shadow:inset 0 1px #fff2,0 0 14px var(--loot-glow)}
-  #inventory .inventory-item.is-equipped{box-shadow:inset 0 0 18px var(--loot-glow),0 0 14px var(--loot-glow)}
   #character .slot.is-equipped.loot-tier{border-color:var(--loot-color);background:radial-gradient(ellipse at 50% 0%,var(--loot-glow),transparent 70%),linear-gradient(145deg,#352d3b,#171c2b);box-shadow:inset 0 0 14px var(--loot-glow)}
   .battle-layout{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));gap:12px}
   .battle-layout>.card{margin:0}
@@ -297,11 +294,10 @@
   .torment-hero{display:grid;grid-template-columns:minmax(0,1fr) 200px;gap:20px;align-items:center}
   .torment-eyebrow{color:#f3aa7a;font-size:.73rem;font-weight:800;letter-spacing:.18em;text-transform:uppercase}
   .torment-sanctuary h2{margin:8px 0;color:#ffe4b2;font-size:clamp(1.5rem,3vw,2.4rem)}
-  .torment-intro{max-width:620px;color:#dfc4b8}
   .torment-emblem{position:relative;display:grid;place-items:center;width:180px;height:180px;justify-self:center;border:1px solid #e6a17499;border-radius:50%;background:radial-gradient(circle,#a53841aa,#3b1c3499 50%,#171827 72%);box-shadow:0 0 35px #c34a4c55,inset 0 0 30px #f4a07133}
   .torment-emblem::before,.torment-emblem::after{content:"";position:absolute;inset:12px;border:1px solid #f1bd8888;transform:rotate(45deg);border-radius:20%}
   .torment-emblem::after{inset:24px;transform:rotate(-45deg);border-color:#e57d7188}
-  .torment-emblem span{z-index:1;font-size:4rem;filter:drop-shadow(0 0 16px #ff8d51);animation:float 3s ease-in-out infinite}
+  .torment-emblem span{z-index:1;font-size:calc(4rem * var(--flame-scale,1));filter:drop-shadow(0 0 16px #ff8d51);animation:float 3s ease-in-out infinite}
   .torment-current{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:8px 0 18px;padding:12px 15px;border:1px solid #c78667;border-radius:12px;background:linear-gradient(110deg,#5b3039,#251d30);box-shadow:inset 0 1px #fff2}
   .torment-current small{color:#e6bc9d;text-transform:uppercase;letter-spacing:.09em;font-weight:700}
   .torment-current strong{color:#ffe2af;font:700 1.2rem Georgia,serif}
@@ -323,7 +319,7 @@
   .torment-option .torment-option-state{color:#f8bf89;font-size:.72rem;font-weight:700}
   .torment-note{margin:16px 0 0;color:#dfc4b8;font-size:.86rem}
   #torment-status:not(:empty){margin:12px 0 0;color:#ffd9a8;font-weight:700}
-  @media(max-width:600px){.torment-hero{grid-template-columns:minmax(0,1fr) 90px;gap:10px}.torment-emblem{width:85px;height:85px}.torment-emblem::before{inset:7px}.torment-emblem::after{inset:14px}.torment-emblem span{font-size:2.4rem}.torment-stat{padding:9px 6px}.torment-stat strong{font-size:1rem}}
+  @media(max-width:600px){.torment-hero{grid-template-columns:minmax(0,1fr) 90px;gap:10px}.torment-emblem{width:85px;height:85px}.torment-emblem::before{inset:7px}.torment-emblem::after{inset:14px}.torment-emblem span{font-size:calc(2.4rem * var(--flame-scale,1))}.torment-stat{padding:9px 6px}.torment-stat strong{font-size:1rem}}
   .expedition-nav{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,170px),1fr));gap:7px;margin:16px 0}
   .expedition-nav button{margin:0;min-height:48px;border-color:#816449;background:linear-gradient(145deg,#453438,#242332)}
   .expedition-nav button[aria-pressed="true"]{border-color:#f3c987;background:linear-gradient(135deg,#9b653b,#563449);box-shadow:0 0 14px #e6a95244}
@@ -444,11 +440,10 @@
     #torment .torment-sanctuary{padding:10px;margin-bottom:0}
     #torment .torment-hero{grid-template-columns:minmax(0,1fr) 70px;gap:8px}
     #torment .torment-sanctuary h2{margin:2px 0;font-size:1.35rem}
-    #torment .torment-intro{margin:2px 0;font-size:.8rem}
     #torment .torment-emblem{width:60px;height:60px}
     #torment .torment-emblem::before{inset:5px}
     #torment .torment-emblem::after{inset:10px}
-    #torment .torment-emblem span{font-size:2rem}
+    #torment .torment-emblem span{font-size:calc(2rem * var(--flame-scale,1))}
     #torment .torment-current{margin:4px 0;padding:4px 8px}
     #torment .torment-stat{padding:4px 8px}
     #torment .torment-picker{margin-top:6px}
@@ -502,9 +497,8 @@
     #torment .torment-sanctuary{padding:16px}
     #torment .torment-hero{grid-template-columns:minmax(0,1fr) 100px}
     #torment .torment-sanctuary h2{font-size:1.6rem}
-    #torment .torment-intro{font-size:.95rem}
     #torment .torment-emblem{width:85px;height:85px}
-    #torment .torment-emblem span{font-size:2.7rem}
+    #torment .torment-emblem span{font-size:calc(2.7rem * var(--flame-scale,1))}
     #torment .torment-current,#torment .torment-stat{padding:8px 11px}
     #torment .torment-stat small{font-size:.9rem}
     #torment .torment-picker{margin-top:10px}
@@ -645,11 +639,10 @@
 </div>
 <div class="card">
   <h2>🎒 Inventario y desmantelamiento</h2>
-  <div class="inventory-summary"><p id="materials"></p><small>Cada mejora añade un 1 % a la estadística del objeto. Al desmantelarlo se pierden sus mejoras; desequípalo primero.</small></div>
+  <div class="inventory-summary"><p id="materials"></p><small>Cada mejora añade un 1 % a la estadística del objeto. Desequipa los objetos para mejorarlos o desmantelarlos; al desmantelar se pierden sus mejoras.</small></div>
   <div class="inventory-toolbar">
     <div class="inventory-filter-heading"><span class="filter-emblem" aria-hidden="true">🔎</span><div><strong>Explorar inventario</strong><small>Encuentra tu equipo</small></div></div>
     <label for="inventory-type">⚔️ Tipo de objeto <select id="inventory-type"><option value="all">Todos los tipos</option></select></label>
-    <label for="inventory-equipped">🛡️ Estado <select id="inventory-equipped"><option value="all">Todos los objetos</option><option value="equipped">Equipados</option><option value="available">Sin equipar</option></select></label>
     <div class="inventory-pagination" id="inventory-pagination">
       <button id="inventory-prev" type="button">← Anterior</button>
       <span id="inventory-page" aria-live="polite"></span>
@@ -745,9 +738,8 @@
     <div>
       <div class="torment-eyebrow">✦ Santuario de dificultad ✦</div>
       <h2>Forja tu destino</h2>
-      <p class="torment-intro">Elige el tormento que gobierna tu aventura. Cuanto mayor sea el desafío, mayores serán las recompensas.</p>
     </div>
-    <div class="torment-emblem" aria-hidden="true"><span>🔥</span></div>
+    <div class="torment-emblem" id="torment-emblem" aria-hidden="true"><span>🔥</span></div>
   </div>
   <div class="torment-current"><small>Dificultad activa</small><strong id="torment-current"></strong></div>
   <div class="torment-stats" aria-label="Efectos del tormento activo">
@@ -1083,9 +1075,12 @@ const globalStats=()=>({
   dungeons:S.challengeClears,packs:S.packsOpened,achievements:S.achievements.length,
   chapters:S.weeklyRewards,streak:S.streak
 });
-const inventoryEquippedFirst=ids=>{
+const inventoryAvailable=(ids,type='all')=>{
   const equipped=new Set(Object.values(S.eq));
-  return [...ids].sort((a,b)=>Number(equipped.has(b))-Number(equipped.has(a)) || itemById(b).tier-itemById(a).tier);
+  return ids.filter(id=>{
+    const item=itemById(id);
+    return item && !equipped.has(id) && (type==='all'||item.g===type);
+  }).sort((a,b)=>itemById(b).tier-itemById(a).tier);
 };
 const target = (ex,l) => Math.max(ex.base, Math.round(ex.base*Math.min(2,1+0.05*(l-1))/ex.step[0])*ex.step[0]);
 const BATTLE_INTERVAL=10000, OFFLINE_LIMIT=8*60*60*1000;
@@ -1765,6 +1760,7 @@ function render(liveOnly=false){
 function renderTorment(){
   const current=TORMENTS[S.torment],box=$('torment-options');
   const focused=document.activeElement?.dataset.torment;
+  $('torment-emblem').style.setProperty('--flame-scale',String(1+S.torment*0.05));
   $('torment-current').textContent=current.name;
   $('torment-hp').textContent=`×${current.hp}`;
   $('torment-reward').textContent=`×${current.reward}`;
@@ -1924,32 +1920,28 @@ function renderChar(){
   $('materials').textContent=`🔩 Fragmentos: ${S.materials}`;
   $('inventory-status').textContent='';
   const inventory=$('inventory');inventory.innerHTML='';
-  const type=$('inventory-type').value, equipped=$('inventory-equipped').value;
-  const matches=inventoryEquippedFirst(S.owned.filter(id=>{
-    const item=itemById(id),worn=Object.values(S.eq).includes(id);
-    return item && (type==='all'||item.g===type) && (equipped==='all'||(equipped==='equipped'?worn:!worn));
-  }));
+  const type=$('inventory-type').value;
+  const matches=inventoryAvailable(S.owned,type);
   const pages=Math.max(1,Math.ceil(matches.length/INVENTORY_PAGE_SIZE));
   inventoryPage=Math.min(inventoryPage,pages-1);
   $('inventory-pagination').hidden=pages===1;
   $('inventory-page').textContent=`Página ${inventoryPage+1} de ${pages} · ${matches.length} objetos`;
   $('inventory-prev').disabled=inventoryPage===0;
   $('inventory-next').disabled=inventoryPage===pages-1;
-  if(!matches.length){inventory.textContent=S.owned.length?'No hay objetos con estos filtros.':'Todavía no tienes objetos. Consigue uno en la tienda o en los sobres.';return}
+  if(!matches.length){inventory.textContent=S.owned.length?'No hay objetos sin equipar de este tipo.':'Todavía no tienes objetos. Consigue uno en la tienda o en los sobres.';return}
   for(const id of matches.slice(inventoryPage*INVENTORY_PAGE_SIZE,(inventoryPage+1)*INVENTORY_PAGE_SIZE)){
     const item=itemById(id);if(!item) continue;
-    const worn=Object.values(S.eq).includes(id);
-    const row=document.createElement('div');row.className=worn?'inventory-item is-equipped':'inventory-item';
+    const row=document.createElement('div');row.className='inventory-item';
     row.classList.add('loot-tier');row.dataset.tier=item.tier;
-    row.draggable=!worn;
+    row.draggable=true;
     row.ondragstart=event=>{event.dataTransfer.setData('application/x-fitquest-item',id);event.dataTransfer.effectAllowed='move'};
     row.ondragend=()=>render();
-    row.innerHTML=`<strong>${GROUPS[item.g].icon} ${item.name}${upgradeLevel(id)?` +${upgradeLevel(id)}`:''}</strong>${worn?'<span class="equipped-badge">✓ Equipado</span>':''}<small>${TIER_ICONS[item.tier]} ${TIER_NAMES[item.tier]} · +${itemPercent(item)}% ${STAT_TXT[item.stat]}</small>`;
+    row.innerHTML=`<strong>${GROUPS[item.g].icon} ${item.name}${upgradeLevel(id)?` +${upgradeLevel(id)}`:''}</strong><small>${TIER_ICONS[item.tier]} ${TIER_NAMES[item.tier]} · +${itemPercent(item)}% ${STAT_TXT[item.stat]}</small>`;
     const actions=document.createElement('div');actions.className='item-actions';
-    const select=document.createElement('button');select.textContent=worn?'Equipado':'Equipar';select.disabled=worn;
+    const select=document.createElement('button');select.textContent='Equipar';
     select.onclick=()=>equip(item);
-    select.setAttribute('aria-label',`${worn?'Equipado':'Equipar'} ${item.name}`);
-    select.title=worn?'Objeto equipado':'Equipar automáticamente';
+    select.setAttribute('aria-label',`Equipar ${item.name}`);
+    select.title='Equipar automáticamente';
     const upgrade=document.createElement('button');
     upgrade.textContent=`✨ ${upgradeCost(item)} 🔩`;
     upgrade.disabled=S.materials<upgradeCost(item);
@@ -1960,7 +1952,6 @@ function renderChar(){
     destroy.textContent=dismantleConfirm===id?'Confirmar':`🔨 +${TIER_FRAGMENTS[item.tier]}`;
     destroy.setAttribute('aria-label',dismantleConfirm===id?`Confirmar desmantelar ${item.name} y perder sus mejoras`:`Desmantelar ${item.name} por ${TIER_FRAGMENTS[item.tier]} fragmentos`);
     destroy.title=dismantleConfirm===id?'Confirmar: perder objeto y mejoras':'Desmantelar objeto';
-    destroy.disabled=worn;
     destroy.onclick=()=>{
       if(dismantleConfirm!==id){dismantleConfirm=id;render();return}
       settleBattle();
@@ -2106,15 +2097,17 @@ for(const [id,group] of Object.entries(GROUPS)){
   const option=document.createElement('option');option.value=id;option.textContent=group.label;
   $('inventory-type').appendChild(option);
 }
-for(const id of ['inventory-type','inventory-equipped']){
-  $(id).addEventListener('change',()=>{inventoryPage=0;dismantleConfirm=null;renderChar()});
+$('inventory-type').addEventListener('change',()=>{inventoryPage=0;dismantleConfirm=null;renderChar()});
+function changeInventoryPage(direction){
+  inventoryPage+=direction;dismantleConfirm=null;renderChar();
+  window.scrollTo({top:document.documentElement.scrollHeight,behavior:'auto'});
 }
-$('inventory-prev').onclick=()=>{inventoryPage--;dismantleConfirm=null;renderChar()};
-$('inventory-next').onclick=()=>{inventoryPage++;dismantleConfirm=null;renderChar()};
+$('inventory-prev').onclick=()=>changeInventoryPage(-1);
+$('inventory-next').onclick=()=>changeInventoryPage(1);
 $('reset').onclick=()=>{
   const b=$('reset');
   if(b.dataset.armed){clearTimeout(resetTimer);delete b.dataset.armed;b.textContent='Reiniciar partida';
-    clearTimeout(lootTimer);lootTimer=null;S=fresh();dismantleConfirm=null;inventoryPage=0;$('inventory-type').value='all';$('inventory-equipped').value='all';$('pack-result').textContent='';$('pack-stage').classList.remove('spinning','reveal');$('pack-reel').replaceChildren();$('pack-reel').style.transform='translateX(-64px)';$('mission-status').textContent='';$('torment-status').textContent='';save();render();return}
+    clearTimeout(lootTimer);lootTimer=null;S=fresh();dismantleConfirm=null;inventoryPage=0;$('inventory-type').value='all';$('pack-result').textContent='';$('pack-stage').classList.remove('spinning','reveal');$('pack-reel').replaceChildren();$('pack-reel').style.transform='translateX(-64px)';$('mission-status').textContent='';$('torment-status').textContent='';save();render();return}
   b.dataset.armed=1;b.textContent='¿Seguro? Pulsa otra vez para borrar';
   resetTimer=setTimeout(()=>{delete b.dataset.armed;b.textContent='Reiniciar partida'},4000);
 };

@@ -237,12 +237,12 @@ test('global statistics use saved counters and all defeated monsters', () => {
   })()`),true);
 });
 
-test('character inventory marks equipped items and keeps compact filterable layout', () => {
+test('character inventory hides equipped items and filters only by type', () => {
   assert.match(html, /class="inventory-summary"><p id="materials"><\/p><small>/);
   assert.match(html, /#inventory\{display:grid;grid-template-columns:repeat\(auto-fill/);
   assert.match(html, /#inventory\{[^}]*margin-top:14px/);
-  assert.match(script, /row\.className=worn\?'inventory-item is-equipped':'inventory-item'/);
-  assert.match(script, /class="equipped-badge">✓ Equipado/);
+  assert.doesNotMatch(html, /id="inventory-equipped"/);
+  assert.match(script, /inventoryAvailable\(S\.owned,type\)/);
   assert.match(script, /b\.className=it\?'slot is-equipped':'slot'/);
 });
 
@@ -253,26 +253,32 @@ test('character displays arena victories and total bonuses without source breakd
   assert.doesNotMatch(bonuses,/b\.(attributes|equipment|forge|achievements)/);
 });
 
-test('equipped inventory items sort first without changing the saved order', () => {
+test('inventory excludes equipped instances but retains unequipped copies and rarity order', () => {
   const g=game();
   assert.equal(g.run(`(() => {
-    S=fresh(); S.owned=['shield_0_0','sword_0_0','helmet_0_0','ring_0_0'];
-    S.eq={sword:'sword_0_0',helmet:'helmet_0_0'};
-    return JSON.stringify(inventoryEquippedFirst(S.owned))===JSON.stringify(['sword_0_0','helmet_0_0','shield_0_0','ring_0_0']) &&
-      S.owned[0]==='shield_0_0' &&
-      inventoryEquippedFirst(['shield_0_0','helmet_0_0'])[0]==='helmet_0_0';
+    S=fresh(); S.owned=['sword_0_0','shield_5_0','sword_0_0#1','helmet_1_0','arms_4_0','ring_6_0'];
+    S.eq={sword:'sword_0_0',arms:'arms_4_0'};
+    if(JSON.stringify(inventoryAvailable(S.owned))!==JSON.stringify(['ring_6_0','shield_5_0','helmet_1_0','sword_0_0#1'])) return false;
+    if(JSON.stringify(inventoryAvailable(S.owned,'sword'))!==JSON.stringify(['sword_0_0#1'])) return false;
+    delete S.eq.sword;
+    return JSON.stringify(inventoryAvailable(S.owned,'sword'))===JSON.stringify(['sword_0_0','sword_0_0#1']) &&
+      S.owned[0]==='sword_0_0';
   })()`),true);
 });
 
-test('inventory sorts equipped items first and rarity descending within each group', () => {
-  const g=game();
-  assert.equal(g.run(`(() => {
-    S=fresh(); S.owned=['sword_0_0','shield_5_0','helmet_1_0','arms_4_0','ring_6_0'];
-    S.eq={sword:'sword_0_0',arms:'arms_4_0'};
-    const result=inventoryEquippedFirst(S.owned);
-    return JSON.stringify(result)===JSON.stringify(['arms_4_0','sword_0_0','ring_6_0','shield_5_0','helmet_1_0']) &&
-      S.owned[0]==='sword_0_0';
-  })()`),true);
+test('changing inventory pages scrolls to the updated bottom in both directions', () => {
+  const calls=[];
+  const context=vm.createContext({
+    inventoryPage:1,dismantleConfirm:'item',
+    renderChar:()=>calls.push('render'),
+    document:{documentElement:{scrollHeight:2400}},
+    window:{scrollTo:options=>calls.push({top:options.top,behavior:options.behavior})},
+  });
+  vm.runInContext(script.slice(script.indexOf('function changeInventoryPage('),script.indexOf("$('inventory-prev').onclick")),context);
+  vm.runInContext('changeInventoryPage(1); changeInventoryPage(-1)',context);
+  assert.equal(vm.runInContext('inventoryPage',context),1);
+  assert.equal(vm.runInContext('dismantleConfirm',context),null);
+  assert.deepEqual(calls,['render',{top:2400,behavior:'auto'},'render',{top:2400,behavior:'auto'}]);
 });
 
 test('hero power follows equipment, upgrades, attributes and arena upgrades', () => {
@@ -827,8 +833,9 @@ test('torment unlocks by level and rejects locked or invalid selections', () => 
 });
 
 test('torment sanctuary displays unlocks and saves the selected difficulty', () => {
-  const elements=Object.fromEntries(['torment-current','torment-hp','torment-reward','torment-target',
+  const elements=Object.fromEntries(['torment-current','torment-hp','torment-reward','torment-target','torment-emblem',
     'torment-options','torment-status'].map(id=>[id,{textContent:''}]));
+  elements['torment-emblem'].style={setProperty(name,value){this[name]=value}};
   const box=elements['torment-options'];
   box.children=[];
   box.replaceChildren=()=>{box.children=[]};
@@ -850,6 +857,7 @@ test('torment sanctuary displays unlocks and saves the selected difficulty', () 
   vm.runInContext(script.slice(script.indexOf('function renderTorment(){'),script.indexOf('function renderBattleUpgrades(){')),context);
   vm.runInContext('renderTorment()',context);
   assert.equal(elements['torment-current'].textContent,'Normal');
+  assert.equal(elements['torment-emblem'].style['--flame-scale'],'1');
   assert.equal(box.children.length,3);
   assert.equal(box.children[0]['aria-pressed'],'true');
   assert.equal(box.children[1].disabled,false);
@@ -862,11 +870,18 @@ test('torment sanctuary displays unlocks and saves the selected difficulty', () 
   assert.equal(saves,1);
   assert.equal(state.torment,1);
   assert.equal(elements['torment-current'].textContent,'Tormento I');
+  assert.equal(elements['torment-emblem'].style['--flame-scale'],'1.05');
   assert.equal(elements['torment-hp'].textContent,'×1.75');
   assert.equal(elements['torment-reward'].textContent,'×1.4');
   assert.equal(elements['torment-target'].textContent,'+5%');
   assert.equal(box.children[1]['aria-pressed'],'true');
   assert.match(elements['torment-status'].textContent,/Tormento I seleccionado/);
+  state.level=20;
+  vm.runInContext('renderTorment()',context);
+  click(box.children[2]);
+  assert.equal(elements['torment-emblem'].style['--flame-scale'],'1.1');
+  click(box.children[0]);
+  assert.equal(elements['torment-emblem'].style['--flame-scale'],'1');
 });
 
 test('missions keep their target and reward until replaced, then use new torment', () => {

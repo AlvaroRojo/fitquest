@@ -90,18 +90,19 @@ eliminarla.
   arena. Es un indicador visual y no añade bonificaciones de combate. El héroe
   tiene 100 evoluciones visuales: la primera comienza en 1 de poder y se
   alcanza una nueva cada 10 puntos, hasta la última en 991. El aspecto puede
-  retroceder si disminuye el poder. Los objetos equipados se
-  muestran primero en el inventario; dentro de los equipados y los no
-  equipados se ordenan de mayor a menor rareza. Sus fondos reflejan la rareza.
+  retroceder si disminuye el poder. El inventario muestra solo los objetos
+  sin equipar, ordenados de mayor a menor rareza. Sus fondos reflejan la rareza.
   Las copias del mismo objeto son independientes: cada una se puede equipar,
   mejorar o desmantelar por separado.
   Desmantela objetos no equipados con
   dos pulsaciones: dan 2, 5, 12, 25, 40, 65 o 100 fragmentos según su rareza. El inventario
-  se puede filtrar por tipo y estado y muestra hasta 12 objetos por página.
+  se puede filtrar por tipo y muestra hasta 12 objetos por página; al cambiar
+  de página la vista baja hasta el final del inventario.
   En ordenador, personaje y entrenamiento se muestran arriba y el inventario
   ocupa el ancho completo debajo. En pantallas amplias, como 1680 × 1050,
   los textos y controles aumentan de tamaño.
-  Puedes usar fragmentos para mejorar un objeto sin un máximo de nivel; cada mejora añade un 1 %
+  Desequipa un objeto para poder mejorarlo. Puedes usar fragmentos para mejorarlo
+  sin un máximo de nivel; cada mejora añade un 1 %
   a su estadística. El coste es 5 + 3 por nivel de mejora actual + 2 por
   índice de rareza (común 0 a divino 6). Desmantelar elimina el objeto y
   sus mejoras; aún no hay fabricación.
@@ -174,7 +175,7 @@ eliminarla.
   otorgan recompensas adicionales; sus datos permanecen en la partida.
 - **Tormento global:** en la pestaña **Tormento**, todos los rangos están
   visibles para comparar sus efectos y seleccionar uno disponible. El santuario muestra
-  la dificultad activa; los rangos bloqueados indican el nivel necesario.
+  la dificultad activa con una llama que crece según el rango; los rangos bloqueados indican el nivel necesario.
   Hay Normal y doce rangos,
   desbloqueados cada diez niveles desde el 10 hasta el 120. Los rangos I a XII
   multiplican la vida enemiga por 1,75/2,5/4/6/8/11/15/21/30/42/60/85 y
