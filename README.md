@@ -156,9 +156,10 @@ confirmación. Se aceptan las copias exportadas por esta versión.
   necesitan tres rangos en la anterior. Sus bonos se suman a los de habilidades,
   equipo y logros, y el crítico conserva su límite del 75 %.
   Con 20 puntos invertidos se elige una subclase sin coste adicional:
-  Campeón (+30 puntos porcentuales de daño), Asesino (+10 puntos de probabilidad
-  y +30 de daño crítico) u Oráculo (+20 puntos de XP, monedas y fragmentos de
-  recompensas). Solo puede elegirse una; redistribuir pasivas es gratuito y
+  Campeón (+30 % de daño), Asesino (+10 % de probabilidad y +30 % de daño
+  crítico) u Oráculo (+20 % de XP, monedas y fragmentos de recompensas).
+  Estas mejoras se suman a los demás bonos. Solo puede elegirse una;
+  redistribuir pasivas es gratuito y
   permite elegir otra, sin afectar al árbol de habilidades original. Las copias
   de seguridad antiguas siguen siendo compatibles.
 - **Logros:** desbloquean mejoras permanentes al alcanzar sus objetivos. Las

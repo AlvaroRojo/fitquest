@@ -28,6 +28,7 @@ function game(saved) {
 test('navigation starts in adventure and selects one accessible tab', () => {
   const sections = ['adventure', 'character', 'statistics', 'skills', 'passives', 'store', 'achievements', 'packs', 'battle', 'dungeons', 'torment'];
   assert.deepEqual([...html.matchAll(/data-section="([^"]+)"/g)].map(match => match[1]), sections);
+  assert.match(html, /data-section="adventure"[^>]*>📜 Misiones<\/button>/);
   assert.match(html, /id="tab-adventure"[^>]*aria-selected="true"/);
   assert.match(html, /<section id="adventure" role="tabpanel" aria-labelledby="tab-adventure">/);
   const panels = Object.fromEntries(sections.map(id => [id, { hidden: id !== 'adventure' }]));
@@ -1078,6 +1079,14 @@ test('passive subclasses are exclusive, affect gameplay, persist and can change 
     save();return true;
   })()`),true);
   assert.equal(game(restored.saved()).run(`S.subclass==='oracle' && passivePoints()===0 && materialReward(100)===135`),true);
+});
+
+test('subclass descriptions use percent signs and successful actions do not show upgrade messages', () => {
+  const g=game();
+  assert.equal(g.run(`Object.values(PASSIVE_CLASSES).every(item=>item.description.includes('%')&&!item.description.includes('puntos porcentuales'))`),true);
+  const renderer=script.slice(script.indexOf('function renderPassives(){'),script.indexOf('function renderTorment(){'));
+  assert.doesNotMatch(renderer,/seleccionada\.|mejorada a/);
+  assert.match(renderer,/No se puede seleccionar esta subclase/);
 });
 
 test('passive backup validation rejects locked, invalid or overspent progress', () => {

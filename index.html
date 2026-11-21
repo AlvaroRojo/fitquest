@@ -595,7 +595,7 @@
 
 <div class="game-layout">
 <div class="navigation" role="tablist" aria-label="Secciones del juego">
-  <button type="button" role="tab" id="tab-adventure" data-section="adventure" aria-controls="adventure" aria-selected="true">🍺 Posada y misiones</button>
+  <button type="button" role="tab" id="tab-adventure" data-section="adventure" aria-controls="adventure" aria-selected="true">📜 Misiones</button>
   <button type="button" role="tab" id="tab-character" data-section="character" aria-controls="character" aria-selected="false" tabindex="-1">🧙 Personaje</button>
   <button type="button" role="tab" id="tab-statistics" data-section="statistics" aria-controls="statistics" aria-selected="false" tabindex="-1">📊 Estadísticas</button>
   <button type="button" role="tab" id="tab-skills" data-section="skills" aria-controls="skills" aria-selected="false" tabindex="-1">🌳 Habilidades</button>
@@ -998,9 +998,9 @@ const PASSIVE_BRANCHES=[
 ];
 const PASSIVES=Object.fromEntries(PASSIVE_BRANCHES.flatMap(branch=>branch.nodes.map((node,i)=>[node.id,{...node,requires:i?branch.nodes[i-1].id:null}])));
 const PASSIVE_CLASSES={
-  champion:{name:'⚔️ Campeón',description:'+30 puntos porcentuales de daño',bonuses:{dmg:30}},
-  assassin:{name:'🎯 Asesino',description:'+10 puntos de crítico y +30 % de daño crítico',bonuses:{crit:10,critDamage:30}},
-  oracle:{name:'💎 Oráculo',description:'+20 puntos porcentuales de XP, monedas y fragmentos de recompensas',bonuses:{xp:20,coin:20,materials:20}}
+  champion:{name:'⚔️ Campeón',description:'+30 % de daño',bonuses:{dmg:30}},
+  assassin:{name:'🎯 Asesino',description:'+10 % de probabilidad crítica y +30 % de daño crítico',bonuses:{crit:10,critDamage:30}},
+  oracle:{name:'💎 Oráculo',description:'+20 % de XP, monedas y fragmentos de recompensas',bonuses:{xp:20,coin:20,materials:20}}
 };
 const PASSIVE_MAX=5, PASSIVE_REQUIRED=3, PASSIVE_CLASS_REQUIRED=20;
 const passiveSpent=()=>Object.values(S.passives).reduce((sum,rank)=>sum+rank,0);
@@ -2251,7 +2251,7 @@ function renderPassives(){
     button.disabled=locked||spent<PASSIVE_CLASS_REQUIRED||S.subclass!==null;
     button.onclick=()=>{
       if(!chooseSubclass(id)){$('passive-status').textContent='No se puede seleccionar esta subclase.';return}
-      save();render();$('passive-status').textContent=`Subclase ${subclass.name} seleccionada.`;
+      save();render();$('passive-status').textContent='';
     };
     classes.appendChild(button);
   }
@@ -2624,7 +2624,7 @@ $('neutral-style').onclick=()=>{
 $('reset-passives').onclick=()=>{
   if(!passiveSpent()&&!S.subclass) return;
   if(!confirm('¿Redistribuir todas las pasivas gratis? Recuperarás los puntos y podrás elegir otra subclase.')) return;
-  resetPassives();save();render();$('passive-status').textContent='Puntos recuperados; puedes elegir otra subclase al invertir 20 puntos.';
+  resetPassives();save();render();$('passive-status').textContent='';
 };
 for(const [id,group] of Object.entries(GROUPS)){
   const option=document.createElement('option');option.value=id;option.textContent=group.label;
