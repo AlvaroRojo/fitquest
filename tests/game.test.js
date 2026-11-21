@@ -549,13 +549,12 @@ test('active mission targets and partial progress persist across day changes', (
   assert.equal(restored.run('S.targets[S.active[4]]'),g.run('S.targets[S.active[4]]'));
 });
 
-test('mission board offers goal adaptation without restoring rest controls', () => {
+test('mission board omits rest controls and exercise customization', () => {
   const board = html.match(/<h2>📜 Tablón de encargos[\s\S]*?<\/div>\s*<div class="card" id="journey">/)[0];
   assert.doesNotMatch(board, /Reglas y bienestar|Elige una misión/);
   assert.doesNotMatch(html, /Tu ejercicio real es el daño/);
   assert.doesNotMatch(html, /id="rest"|\$\('rest'\)/);
-  assert.match(board,/mission-scale/);
-  assert.doesNotMatch(board,/personalizar ejercicios|exercise-options|rest-day|rest-status|Descansos esta semana/i);
+  assert.doesNotMatch(board, /personalizar ejercicios|mission-scale|exercise-options|rest-day|rest-status|Descansos esta semana/i);
 });
 
 test('inventory removes bulk selection but keeps per-item dismantling', () => {
@@ -1545,73 +1544,6 @@ test('new mission targets use their unrounded base regardless of torment', () =>
   })()`),true);
 });
 
-test('mission goals stay fixed at all levels and reductions preserve full rewards', () => {
-  const g=game();
-  assert.equal(g.run(`(() => {
-    ACHIEVEMENTS.length=0;
-    const results=[];
-    for(const level of [1,100,500]) for(const scale of [50,75,100]){
-      S=fresh();S.level=level;S.active=['squat','push','plank','abs','jack','lunge'];
-      S.missionScale=scale;S.battleUpdated=Date.now();S.monsterHp=1e9;
-      const ex=byId('squat'),goal=missionTarget(ex),estimate=missionEstimate(ex);
-      if(goal!==Math.ceil(20*scale/100)) return false;
-      const xp=S.xp,coins=S.coins,hp=S.monsterHp;
-      completeMission(ex);
-      if(S.xp-xp!==estimate.xp||S.coins-coins!==estimate.coins||
-         Math.abs(hp-S.monsterHp-estimate.damage)>1e-8) return false;
-      results.push(JSON.stringify(estimate));
-    }
-    return results.every(value=>value===results[0]);
-  })()`),true);
-});
-
-test('changing the goal preserves unpaid rewards for legacy partial progress', () => {
-  const g=game();
-  assert.equal(g.run(`(() => {
-    S=fresh();S.active=['squat','push','plank','abs','jack','lunge'];S.done.squat=5;
-    const ex=byId('squat'),before=missionEstimate(ex);
-    if(!setMissionScale(50)||missionTarget(ex)!==10||S.done.squat!==5) return false;
-    const after=missionEstimate(ex);
-    return after.damage===before.damage&&after.xp===before.xp&&after.coins===before.coins;
-  })()`),true);
-});
-
-test('fixed-target migration preserves partial progress and existing relics', () => {
-  const first=game();
-  first.run(`S=fresh();S.level=100;S.active=['squat','push','plank','abs','jack','lunge'];
-    S.targets.squat=40;S.done.squat=24;S.missionTorments.squat=0;
-    S.missionTargetReferences.squat={target:40,torment:0,scale:100};
-    S.owned=['tower_relic#1'];delete S.fixedMissionTargets;delete S.relicCollection;save()`);
-  const restored=game(first.saved());
-  assert.equal(restored.run(`(() => {
-    if(S.targets.squat!==24||S.done.squat!==24||!S.relicCollection.includes('tower_relic')) return false;
-    if(missionEstimate(byId('squat')).damage!==0) return false;
-    save();return true;
-  })()`),true);
-  assert.equal(game(restored.saved()).run(`S.targets.squat===24&&S.done.squat===24`),true);
-});
-
-test('first-round milestones grant extras once and relic collection survives dismantling', () => {
-  const g=game();
-  assert.equal(g.run(`(() => {
-    ACHIEVEMENTS.length=0;S=fresh();S.tower.floor=25;S.tower.hp=1;S.tower.torment=0;S.tower.keys=1;
-    if(!attackTower('2026-01-01')||S.materials!==14||S.owned.length) return false;
-    S.tower.floor=100;S.tower.hp=1;S.tower.torment=0;S.tower.keys=1;
-    if(!attackTower('2026-01-02')||!S.owned.includes('tower_relic')) return false;
-    if(!dismantle('tower_relic')||!S.relicCollection.includes('tower_relic')) return false;
-    S.activeDays=156;claimJourneyRewards(0);
-    if(S.weeklyRewards!==52||!S.owned.includes('journey_relic')||
-       !S.relicCollection.includes('journey_relic')) return false;
-    const materials=S.materials,owned=S.owned.length;
-    claimJourneyRewards(0);
-    if(S.materials!==materials||S.owned.length!==owned||
-       !validateBackup({format:'fitquest-save',version:1,state:S})) return false;
-    save();return true;
-  })()`),true);
-  assert.equal(game(g.saved()).run(`S.relicCollection.includes('tower_relic')&&
-    S.relicCollection.includes('journey_relic')&&!S.owned.includes('tower_relic')`),true);
-});
-
 test('legacy mission targets migrate once with references, estimates and preserved progress', () => {
   const first=game();
   first.run(`(() => {
@@ -1759,7 +1691,7 @@ test('tower torment changes immediately and persists health and rewards', () => 
   const restored=game(g.saved());
   assert.equal(restored.run(`(() => {
     const coins=S.coins+Math.round((20+50*5)*bonus('coin'));
-    const xp=S.xp+Math.round((25+50*4)*bonus('xp')),materials=S.materials+7+materialReward(15);
+    const xp=S.xp+Math.round((25+50*4)*bonus('xp')),materials=S.materials+7;
     S.tower.hp=1;
     if(!attackTower('2026-01-06') || S.coins!==coins || S.xp!==xp ||
       S.materials!==materials || S.tower.floor!==51 || S.tower.torment!==null) return false;

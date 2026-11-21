@@ -666,10 +666,6 @@
 
 <div class="card">
   <h2>📜 Tablón de encargos <small id="cnt"></small></h2>
-  <label for="mission-scale">Objetivo de ejercicio:
-    <select id="mission-scale"><option value="50">50 %</option><option value="75">75 %</option><option value="100">100 %</option><option value="125">125 % (anterior)</option><option value="150">150 % (anterior)</option></select>
-  </label>
-  <p><small>Puedes reducir el objetivo sin perder recompensas. Adapta el ejercicio a tu capacidad; descansar también es importante.</small></p>
   <div id="missions" class="quest-board"></div>
   <p id="adventure-next"></p>
   <p id="mission-status" class="mission-status" role="status" aria-live="polite"></p>
@@ -692,12 +688,6 @@
   <div id="eq" class="hero-layout"><div class="hero-stage" id="hero"></div></div>
   <h3 class="jewelry-heading">💎 Joyería</h3>
   <div id="jewelry" class="jewelry-slots" aria-label="Huecos de joyería"></div>
-</div>
-<div class="card">
-  <h2>🏅 Colección y títulos</h2>
-  <p id="hero-titles"></p>
-  <p id="relic-collection"></p>
-  <small>Los títulos son decorativos y las reliquias descubiertas permanecen en la colección aunque las desmanteles.</small>
 </div>
 <div class="card training-card">
   <h2>📖 Entrenamiento del héroe</h2>
@@ -1125,7 +1115,6 @@ function addItem(id){
   let instance=id,n=1;
   while(S.owned.includes(instance)) instance=`${id}#${n++}`;
   S.owned.push(instance);
-  if(EXCLUSIVE_ITEMS.some(item=>item.id===id) && !S.relicCollection.includes(id)) S.relicCollection.push(id);
   return instance;
 }
 const SHOP_SIZE=10, FORGE_WEEKLY_LIMIT=10;
@@ -1297,12 +1286,6 @@ const ACHIEVEMENTS=[
     (i,goal)=>({coins:25+goal*2,materials:i>=3?5+i*3:0})
   ),
   ...milestoneAchievements(
-    'missions-bridge','Crónica del héroe','Misiones completadas:',
-    [1250,1750,2250,2500,3500,4000,4500,6000],
-    s=>s.totalMissions,['xp','dmg','coin'],
-    (i,goal)=>({coins:goal,materials:60+i*10})
-  ),
-  ...milestoneAchievements(
     'missions-legend','Crónica infinita','Misiones completadas:',
     [7500,10000,15000,25000,50000,100000],
     s=>s.totalMissions,['xp','dmg','coin'],
@@ -1344,7 +1327,7 @@ const inventoryAvailable=(ids,type='all')=>{
     return item && !equipped.has(id) && (type==='all'||item.g===type);
   }).sort((a,b)=>itemById(b).tier-itemById(a).tier);
 };
-const target = ex => ex.base;
+const target = (ex,l) => Math.max(ex.base, Math.round(ex.base*Math.min(2,1+0.05*(l-1))/ex.step[0])*ex.step[0]);
 const BATTLE_INTERVAL=10000, OFFLINE_LIMIT=8*60*60*1000;
 const offlineLimit=()=>OFFLINE_LIMIT*(passiveMastery('sage5')?1.5:1);
 const BATTLE_UPGRADES={
@@ -1491,10 +1474,6 @@ const TOWER_FLOORS=100;
 const towerMaxHp=(floor,round=S.tower?.round||0)=>Math.round((24+floor*2)*(1+round*.5));
 const towerRewardMultiplier=round=>1+round*.25;
 const FULL_REWARD_MISSIONS=6, WEEKLY_DAYS=3, JOURNEY_CHAPTERS=52, REST_WEEKLY_LIMIT=2, BOSS_WEEKLY_LIMIT=3;
-const LEVEL_TITLES=[[120,'Campeón del tormento'],[150,'Leyenda del alba'],[200,'Héroe ancestral'],[300,'Viajero eterno'],[500,'Leyenda inmortal']];
-const TOWER_TITLES=[[25,'Vigía de la torre'],[50,'Centinela de la torre'],[75,'Guardián de la torre'],[100,'Conquistador de la torre']];
-const JOURNEY_TITLES=[[13,'Explorador'],[26,'Cartógrafo'],[39,'Caminante'],[52,'Cronista del viaje']];
-const milestoneTitle=(kind,milestone)=>(kind==='tower'?TOWER_TITLES:JOURNEY_TITLES).find(([value])=>value===milestone)?.[1];
 const journeyDaysRequired=round=>WEEKLY_DAYS+round;
 
 const fresh = () => ({level:1,xp:0,coins:0,owned:[],eq:{},streak:0,kills:0,
@@ -1502,7 +1481,7 @@ const fresh = () => ({level:1,xp:0,coins:0,owned:[],eq:{},streak:0,kills:0,
   targets:{},missionTorments:{},missionTargetReferences:{},exerciseEnabled:EXERCISES.map(e=>e.id),missionScale:100,skills:{},skillStyle:null,passives:{},subclass:null,arenaBalanceVersion:1,levelBalanceVersion:1,totalMissions:0,packsOpened:0,packMisses:0,achievements:[],missionKills:0,autoKills:0,autoMonsterHp:monsterHp(0),autoTorment:0,battleUpdated:Date.now(),
   challengeClears:0,materials:0,activeDays:0,lastActivityDay:null,
   weeklyRewards:0,journeyRound:0,journeyStartDays:0,balanceVersion:1,unlimitedMissionsVersion:1,upgrades:{},attributes:{dmg:0,xp:0,coin:0},encounter:nextEncounter(0),
-  missionDifficultyVersion:1,independentMissionTargets:1,fixedMissionTargets:1,relicCollection:[],legacyMissions:{},shopStock:null,forgeRanks:{dmg:0,xp:0,coin:0},forgeLastWeek:null,forgeWeek:null,forgeWeekPurchases:0,
+  missionDifficultyVersion:1,independentMissionTargets:1,legacyMissions:{},shopStock:null,forgeRanks:{dmg:0,xp:0,coin:0},forgeLastWeek:null,forgeWeek:null,forgeWeekPurchases:0,
   battleUpgrades:{damage:0,speed:0,loot:0},
   torment:0,
   tower:{floor:1,round:0,hp:towerMaxHp(1,0),keys:0,lastAttack:null,torment:null},
@@ -1516,7 +1495,6 @@ if(S.weapon){for(let w=0;w<S.weapon;w++)S.coins+=Math.round(50*Math.pow(1.5,w));
 S.targets ??= {};
 if(!S.missionTorments) S.missionTorments=Object.fromEntries(S.active.map(id=>[id,0]));
 S.missionTargetReferences ??= {};
-S.relicCollection ??= [...new Set(S.owned.map(itemTypeId).filter(id=>EXCLUSIVE_ITEMS.some(item=>item.id===id)))];
 S.exerciseEnabled ??= EXERCISES.map(e=>e.id);
 S.missionScale ??= 100;
 S.skills ??= {};
@@ -1619,15 +1597,6 @@ if(!S.independentMissionTargets){
   }
   S.independentMissionTargets=1;
 }
-if(!S.fixedMissionTargets){
-  for(const id of S.active){
-    if(!S.targets[id]) continue;
-    const base=target(byId(id))*DIFFICULTIES[missionDifficulty(byId(id))].target;
-    S.targets[id]=Math.max(S.done[id]||0,1,Math.ceil(base*S.missionScale/100));
-    S.missionTargetReferences[id]={target:base,torment:0,scale:100};
-  }
-  S.fixedMissionTargets=1;
-}
 
 function log(t){S.log.unshift(t);S.log=S.log.slice(0,40)}
 function grantEndgameReward(id,round,milestone,torment){
@@ -1635,15 +1604,6 @@ function grantEndgameReward(id,round,milestone,torment){
   const fragments=materialReward((25+milestone)*towerRewardMultiplier(round)*reward);
   S.materials+=fragments;addItem(id);
   log(`🎁 Hito de vuelta ${round+1}: ${ITEM[id].name} y +${fragments} fragmentos`);
-}
-function grantFirstRoundReward(kind,milestone,torment){
-  const isTower=kind==='tower',last=isTower?100:52;
-  const multiplier=isTower?combatReward(torment):TORMENTS[torment].reward;
-  const fragments=materialReward((5+(isTower?milestone/5:milestone/13))*multiplier);
-  S.materials+=fragments;
-  const item=isTower?'tower_relic':'journey_relic';
-  if(milestone===last) addItem(item);
-  log(`🎁 Hito ${isTower?'de torre':'de travesía'} ${milestone}: título ${milestoneTitle(kind,milestone)}, +${fragments} fragmentos${milestone===last?` y ${ITEM[item].name}`:''}`);
 }
 function ensureShopStock(day=today()){
   const sameDay=S.shopStock && S.shopStock.day===day;
@@ -1708,10 +1668,7 @@ function claimJourneyRewards(torment=S.torment){
     const coins=Math.round((35+3*chapter)*multiplier*TORMENTS[torment].reward),materials=materialReward((3+Math.min(chapter,20))*multiplier*TORMENTS[torment].reward);
     S.coins+=coins;S.materials+=materials;
     log(`🌟 Travesía ${chapter}/${JOURNEY_CHAPTERS} · vuelta ${round+1}: +${coins} monedas y +${materials} fragmentos`);
-    if(chapter%13===0){
-      if(round>0) grantEndgameReward('journey_relic',round,chapter,torment);
-      else grantFirstRoundReward('journey',chapter,torment);
-    }
+    if(round>0&&chapter%13===0) grantEndgameReward('journey_relic',round,chapter,torment);
   }
 }
 function startJourneyRound(){
@@ -1749,9 +1706,9 @@ function missionDifficulty(ex){
 function missionTarget(ex){
   S.missionTorments[ex.id] ??= S.torment;
   if(!S.targets[ex.id]){
-    const base=target(ex)*DIFFICULTIES[missionDifficulty(ex)].target;
-    S.missionTargetReferences[ex.id]={target:base,torment:0,scale:100};
-    S.targets[ex.id]=Math.max(1,Math.ceil(base*S.missionScale/100));
+    const base=Math.max(1,target(ex,S.level)*DIFFICULTIES[missionDifficulty(ex)].target*S.missionScale/100);
+    S.missionTargetReferences[ex.id]={target:base,torment:0,scale:S.missionScale};
+    S.targets[ex.id]=Math.ceil(base);
   }
   return S.targets[ex.id];
 }
@@ -1774,7 +1731,7 @@ const streakMult = () => 1+Math.min(0.3,S.streak*0.02);
 
 function gain(xp){
   S.xp+=xp;
-  while(S.xp>=xpNeeded(S.level)){S.xp-=xpNeeded(S.level);S.level++;log(`⭐ ¡Nivel ${S.level}!`)}
+  while(S.xp>=xpNeeded(S.level)){S.xp-=xpNeeded(S.level);S.level++;log(`⭐ ¡Nivel ${S.level}! Los objetivos suben un poco.`)}
 }
 function hit(dmg,arena='mission'){
   const automatic=arena==='auto';
@@ -1863,7 +1820,6 @@ function attackTower(day=today(),onCritical){
     tower.floor++;tower.hp=tower.floor<=TOWER_FLOORS?towerMaxHp(tower.floor):0;tower.torment=null;tower.rewardTorment=null;
     log(`🗼 Planta ${floor} superada: +${coins} monedas, +${xp} XP y +${materials} fragmentos`);
     if(guardian) grantEndgameReward('tower_relic',tower.round,floor,torment);
-    else if(!tower.round&&floor%25===0) grantFirstRoundReward('tower',floor,torment);
     unlockAchievements(torment);
   }else grantChallengeProgress('Torre',before-tower.hp,max,20+tower.floor*5,25+tower.floor*4,2+Math.floor(tower.floor/10),torment,towerRewardMultiplier(tower.round||0));
   return true;
@@ -1965,10 +1921,8 @@ function trainAttribute(stat){
   unlockAchievements();
   return true;
 }
-const missionRewardUnits=ex=>Math.max(0,Math.ceil(target(ex)*DIFFICULTIES[missionDifficulty(ex)].target)-(S.done[ex.id]||0));
 function missionEstimate(ex){
-  missionTarget(ex);
-  const units=missionRewardUnits(ex);
+  const units=Math.max(0,missionTarget(ex)-(S.done[ex.id]||0));
   const scale=S.completedToday<FULL_REWARD_MISSIONS?1:0.25;
   const mult=streakMult()*scale;
   const reward=DIFFICULTIES[missionDifficulty(ex)].reward;
@@ -1983,9 +1937,9 @@ function completeMission(ex,onCritical){
   settleBattle();
   rollDay();
   if(!S.active.includes(ex.id) || S.bonus[ex.id]){save();render();return}
-  const tgt=missionTarget(ex);
+  const tgt=missionTarget(ex), before=S.done[ex.id]||0;
   const torment=S.missionTorments[ex.id],tormentReward=TORMENTS[torment].reward;
-  const units=missionRewardUnits(ex);
+  const units=Math.max(0,tgt-before);
   const reward=DIFFICULTIES[missionDifficulty(ex)].reward;
   S.done[ex.id]=tgt;
   const mult=streakMult()*(S.completedToday<FULL_REWARD_MISSIONS?1:0.25);
@@ -2024,8 +1978,6 @@ function validateBackup(data){
   const maps=['eq','done','bonus','targets','missionTorments','missionTargetReferences','upgrades','attributes','forgeRanks','battleUpgrades','skills','legacyMissions','tower','weeklyBoss','encounter'];
   if(maps.some(key=>!s[key]||typeof s[key]!=='object'||Array.isArray(s[key]))) return false;
   if(!Array.isArray(s.owned)||!Array.isArray(s.achievements)||!Array.isArray(s.log)||!Array.isArray(s.active)||!Array.isArray(s.exerciseEnabled)) return false;
-  if(s.relicCollection!=null&&(!Array.isArray(s.relicCollection)||new Set(s.relicCollection).size!==s.relicCollection.length||
-     s.relicCollection.some(id=>!EXCLUSIVE_ITEMS.some(item=>item.id===id)))) return false;
   if(s.achievements.some(id=>typeof id!=='string')||s.log.some(entry=>typeof entry!=='string')) return false;
   if(s.owned.some(id=>typeof id!=='string'||!Object.hasOwn(ITEM,itemTypeId(id))||!/^([^#]+)(#[1-9]\d*)?$/.test(id)) || new Set(s.owned).size!==s.owned.length ||
      s.active.length!==SLOTS || new Set(s.active).size!==SLOTS || s.active.some(id=>!byId(id)) ||
@@ -2303,14 +2255,13 @@ function journeyMarkup(){
   const progress=completed===JOURNEY_CHAPTERS?required:(S.activeDays-S.journeyStartDays)%required;
   const percent=100*progress/required;
   const next=completed+1;
-  const milestone=Math.ceil(next/13)*13;
   const multiplier=1+S.journeyRound*.25;
   const reward=completed===JOURNEY_CHAPTERS?'¡Has completado toda la travesía!':
     `Próximo capítulo: +${Math.round((35+3*next)*multiplier*TORMENTS[S.torment].reward)} monedas y +${materialReward((3+Math.min(next,20))*multiplier*TORMENTS[S.torment].reward)} fragmentos`;
   return `<div class="week-card"><div class="journey-summary"><div class="chapter">🌌 Crónicas del héroe · ${completed}/${JOURNEY_CHAPTERS} · vuelta ${S.journeyRound+1}</div>
     <p>${completed===JOURNEY_CHAPTERS?'Puedes comenzar otra vuelta cuando quieras.':`${progress}/${required} días de actividad para avanzar`}</p>
     ${completed===JOURNEY_CHAPTERS?'<button id="journey-next-round" type="button">🌌 Comenzar otra vuelta</button>':''}
-    ${completed<JOURNEY_CHAPTERS?`<p>🎁 Próximo hito: capítulo ${milestone} · ${S.journeyRound===0?`título ${milestoneTitle('journey',milestone)}, `:''}fragmentos${S.journeyRound>0||milestone===52?` y ${ITEM.journey_relic.name}`:''}.</p>`:''}
+    ${S.journeyRound>0&&completed<JOURNEY_CHAPTERS?`<p>🎁 Próximo hito: capítulo ${Math.ceil(next/13)*13} · ${ITEM.journey_relic.name} y fragmentos.</p>`:''}
     <p class="reward">${reward}</p><small>Los días de actividad no tienen que ser consecutivos; descansar no borra el progreso.</small></div>
     <div class="chapter-progress"><h3>${completed===JOURNEY_CHAPTERS?'🏆 Leyenda de la travesía':`✨ Camino al capítulo ${next}`}</h3>
     <div class="bar mis"><div style="width:${percent}%"></div></div>
@@ -2427,8 +2378,6 @@ function render(liveOnly=false){
     $('missions').appendChild(el);
   }
   $('cnt').textContent=`(${S.completedToday} hoy · sin límite)`;
-  $('mission-scale').value=String(S.missionScale);
-  for(const option of $('mission-scale').options) option.disabled=Number(option.value)>100&&Number(option.value)!==S.missionScale;
   $('weekly-progress').innerHTML=journeyMarkup();
   renderChar();renderAttributes();renderSkills();renderPassives();renderShop();renderAchievements();renderTorment();renderTower();renderWeeklyBoss();renderBattleUpgrades();
 }
@@ -2571,11 +2520,10 @@ function renderPacks(){
       `Disponible desde el nivel ${TIER_LVL[PACK_HIGH_TIER]}; el progreso se conserva.`);
   box.replaceChildren();
   for(const pack of PACKS){
-    const locked=S.level<pack.level,odds=effectivePackOdds(pack,locked?pack.level:S.level,S.torment,locked?0:misses);
+    const locked=S.level<pack.level,odds=effectivePackOdds(pack,S.level,S.torment,misses);
     const card=document.createElement('div');card.className='pack-offer';
-    const oddsLevel=locked?pack.level:S.level;
-    const probabilities=odds.map((chance,tier)=>`<span>${TIER_ICONS[tier]} ${TIER_NAMES[tier]}: ${(chance*100).toFixed(2)} %${oddsLevel<TIER_LVL[tier]?` (nivel ${TIER_LVL[tier]})`:''}</span>`).join('');
-    card.innerHTML=`<strong>${pack.icon} ${pack.name}</strong><small>Desbloqueo: nivel ${pack.level} · ${pack.cost} monedas</small><small>${locked?'Vista previa al nivel de desbloqueo, sin garantía; puede variar con el tormento y la garantía.':'Probabilidades actuales, incluida la garantía.'}</small><div class="pack-odds" aria-label="${locked?'Probabilidades al desbloquear':'Probabilidades actuales'}">${probabilities}</div>`;
+    const probabilities=odds.map((chance,tier)=>`<span>${TIER_ICONS[tier]} ${TIER_NAMES[tier]}: ${(chance*100).toFixed(2)} %${S.level<TIER_LVL[tier]?` (nivel ${TIER_LVL[tier]})`:''}</span>`).join('');
+    card.innerHTML=`<strong>${pack.icon} ${pack.name}</strong><small>Desbloqueo: nivel ${pack.level} · ${pack.cost} monedas</small><div class="pack-odds" aria-label="Probabilidades actuales">${probabilities}</div>`;
     const button=document.createElement('button');button.type='button';button.dataset.pack=pack.id;
     button.textContent=locked?`Disponible al nivel ${pack.level}`:`Abrir · ${pack.cost} 🪙`;
     button.setAttribute('aria-label',`${button.textContent} ${pack.name}`);
@@ -2645,12 +2593,6 @@ function renderChar(){
   $('hero-next').textContent=evolution===500?'Aspecto máximo':`Siguiente: ${1+evolution*10} de poder`;
   $('hero-progress').setAttribute('aria-valuenow',String(progress));
   $('hero-progress').firstElementChild.style.width=`${progress*10}%`;
-  const unlocked=LEVEL_TITLES.filter(([level])=>S.level>=level),nextTitle=LEVEL_TITLES.find(([level])=>S.level<level);
-  const milestones=[...TOWER_TITLES.filter(([floor])=>S.tower.round*100+S.tower.floor-1>=floor),
-    ...JOURNEY_TITLES.filter(([chapter])=>S.weeklyRewards>=chapter)];
-  const titles=[...unlocked,...milestones].map(([,name])=>name);
-  $('hero-titles').textContent=`🏅 Títulos: ${titles.length?titles.join(' · '):'Todavía ninguno'}${nextTitle?` · Próximo de nivel: ${nextTitle[1]} (nivel ${nextTitle[0]})`:''}`;
-  $('relic-collection').textContent=`📜 Reliquias: ${EXCLUSIVE_ITEMS.map(item=>S.relicCollection.includes(item.id)?item.name:'Por descubrir').join(' · ')}`;
   $('hero').innerHTML=heroArt();
   $('eq').replaceChildren(hero);
   $('jewelry').replaceChildren();
@@ -2823,7 +2765,7 @@ function renderTower(){
       <span class="challenge-pill">🗼 Planta ${floor} / ${TOWER_FLOORS} · vuelta ${tower.round+1} · 🔷 ${tower.keys} llaves</span>
       <h3>${guardian?guardian.name:MISSION_MONSTERS[species].name}</h3>
       ${guardian?`<p><small>✨ ${bossAbilityText(guardian)} · recompensa especial: ${ITEM.tower_relic.name} y fragmentos.</small></p>`:''}
-      ${!guardian?`<p><small>Próximo ${tower.round>0?'guardián':'hito'}: planta ${Math.ceil(floor/25)*25} · ${tower.round===0?`título ${milestoneTitle('tower',Math.ceil(floor/25)*25)}, `:''}fragmentos${tower.round>0||Math.ceil(floor/25)*25===100?` y ${ITEM.tower_relic.name}`:''}.</small></p>`:''}
+      ${tower.round>0&&!guardian?`<p><small>Próximo guardián: planta ${Math.ceil(floor/25)*25} · recompensa exclusiva y fragmentos.</small></p>`:''}
       <span class="challenge-pill">🔥 ${difficulty.name}</span>
       <div class="bar challenge-progress" aria-label="Progreso de la torre"><div style="width:${(floor-1)/TOWER_FLOORS*100}%"></div></div>
       <p>❤️ ${Math.max(0,Math.ceil(hp))} / ${max} · ⚔️ ${damage} daño</p>
@@ -2902,9 +2844,6 @@ for(const [id,group] of Object.entries(GROUPS)){
   $('inventory-type').appendChild(option);
 }
 $('inventory-type').addEventListener('change',()=>{inventoryPage=0;dismantleConfirm=null;renderChar()});
-$('mission-scale').addEventListener('change',event=>{
-  if(setMissionScale(Number(event.target.value))){save();render()}
-});
 function changeInventoryPage(direction){
   inventoryPage+=direction;dismantleConfirm=null;renderChar();
   window.scrollTo({top:document.documentElement.scrollHeight,behavior:'auto'});
@@ -2976,7 +2915,7 @@ window.addEventListener('storage',event=>{
   catch(error){alert('No se puede leer la partida actualizada en otra pestaña.');throw error}
   if(!S.skills || !S.passives || !S.exerciseEnabled || S.missionScale==null ||
      S.packMisses==null || S.journeyRound==null || S.journeyStartDays==null ||
-     !S.independentMissionTargets || !S.fixedMissionTargets || !S.relicCollection || S.tower?.round==null || S.weeklyBoss?.weekAttacks==null){location.reload();return}
+     !S.independentMissionTargets || S.tower?.round==null || S.weeklyBoss?.weekAttacks==null){location.reload();return}
   migrateRemovedDungeons();
   $('torment-status').textContent='';
   render();

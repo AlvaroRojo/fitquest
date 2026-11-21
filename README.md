@@ -22,17 +22,13 @@ confirmación. Se aceptan las copias exportadas por esta versión.
   intensas un 50 % más (redondeado hacia arriba). La XP, el daño y las
   monedas de misión reciben además un multiplicador de dificultad: ×1 en
   suave, ×1,25 en intermedia y ×1,5 en intensa. Así, para un mismo ejercicio,
-  el objetivo base mayor también aumenta la XP y el daño antes de ese multiplicador.
+  el objetivo mayor también aumenta la XP y el daño antes de ese multiplicador.
   Las recompensas de ejercicios diferentes pueden variar según su cantidad y
   valor. Son categorías de juego, no una valoración
   médica: ejercicios distintos pueden tener dificultades reales diferentes.
   Las misiones antiguas mantienen su categoría hasta completarse.
   Se pueden completar sin límite al día. Hay 20 tipos de ejercicios y el
-  objetivo base no aumenta con el nivel ni con el tormento. El selector permite
-  adaptarlo al 50 %, 75 % o 100 % sin reducir el daño, XP ni monedas de una
-  misión completa; las opciones superiores solo se conservan para partidas
-  antiguas que ya las tenían seleccionadas. Al reducir un objetivo no se borra
-  el progreso registrado y no se vuelve a recompensar la parte ya registrada;
+  objetivo se fija al comenzar cada misión y no cambia al cambiar el tormento;
   descansar y adaptar el ejercicio siempre es más importante
   que una recompensa. Los objetivos no son recomendaciones médicas. Si una
   partida anterior tenía progreso parcial, termina la parte restante antes
@@ -47,8 +43,9 @@ confirmación. Se aceptan las copias exportadas por esta versión.
   posteriores dan el 25 % de XP, daño y monedas de misión. El botín de
   monstruos no se reduce. La primera misión del día da una llave de torre.
   Esto evita que acumular ejercicio sea necesario para progresar.
-  El tablón permite ajustar la cantidad, pero no registrar descansos. Las preferencias
-  y descansos anteriores se conservan al actualizar.
+  El tablón usa los ejercicios y objetivos guardados en la partida, pero no
+  muestra controles para personalizarlos ni para registrar descansos. Las
+  preferencias y descansos anteriores se conservan al actualizar.
 - **Encuentros de misiones:** cada enemigo tiene vida según su especie.
   Tras cada cinco victorias aparece un élite y, tras cada diez, un jefe
   en su lugar. En los demás encuentros hay un 5 % de probabilidad de
@@ -110,13 +107,6 @@ confirmación. Se aceptan las copias exportadas por esta versión.
   se puede filtrar por tipo y muestra hasta 12 objetos por página; al cambiar
   de página la vista baja hasta el final del inventario. Los objetos no
   equipados se desmantelan individualmente desde su propia tarjeta.
-  La colección conserva las reliquias exclusivas obtenidas aunque se
-  desmantelen. En partidas anteriores se registran las que todavía se poseen;
-  no se puede reconstruir el historial de reliquias ya desmanteladas.
-  Los títulos decorativos se desbloquean en los niveles 120, 150, 200, 300 y
-  500 y en los hitos de la primera vuelta de torre y travesía; no añaden
-  poder ni bonificaciones. Los títulos de hitos ya superados se reconocen
-  automáticamente, sin entregar de nuevo los objetos ni fragmentos.
   En ordenador, personaje y entrenamiento se muestran arriba y el inventario
   ocupa el ancho completo debajo. En pantallas amplias, como 1680 × 1050,
   los textos y controles aumentan de tamaño.
@@ -214,9 +204,7 @@ confirmación. Se aceptan las copias exportadas por esta versión.
   garantía es global para todos los sobres y se conserva entre sesiones.
   Se acumula también antes del nivel 15, pero se aplica únicamente cuando esa
   rareza está desbloqueada. La pantalla muestra el contador y las
-  probabilidades efectivas, incluidas las de la garantía. En los sobres
-  bloqueados se muestra una vista previa del nivel de desbloqueo, con el
-  tormento actual y sin garantía; las probabilidades finales pueden variar.
+  probabilidades efectivas, incluidas las de la garantía.
   Cada objeto de una rareza tiene igual probabilidad. Cada premio se añade al
   inventario, incluso si es repetido, sin devolución de monedas. La compra se
   guarda inmediatamente, antes de mostrar el carrusel animado, cuyo recorrido
@@ -254,9 +242,7 @@ confirmación. Se aceptan las copias exportadas por esta versión.
   La planta 100 completa la torre. Se puede iniciar otra vuelta opcional tantas
   veces como se desee: cada vuelta adicional aumenta un 50 % la vida base y
   un 25 % las recompensas, conservando las llaves, el historial y el límite
-  de un ataque por día. En la primera vuelta, las plantas 25, 50, 75 y 100
-  dan fragmentos adicionales y la planta 100 también entrega la Espada del
-  guardián. Desde la segunda vuelta, esas plantas
+  de un ataque por día. Desde la segunda vuelta, las plantas 25, 50, 75 y 100
   tienen guardianes con resistencias distintas; cada victoria da fragmentos y
   una Espada del guardián exclusiva, además del botín habitual. Las copias
   tienen los mismos atributos que una espada legendaria normal.
@@ -318,11 +304,9 @@ confirmación. Se aceptan las copias exportadas por esta versión.
   actividad; cada vuelta adicional requiere un día de actividad más por
   capítulo y aumenta las recompensas base un 25 %.
   Los días anteriores al comienzo de una vuelta no se vuelven a recompensar.
-  En la primera vuelta, cada 13 capítulos se entregan fragmentos adicionales
-  y el capítulo 52 también entrega el Escudo del caminante. Desde la segunda
-  vuelta, cada 13 capítulos se entregan fragmentos y un
+  Desde la segunda vuelta, cada 13 capítulos se entregan fragmentos y un
   Escudo del caminante exclusivo, con los atributos de un escudo legendario
-  normal. No se entregan recompensas de hitos retroactivas ya superados.
+  normal. No se entregan recompensas de hitos retroactivas.
 
 La racha se conserva aunque pasen días sin jugar y aumenta una vez por cada
 día distinto de actividad. No se recuperan rachas perdidas anteriormente.
