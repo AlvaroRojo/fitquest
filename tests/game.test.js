@@ -237,6 +237,22 @@ test('global statistics use saved counters and all defeated monsters', () => {
   })()`),true);
 });
 
+test('expanded statistics render grouped saved metrics and escape persisted text', () => {
+  const g=game();
+  g.run(`const output={};const $=()=>output;
+    S=fresh();S.level=12;S.xp=50;S.lastActive='<img src=x>';S.autoKills=8;
+    S.owned=['sword_0_0'];S.packsOpened=3;S.achievements=['kill1'];`);
+  g.run(script.slice(script.indexOf('const statNumber='),script.indexOf('function journeyMarkup(){')));
+  const markup=g.run('renderStatistics();output.innerHTML');
+  assert.ok((markup.match(/class="overview-stat"/g)||[]).length>=60);
+  assert.match(markup,/Combate y desafíos/);
+  assert.match(markup,/Equipo y colección/);
+  assert.match(markup,/Ofertas restantes/);
+  assert.match(markup,/Evolución[\s\S]*?500/);
+  assert.match(markup,/&lt;img src=x&gt;/);
+  assert.doesNotMatch(markup,/<img src=x>/);
+});
+
 test('character inventory hides equipped items and filters only by type', () => {
   assert.match(html, /class="inventory-summary"><p id="materials"><\/p><small>/);
   assert.match(html, /#inventory\{display:grid;grid-template-columns:repeat\(auto-fill/);
@@ -293,23 +309,23 @@ test('hero power follows equipment, upgrades, attributes and arena upgrades', ()
     const power=heroPower(); delete S.eq.sword;
     return heroPower()===power-ITEM.sword_0_0.pct-2 &&
       heroEvolution(1)===1 && heroEvolution(10)===1 && heroEvolution(11)===2 &&
-      heroEvolution(990)===99 && heroEvolution(991)===100 && heroEvolution(100000)===100;
+      heroEvolution(4990)===499 && heroEvolution(4991)===500 && heroEvolution(100000)===500;
   })()`),true);
 });
 
-test('all 100 hero evolutions have visually distinct artwork', () => {
+test('all 500 hero evolutions have visually distinct artwork', () => {
   const g=game();
   const hero=script.slice(script.indexOf('function heroArt(){'),script.indexOf('const navigationButtons='));
   g.run(hero);
   assert.equal(g.run(`(() => {
     S=fresh(); const images=new Set();
-    for(let i=1;i<=100;i++){
+    for(let i=1;i<=500;i++){
       S.level=1+(i-1)*10;
       const art=heroArt().replace(/aria-label="[^"]*"/,'');
       if(images.has(art)) return false;
       images.add(art);
     }
-    return images.size===100;
+    return images.size===500 && heroArt().includes('evolución 500 de 500');
   })()`),true);
 });
 
@@ -415,6 +431,23 @@ test('mission board omits guidance text and weekly rest control', () => {
   assert.doesNotMatch(board, /Reglas y bienestar|Elige una misión/);
   assert.doesNotMatch(html, /Tu ejercicio real es el daño/);
   assert.doesNotMatch(html, /id="rest"|\$\('rest'\)/);
+  assert.doesNotMatch(board, /personalizar ejercicios|mission-scale|rest-day|exercise-options/i);
+});
+
+test('inventory removes bulk selection but keeps per-item dismantling', () => {
+  const character=html.match(/<section id="character"[\s\S]*?<\/section>/)?.[0]||'';
+  const renderer=script.slice(script.indexOf('function renderChar(){'),script.indexOf('function equip('));
+  assert.doesNotMatch(character+renderer,/dismantle-selected|Desmantelar selección|Seleccionar|checkbox/);
+  assert.match(script, /destroy\.onclick=/);
+  assert.ok(character);
+});
+
+test('daily store shows item level and current torment without date, with a separate forge limit banner', () => {
+  assert.match(html, /id="shop-context"/);
+  assert.doesNotMatch(html, /id="shop-date"/);
+  assert.match(script, /Nivel de objetos: \$\{S\.shopStock\.level\} · Tormento actual: \$\{TORMENTS\[S\.torment\]\.name\}/);
+  assert.match(html, /id="forge-title"[\s\S]*?<\/div>\s*<div class="forge-week-banner" id="forge-week"/);
+  assert.match(html, /#statistics-content\{display:grid/);
 });
 
 test('mission board omits manual changes and the visible activity log', () => {

@@ -119,6 +119,8 @@
   .inventory-item small{display:block;margin:4px 0}
   .inventory-item .item-actions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px}
   .inventory-item .item-actions button{margin:0;padding:7px 3px;font-size:.78rem;overflow-wrap:anywhere}
+  .skill-controls{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:8px 0 14px;padding:10px;border:1px solid #806346;border-radius:10px;background:linear-gradient(120deg,#392e35,#211e2c)}
+  .skill-controls button{margin:0}
   .skill-tree{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
   .skill-branch{display:grid;gap:8px;align-content:start;padding:12px;border:1px solid #806448;border-radius:12px;background:linear-gradient(145deg,#30253b,#151b2d)}
   .skill-branch h3{margin:0;color:#ffdcab;text-align:center}
@@ -127,9 +129,6 @@
   .skill-node[data-active="true"]{border-color:#e8bc73;box-shadow:inset 0 0 15px #dca15833,0 0 8px #dca15833}
   .skill-node small{display:block;margin-top:3px}
   .skill-node:disabled{opacity:.6}
-  .settings-grid{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
-  .exercise-options{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:5px;margin:10px 0}
-  .exercise-options label{display:flex;gap:6px;align-items:center}
   .backup-controls{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
   .reset-footer .backup-controls{align-items:center;margin-top:0}
   .reset-footer #reset{margin-left:auto}
@@ -139,8 +138,24 @@
   .hero-stat small,.overview-stat small{display:block;color:#cbb59b}
   .hero-stat strong,.overview-stat strong{display:block;color:#ffe1a8;overflow-wrap:anywhere}
   .overview-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:9px}
-  .overview-group{margin-top:16px}
-  .overview-group h3{margin:0 0 8px;color:#ffe0a2}
+  #statistics-content{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+  .statistics-banner{grid-column:1/-1;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;padding:14px;border:1px solid #b58b55;border-radius:14px;background:radial-gradient(ellipse at 85% 0%,#d79b5b55,transparent 45%),linear-gradient(120deg,#4b3438,#1b2030);box-shadow:inset 0 1px #fff2,0 8px 20px #0004}
+  .statistics-banner>div{padding:9px 12px;border:1px solid #e3bd7c44;border-radius:10px;background:#171b28aa}
+  .statistics-banner small,.statistics-banner strong{display:block}
+  .statistics-banner small{color:#d8c6a9;font-size:.75rem;letter-spacing:.07em;text-transform:uppercase}
+  .statistics-banner strong{margin-top:2px;color:#ffe2a8;font:700 1.25rem Georgia,serif;font-variant-numeric:tabular-nums}
+  .overview-group{min-width:0;padding:14px;border:1px solid #806346;border-radius:14px;background:radial-gradient(ellipse at 100% 0%,#8c614022,transparent 45%),linear-gradient(145deg,#342d36,#171c2b);box-shadow:inset 0 1px #fff1,0 6px 16px #0003}
+  .overview-group header{display:flex;align-items:center;gap:9px;margin-bottom:10px;padding-bottom:9px;border-bottom:1px solid #80634688}
+  .overview-group header>span{display:grid;place-items:center;flex:none;width:36px;height:36px;border:1px solid #b58b55;border-radius:10px;background:linear-gradient(145deg,#624538,#2b2532);font-size:1.15rem}
+  .overview-group h3{margin:0;color:#ffe0a2;font:700 1rem Georgia,serif}
+  .overview-group header small{display:block;color:#cbb59b;font-size:.75rem}
+  .overview-grid{grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:7px}
+  .overview-stat{padding:8px 9px;border-color:#80634677;background:linear-gradient(135deg,#211f2b,#171c28)}
+  .overview-stat strong{font-variant-numeric:tabular-nums}
+  .forge-week-banner{margin:10px 0 12px;padding:8px 12px;border:1px solid #aa8558;border-radius:10px;background:linear-gradient(110deg,#3b3030,#262333);color:#ffe0a2;font-size:.88rem;font-weight:700;font-variant-numeric:tabular-nums}
+  .forge-option{min-height:145px;line-height:1.4}
+  .forge-option small{line-height:1.45}
+  @media(max-width:760px){#statistics-content{grid-template-columns:1fr}.statistics-banner{grid-template-columns:1fr}}
   .critical-label{position:absolute;z-index:10;left:50%;top:20%;transform:translateX(-50%);white-space:nowrap;color:#fff4bb;font-weight:900;font-size:clamp(1.4rem,2.2vw,2.5rem);text-shadow:0 0 7px #ff5b22,0 0 25px #ffba26,2px 3px #6b1832;pointer-events:none;animation:critical-pop 1.1s ease-out forwards}
   .critical-impact{animation:critical-impact .55s ease-out}
   @keyframes critical-pop{0%{opacity:0;transform:translate(-50%,20px) scale(.5)}20%{opacity:1;transform:translate(-50%,0) scale(1.18)}80%{opacity:1}100%{opacity:0;transform:translate(-50%,-35px) scale(1)}}
@@ -621,15 +636,6 @@
   <h2>📜 Tablón de encargos <small id="cnt"></small></h2>
   <div id="missions" class="quest-board"></div>
   <p id="mission-status" class="mission-status" role="status" aria-live="polite"></p>
-  <details>
-    <summary>⚙️ Personalizar ejercicios y descanso</summary>
-    <p><small>Elige al menos siete ejercicios para los nuevos encargos. El objetivo se ajusta también en los actuales conservando tu progreso. Descansa cuando lo necesites.</small></p>
-    <div class="settings-grid"><label for="mission-scale">Objetivo de los encargos</label>
-      <select id="mission-scale"><option value="50">50 %</option><option value="75">75 %</option><option value="100">100 %</option><option value="125">125 %</option><option value="150">150 %</option></select>
-      <button id="rest-day" type="button">🌿 Registrar descanso de hoy</button></div>
-    <div id="exercise-options" class="exercise-options"></div>
-    <p id="exercise-status" role="status" aria-live="polite"></p>
-  </details>
 </div>
 <div class="card" id="journey">
   <h2>🗺️ Travesía del héroe</h2>
@@ -663,7 +669,6 @@
   <div class="inventory-toolbar">
     <div class="inventory-filter-heading"><span class="filter-emblem" aria-hidden="true">🔎</span><div><strong>Explorar inventario</strong><small>Encuentra tu equipo</small></div></div>
     <label for="inventory-type">⚔️ Tipo de objeto <select id="inventory-type"><option value="all">Todos los tipos</option></select></label>
-    <button id="dismantle-selected" type="button">🔨 Desmantelar selección</button>
     <div class="inventory-pagination" id="inventory-pagination">
       <button id="inventory-prev" type="button">← Anterior</button>
       <span id="inventory-page" aria-live="polite"></span>
@@ -684,10 +689,11 @@
     <h2>🌳 Árbol de habilidades</h2>
     <p>Un punto por nivel; los niveles múltiplos de 10 otorgan dos en total. Para desbloquear un nodo nuevo necesitas 5 rangos en el anterior.</p>
     <p id="skill-points"></p>
-    <button id="reset-skills" type="button">↺ Redistribuir puntos</button>
-    <button id="neutral-style" type="button">⚖️ Estilo neutral</button>
+    <div class="skill-controls" aria-label="Controles del árbol de habilidades">
+      <button id="reset-skills" type="button">↺ Redistribuir puntos</button>
+      <button id="neutral-style" type="button">⚖️ Estilo neutral</button>
+    </div>
     <div id="skill-tree" class="skill-tree"></div>
-    <p id="skill-status" role="status" aria-live="polite"></p>
   </div>
 </section>
 
@@ -696,11 +702,12 @@
   <div class="armory-header"><h2>🛒 Tienda arcana</h2><span class="armory-badge">✨ Equipo para tu aventura</span></div>
   <p class="armory-intro">Descubre tesoros diarios y fortalece tu equipo en la forja.</p>
   <section class="armory-section" aria-labelledby="daily-title">
-    <div class="armory-header"><h3 id="daily-title">🛒 Objetos del día</h3><span class="armory-badge" id="shop-date"></span></div>
+    <div class="armory-header"><h3 id="daily-title">🛒 Objetos diarios</h3><span class="armory-badge" id="shop-context"></span></div>
     <div id="shop"></div>
   </section>
   <section class="armory-section" aria-labelledby="forge-title">
-    <div class="armory-header"><h3 id="forge-title">🔥 Forja permanente</h3><span class="armory-badge" id="forge-week"></span></div>
+    <div class="armory-header"><h3 id="forge-title">🔥 Forja permanente</h3></div>
+    <div class="forge-week-banner" id="forge-week" role="status"></div>
     <div class="forge-options" id="forge-options"></div>
   </section>
   <p id="shop-status" role="status" aria-live="polite"></p>
@@ -1173,7 +1180,7 @@ const bonus=stat=>{
 };
 const heroPower=()=>S.level+Object.keys(ATTRIBUTES).reduce((sum,stat)=>sum+statBreakdown(stat).total,0)+
   Object.values(S.battleUpgrades).reduce((sum,rank)=>sum+rank,0);
-const heroEvolution=power=>Math.max(1,Math.min(100,Math.floor((power-1)/10)+1));
+const heroEvolution=power=>Math.max(1,Math.min(500,Math.floor((power-1)/10)+1));
 const globalStats=()=>({
   missions:S.totalMissions,kills:S.kills,arena:S.autoKills,days:S.activeDays,
   dungeons:S.challengeClears,packs:S.packsOpened,achievements:S.achievements.length,
@@ -1806,8 +1813,7 @@ if(legacyTicks){
 }
 
 const $=id=>document.getElementById(id);
-let dismantleConfirm=null, inventoryPage=0, lootTimer=null, bulkConfirm=false;
-const selectedItems=new Set();
+let dismantleConfirm=null, inventoryPage=0, lootTimer=null;
 const INVENTORY_PAGE_SIZE=12;
 function monsterArt(index){
   const colors=['#746b9b','#805c85','#77656f','#8a5270','#696d83','#704e9f','#526f82','#85556c'];
@@ -1881,15 +1887,16 @@ function encounterBiome(encounter){
 function heroArt(){
   const equipped=key=>Boolean(S.eq[key]);
   const evolution=heroEvolution(heroPower()),realm=Math.floor((evolution-1)/10),rank=(evolution-1)%10;
-  const colors=['#d7b1ee','#e8bd91','#8fdbca','#9bbce9','#e09fbf','#e9d581','#c69df4','#f39c89','#86e3ed','#fff0ad'];
-  const accent=colors[realm];
+  const accent=`hsl(${Math.round((evolution-1)*137.508%360)} 78% 76%)`;
+  const auraSize=Math.min(realm,15);
+  const auraStroke=Math.min(1+realm*.2,3);
   const stars=Array.from({length:rank+1},(_,i)=>{
     const angle=(Math.PI*2*i/(rank+1))-Math.PI/2;
     return `<circle cx="${(75+60*Math.cos(angle)).toFixed(2)}" cy="${(105+88*Math.sin(angle)).toFixed(2)}" r="2.7" fill="${accent}"/>`;
   }).join('');
-  return `<svg class="hero-art" viewBox="0 0 150 220" role="img" aria-label="Héroe y su equipo, evolución ${evolution} de 100">
+  return `<svg class="hero-art" viewBox="0 0 150 220" role="img" aria-label="Héroe y su equipo, evolución ${evolution} de 500">
     <ellipse cx="75" cy="208" rx="50" ry="8" fill="#14102b" opacity=".8"/>
-    <ellipse cx="75" cy="105" rx="${45+realm}" ry="${70+realm}" fill="none" stroke="${accent}" stroke-width="${1+realm*.2}" stroke-dasharray="${3+realm} ${9-realm*.5}" opacity=".7"/>
+    <ellipse cx="75" cy="105" rx="${45+auraSize}" ry="${70+auraSize}" fill="none" stroke="${accent}" stroke-width="${auraStroke}" stroke-dasharray="${3+auraSize} ${Math.max(3,9-auraSize*.3)}" opacity=".7"/>
     ${stars}
     ${realm>=1?`<path d="M50 72 Q19 83 21 180 L46 167 75 188 104 167 129 180 Q131 83 100 72Z" fill="${realm>=7?'#285c70':realm>=4?'#83502f':'#593b70'}" stroke="${accent}" stroke-width="2"/>`:''}
     <path d="M53 125 L49 185 L65 185 L75 139 L85 185 L101 185 L97 125Z" fill="${equipped('pants')?'#8c78b4':'#3e3a58'}" stroke="#cfb7eb" stroke-width="2"/>
@@ -1902,7 +1909,7 @@ function heroArt(){
     <path d="M62 44 L69 46 M81 46 L88 44" stroke="#24132e" stroke-width="3"/>
     ${realm>=2?`<path d="M39 69 L24 58 34 85 48 90 M111 69 L126 58 116 85 102 90" fill="#c3925a" stroke="${accent}" stroke-width="2"/><path d="M75 98 L82 108 75 118 68 108Z" fill="${accent}"/>`:''}
     ${realm>=4?`<path d="M34 59 L15 39 22 75 39 81 M116 59 L135 39 128 75 111 81" fill="#62d9df" stroke="${accent}" stroke-width="2"/><path d="M53 22 L49 8 62 15 75 3 88 15 101 8 97 22" fill="#efc775" stroke="${accent}" stroke-width="2"/>`:''}
-    ${realm>=7?`<path d="M44 75 Q10 52 7 110 L32 97 M106 75 Q140 52 143 110 L118 97" fill="none" stroke="${accent}" stroke-width="${realm-4}"/>`:''}
+    ${realm>=7?`<path d="M44 75 Q10 52 7 110 L32 97 M106 75 Q140 52 143 110 L118 97" fill="none" stroke="${accent}" stroke-width="${Math.min(6,2+Math.floor((realm-7)/3))}"/>`:''}
     ${equipped('necklace')?'<circle cx="75" cy="83" r="5" fill="#68f0e2"/>':''}
     ${equipped('earring1')?'<circle cx="51" cy="54" r="3" fill="#ffe38c"/>':''}
     ${equipped('earring2')?'<circle cx="99" cy="54" r="3" fill="#ffe38c"/>':''}
@@ -1940,8 +1947,9 @@ function showCritical(stage,damage){
   setTimeout(()=>{label.remove();if(icon) icon.classList.remove('critical-impact')},1200);
 }
 const statNumber=value=>Number((Math.round(value*100)/100).toFixed(2)).toLocaleString('es-ES');
+const escapeHtml=value=>String(value).replace(/[&<>"']/g,character=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[character]));
 function statCards(entries,classname){
-  return entries.map(([label,value])=>`<div class="${classname}"><small>${label}</small><strong>${value}</strong></div>`).join('');
+  return entries.map(([label,value])=>`<div class="${classname}"><small>${escapeHtml(label)}</small><strong>${escapeHtml(value)}</strong></div>`).join('');
 }
 function renderHeroStats(){
   const entries=[
@@ -1956,21 +1964,61 @@ function renderHeroStats(){
   $('hero-stats').innerHTML=statCards(entries,'hero-stat');
 }
 function renderStatistics(){
+  const totalSkillRanks=Object.values(S.skills).reduce((sum,rank)=>sum+rank,0);
+  const totalAttributeRanks=Object.values(S.attributes).reduce((sum,rank)=>sum+rank,0);
+  const totalForgeRanks=Object.values(S.forgeRanks).reduce((sum,rank)=>sum+rank,0);
+  const totalItemUpgrades=Object.values(S.upgrades).reduce((sum,rank)=>sum+rank,0);
+  const equipped=Object.values(S.eq).map(itemById).filter(Boolean);
+  const unequipped=inventoryAvailable(S.owned).length;
+  const highestTier=Math.max(0,...S.owned.map(id=>itemById(id)?.tier||0));
+  const shopOffers=S.shopStock?.offers?.length||0;
+  const shopSold=S.shopStock?.sold?.length||0;
+  const forgeUsed=S.forgeWeek===weekStart(today())?S.forgeWeekPurchases:0;
+  const currentXp=Number.isFinite(S.xp)?S.xp:0;
+  const nextLevelXp=xpNeeded(S.level);
+  const missionProgress=Object.values(S.done).reduce((sum,count)=>sum+count,0);
+  const boss=S.weeklyBoss.index<WEEKLY_BOSSES.length?bossFor(S.weeklyBoss.index):null;
+  const unlockedSkills=Object.values(S.skills).filter(rank=>rank>0).length;
   const groups=[
-    ['📜 Aventura',[
-      ['Misiones completadas',S.totalMissions],['Misiones hoy',S.completedToday],['Enemigos de misión',S.missionKills],
-      ['Días de actividad',S.activeDays],['Racha actual',S.streak],['Capítulos',`${S.weeklyRewards}/${JOURNEY_CHAPTERS}`]]],
-    ['⚔️ Combate y desafíos',[
-      ['Enemigos derrotados',S.kills],['Victorias de arena',S.autoKills],['Victorias de desafío',S.challengeClears],
-      ['Plantas superadas',Math.min(TOWER_FLOORS,S.tower.floor-1)],['Bosses derrotados',S.weeklyBoss.index],
-      ['Llaves de torre',S.tower.keys],['Tormento activo',TORMENTS[S.torment].name]]],
-    ['🎒 Colección y progreso',[
-      ['Nivel',S.level],['Poder del héroe',heroPower()],['Evolución',`${heroEvolution(heroPower())}/100`],
-      ['Oro actual',S.coins],['Fragmentos actuales',S.materials],['Objetos totales',S.owned.length],
-      ['Objetos equipados',Object.keys(S.eq).length],['Sobres abiertos',S.packsOpened],
-      ['Logros desbloqueados',`${S.achievements.length}/${ACHIEVEMENTS.length}`],['Puntos disponibles',skillPoints()]]]
+    ['📜','Aventura','Misiones, actividad y travesía',[
+      ['Misiones completadas',S.totalMissions],['Misiones hoy',S.completedToday],['Encargos activos',S.active.length],
+      ['Progreso de encargos',missionProgress],['Enemigos de misión',S.missionKills],['Días de actividad',S.activeDays],
+      ['Racha actual',S.streak],['Último descanso',S.lastRest||'Ninguno'],
+      ['Capítulos de travesía',`${S.weeklyRewards}/${JOURNEY_CHAPTERS}`],['Último día activo',S.lastActive||'Sin actividad']]],
+    ['⚔️','Combate y desafíos','Victorias, progreso y estado actual',[
+      ['Enemigos derrotados',S.kills],['Victorias de arena',S.autoKills],['Daño por golpe de arena',statNumber(battleDamage())],
+      ['Intervalo de arena',`${statNumber(battleInterval()/1000)} s`],['Botín de arena',`+${statNumber((battleLoot()-1)*100)} %`],
+      ['Victorias de desafío',S.challengeClears],['Pisos de torre superados',Math.min(TOWER_FLOORS,S.tower.floor-1)],
+      ['Piso actual de torre',Math.min(TOWER_FLOORS+1,S.tower.floor)],['Llaves de torre',S.tower.keys],
+      ['Bosses derrotados',S.weeklyBoss.index],['Boss actual',boss?.name||'Todos derrotados'],
+      ['Vida restante del boss',statNumber(S.weeklyBoss.hp)],['Tormento de combate',TORMENTS[S.torment].name]]],
+    ['🧙','Héroe y progresión','Nivel, poder y mejoras permanentes',[
+      ['Nivel actual',S.level],['Experiencia acumulada del nivel',currentXp],['XP para el siguiente nivel',nextLevelXp],
+      ['Progreso de nivel',`${Math.min(100,Math.floor(currentXp/nextLevelXp*100))} %`],['Poder del héroe',heroPower()],
+      ['Evolución visual',`${heroEvolution(heroPower())} / 500`],['Rangos de entrenamiento',totalAttributeRanks],
+      ['Bonificación de daño',`+${statNumber(statBreakdown('dmg').total)} %`],
+      ['Bonificación de experiencia',`+${statNumber(statBreakdown('xp').total)} %`],
+      ['Bonificación de monedas',`+${statNumber(statBreakdown('coin').total)} %`]]],
+    ['🎒','Equipo y colección','Inventario, rarezas y mejoras',[
+      ['Objetos en inventario',S.owned.length],['Objetos sin equipar',unequipped],['Objetos equipados',equipped.length],
+      ['Tipos de objeto reunidos',new Set(S.owned.map(id=>itemById(id)?.g).filter(Boolean)).size],
+      ['Rareza máxima',TIER_NAMES[highestTier]],['Mejoras de objetos',totalItemUpgrades],
+      ['Rangos de forja acumulados',totalForgeRanks],['Sobres abiertos',S.packsOpened],
+      ['Fragmentos disponibles',S.materials],['Mejoras de equipo equipadas',equipped.reduce((sum,item)=>sum+upgradeLevel(item.id),0)]]],
+    ['💰','Economía y tienda','Recursos y ofertas disponibles',[
+      ['Oro disponible',S.coins],['Fragmentos disponibles',S.materials],['Nivel de las ofertas',S.shopStock?.level||S.level],
+      ['Tormento actual',TORMENTS[S.torment].name],['Ofertas diarias',shopOffers],['Ofertas compradas',shopSold],
+      ['Ofertas restantes',Math.max(0,shopOffers-shopSold)],['Mejoras de forja esta semana',`${forgeUsed}/${FORGE_WEEKLY_LIMIT}`],
+      ['Forja semanal restante',Math.max(0,FORGE_WEEKLY_LIMIT-forgeUsed)]]],
+    ['🌳','Habilidades y logros','Desbloqueos y puntos invertidos',[
+      ['Puntos de habilidad disponibles',skillPoints()],['Rangos de habilidad',totalSkillRanks],['Habilidades desbloqueadas',unlockedSkills],
+      ['Estilo de combate',S.skillStyle?SKILLS[S.skillStyle].name:'Neutral'],['Probabilidad crítica',`${statNumber(criticalChance())} %`],
+      ['Daño crítico',`${statNumber(150+criticalBonus())} %`],['Logros desbloqueados',S.achievements.length],
+      ['Logros sin desbloquear',Math.max(0,ACHIEVEMENTS.length-S.achievements.length)],
+      ['Progreso de logros',`${S.achievements.length} / ${ACHIEVEMENTS.length}`]]]
   ];
-  $('statistics-content').innerHTML=groups.map(([heading,entries])=>`<div class="overview-group"><h3>${heading}</h3><div class="overview-grid">${statCards(entries.map(([name,value])=>[name,typeof value==='number'?statNumber(value):value]),'overview-stat')}</div></div>`).join('');
+  const banner=`<div class="statistics-banner"><div><small>Poder del héroe</small><strong>${statNumber(heroPower())}</strong></div><div><small>Nivel</small><strong>${statNumber(S.level)}</strong></div><div><small>Evolución</small><strong>${heroEvolution(heroPower())} / 500</strong></div></div>`;
+  $('statistics-content').innerHTML=banner+groups.map(([icon,heading,description,entries])=>`<section class="overview-group"><header><span aria-hidden="true">${icon}</span><div><h3>${heading}</h3><small>${description}</small></div></header><div class="overview-grid">${statCards(entries.map(([name,value])=>[name,typeof value==='number'?statNumber(value):value]),'overview-stat')}</div></section>`).join('');
 }
 function journeyMarkup(){
   const completed=Math.min(JOURNEY_CHAPTERS,S.weeklyRewards);
@@ -2070,7 +2118,7 @@ function render(liveOnly=false){
   }
   $('cnt').textContent=`(${S.completedToday} hoy · sin límite)`;
   $('weekly-progress').innerHTML=journeyMarkup();
-  renderChar();renderAttributes();renderSkills();renderExerciseSettings();renderShop();renderAchievements();renderTorment();renderTower();renderWeeklyBoss();renderBattleUpgrades();
+  renderChar();renderAttributes();renderSkills();renderShop();renderAchievements();renderTorment();renderTower();renderWeeklyBoss();renderBattleUpgrades();
 }
 function renderSkills(){
   const box=$('skill-tree'),labels={dmg:'daño',xp:'XP',coin:'monedas de misiones y enemigos',crit:'probabilidad de crítico',critDamage:'daño crítico',materials:'fragmentos de recompensas'};
@@ -2090,34 +2138,14 @@ function renderSkills(){
       button.innerHTML=`<strong>${node.name} · ${rank}/${skillMax(node)}${node.style&&S.skillStyle===node.style?' · activo':''}</strong><small>${node.style?node.description:`+${node.amount}% ${labels[node.stat]} por punto`}${required?` · requiere ${SKILL_REQUIRED} rangos en ${SKILLS[skill.requires].name} (${S.skills[skill.requires]||0}/${SKILL_REQUIRED})`:''}</small>`;
       button.disabled=node.style&&rank?S.skillStyle===node.style:skillPoints()<1 || rank>=skillMax(node) || required;
       button.onclick=()=>{
-        const unlocked=node.style&&rank?selectSkillStyle(node.style):unlockSkill(node.id);save();render();
-        $('skill-status').textContent=unlocked?`${node.name} ${node.style?'desbloqueado o activado':`mejorado a ${S.skills[node.id]}`}.`:'No se puede mejorar esta habilidad.';
+        if(node.style&&rank) selectSkillStyle(node.style);else unlockSkill(node.id);
+        save();render();
       };
       column.appendChild(button);
     }
     box.appendChild(column);
   }
   if(focused) box.querySelector(`[data-skill="${focused}"]:not(:disabled)`)?.focus({preventScroll:true});
-}
-function renderExerciseSettings(){
-  $('mission-scale').value=String(S.missionScale);
-  $('rest-day').disabled=S.lastRest===today();
-  $('rest-day').textContent=S.lastRest===today()?'🌿 Descanso registrado':'🌿 Registrar descanso de hoy';
-  const box=$('exercise-options');box.replaceChildren();
-  for(const ex of EXERCISES){
-    const label=document.createElement('label'),input=document.createElement('input');
-    input.type='checkbox';input.checked=S.exerciseEnabled.includes(ex.id);
-    input.setAttribute('aria-label',`Permitir ${ex.name} en nuevos encargos`);
-    input.onchange=()=>{
-      if(!input.checked && S.exerciseEnabled.length<=7){
-        input.checked=true;$('exercise-status').textContent='Debes mantener al menos siete ejercicios para generar encargos.';return;
-      }
-      if(input.checked) S.exerciseEnabled.push(ex.id);
-      else S.exerciseEnabled=S.exerciseEnabled.filter(id=>id!==ex.id);
-      save();$('exercise-status').textContent='Preferencias guardadas para los nuevos encargos.';
-    };
-    label.append(input,document.createTextNode(ex.name));box.appendChild(label);
-  }
 }
 function renderTorment(){
   const current=TORMENTS[S.torment],box=$('torment-options');
@@ -2243,11 +2271,11 @@ function renderAttributes(){
 }
 function renderChar(){
   const hero=$('hero');
-  const power=heroPower(),evolution=heroEvolution(power),progress=evolution===100?10:(power-1)%10;
+  const power=heroPower(),evolution=heroEvolution(power),progress=evolution===500?10:(power-1)%10;
   hero.dataset.power=evolution>=71?3:evolution>=41?2:evolution>=11?1:0;
   $('hero-power-score').textContent=power.toLocaleString('es-ES');
-  $('hero-evolution').textContent=`Evolución ${evolution} / 100`;
-  $('hero-next').textContent=evolution===100?'Aspecto máximo':`Siguiente: ${1+evolution*10} de poder`;
+  $('hero-evolution').textContent=`Evolución ${evolution} / 500`;
+  $('hero-next').textContent=evolution===500?'Aspecto máximo':`Siguiente: ${1+evolution*10} de poder`;
   $('hero-progress').setAttribute('aria-valuenow',String(progress));
   $('hero-progress').firstElementChild.style.width=`${progress*10}%`;
   $('hero').innerHTML=heroArt();
@@ -2280,11 +2308,6 @@ function renderChar(){
   const inventory=$('inventory');inventory.innerHTML='';
   const type=$('inventory-type').value;
   const matches=inventoryAvailable(S.owned,type);
-  const available=new Set(inventoryAvailable(S.owned));
-  for(const id of selectedItems) if(!available.has(id)){selectedItems.delete(id);bulkConfirm=false}
-  const bulk=$('dismantle-selected');
-  bulk.disabled=selectedItems.size===0;
-  bulk.textContent=bulkConfirm?`¿Confirmar ${selectedItems.size} objetos?`:`🔨 Desmantelar selección (${selectedItems.size})`;
   const pages=Math.max(1,Math.ceil(matches.length/INVENTORY_PAGE_SIZE));
   inventoryPage=Math.min(inventoryPage,pages-1);
   $('inventory-pagination').hidden=pages===1;
@@ -2303,11 +2326,7 @@ function renderChar(){
     const comparable=EQ_SLOTS.filter(slot=>slot.g===item.g).map(slot=>({slot,item:itemById(S.eq[slot.k])}));
     const comparison=document.createElement('small');
     comparison.textContent=comparable.map(({slot,item:equipped})=>`${GROUPS[slot.g].label}${slot.n?' '+slot.n:''}: ${equipped?`${equipped.name} (+${itemPercent(equipped)}%); diferencia ${itemPercent(item)-itemPercent(equipped)>=0?'+':''}${itemPercent(item)-itemPercent(equipped)}%`:'vacío'}`).join(' · ');
-    const label=document.createElement('label'),checkbox=document.createElement('input');
-    checkbox.type='checkbox';checkbox.checked=selectedItems.has(id);
-    checkbox.setAttribute('aria-label',`Seleccionar ${item.name} para desmantelar`);
-    checkbox.onchange=()=>{if(checkbox.checked) selectedItems.add(id);else selectedItems.delete(id);bulkConfirm=false;renderChar()};
-    label.append(checkbox,document.createTextNode(' Seleccionar'));row.append(comparison,label);
+    row.append(comparison);
     const actions=document.createElement('div');actions.className='item-actions';
     const select=document.createElement('button');select.textContent='Equipar';
     select.onclick=()=>equip(item);
@@ -2342,7 +2361,7 @@ function equip(it){
 function renderShop(){
   if(ensureShopStock()) save();
   $('shop-status').textContent='';
-  $('shop-date').textContent=`📅 ${S.shopStock.day} · nivel ${S.shopStock.level} · ${TORMENTS[S.shopStock.torment??0].name}`;
+  $('shop-context').textContent=`Nivel de objetos: ${S.shopStock.level} · Tormento actual: ${TORMENTS[S.torment].name}`;
   const box=$('shop');box.innerHTML='';
   for(const id of S.shopStock.offers){
     const it=ITEM[id];
@@ -2359,7 +2378,7 @@ function renderShop(){
     row.appendChild(b);box.appendChild(row);
   }
   const used=S.forgeWeek===weekStart(today())?S.forgeWeekPurchases:0;
-  $('forge-week').textContent=`🔥 ${used}/${FORGE_WEEKLY_LIMIT} mejoras esta semana`;
+  $('forge-week').textContent=`🔥 Mejoras usadas esta semana: ${used} / ${FORGE_WEEKLY_LIMIT} · Disponibles: ${FORGE_WEEKLY_LIMIT-used}`;
   const forge=$('forge-options');forge.innerHTML='';
   for(const [stat,option] of Object.entries(FORGE)){
     const rank=S.forgeRanks[stat]||0,cost=forgeCost();
@@ -2469,10 +2488,10 @@ let resetTimer;
 $('reset-skills').onclick=()=>{
   if(!Object.values(S.skills).some(rank=>rank>0)) return;
   if(!confirm('¿Redistribuir todas las habilidades gratis? Recuperarás todos los puntos y volverás al estilo neutral.')) return;
-  resetSkills();save();render();$('skill-status').textContent='Puntos recuperados. Elige tus habilidades de nuevo.';
+  resetSkills();save();render();
 };
 $('neutral-style').onclick=()=>{
-  if(selectSkillStyle(null)){save();render();$('skill-status').textContent='Estilo neutral activado.'}
+  if(selectSkillStyle(null)){save();render()}
 };
 for(const [id,group] of Object.entries(GROUPS)){
   const option=document.createElement('option');option.value=id;option.textContent=group.label;
@@ -2485,15 +2504,6 @@ function changeInventoryPage(direction){
 }
 $('inventory-prev').onclick=()=>changeInventoryPage(-1);
 $('inventory-next').onclick=()=>changeInventoryPage(1);
-$('mission-scale').onchange=event=>{
-  const updated=setMissionScale(Number(event.target.value));save();render();
-  $('exercise-status').textContent=updated?'Objetivos actualizados conservando el progreso.':'No se puede aplicar ese objetivo.';
-};
-$('rest-day').onclick=()=>{
-  rollDay();
-  S.lastRest=today();save();render();
-  $('exercise-status').textContent='Descanso registrado: protege tu racha sin conceder recompensas.';
-};
 $('export-save').onclick=()=>{
   settleBattle();save();
   const blob=new Blob([JSON.stringify({format:'fitquest-save',version:1,state:S},null,2)],{type:'application/json'});
@@ -2513,19 +2523,10 @@ $('import-file').onchange=async event=>{
     location.reload();
   }catch(error){$('backup-status').textContent=`No se ha importado la partida: ${error.message}`;}
 };
-$('dismantle-selected').onclick=()=>{
-  if(!selectedItems.size) return;
-  if(!bulkConfirm){bulkConfirm=true;renderChar();$('inventory-status').textContent='Confirma para destruir los objetos seleccionados y sus mejoras.';return}
-  settleBattle();
-  let count=0;
-  for(const id of selectedItems) if(dismantle(id)) count++;
-  selectedItems.clear();bulkConfirm=false;save();render();
-  $('inventory-status').textContent=`${count} objetos desmantelados.`;
-};
 $('reset').onclick=()=>{
   const b=$('reset');
   if(b.dataset.armed){clearTimeout(resetTimer);delete b.dataset.armed;b.textContent='Reiniciar partida';
-    clearTimeout(lootTimer);lootTimer=null;S=fresh();dismantleConfirm=null;bulkConfirm=false;selectedItems.clear();inventoryPage=0;$('inventory-type').value='all';$('pack-result').textContent='';$('pack-stage').classList.remove('spinning','reveal');$('pack-reel').replaceChildren();$('pack-reel').style.transform='translateX(-64px)';$('mission-status').textContent='';$('torment-status').textContent='';save();render();return}
+    clearTimeout(lootTimer);lootTimer=null;S=fresh();dismantleConfirm=null;inventoryPage=0;$('inventory-type').value='all';$('pack-result').textContent='';$('pack-stage').classList.remove('spinning','reveal');$('pack-reel').replaceChildren();$('pack-reel').style.transform='translateX(-64px)';$('mission-status').textContent='';$('torment-status').textContent='';save();render();return}
   b.dataset.armed=1;b.textContent='¿Seguro? Pulsa otra vez para borrar';
   resetTimer=setTimeout(()=>{delete b.dataset.armed;b.textContent='Reiniciar partida'},4000);
 };

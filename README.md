@@ -41,12 +41,9 @@ confirmación. Se aceptan las copias exportadas por esta versión.
   posteriores dan el 25 % de XP, daño y monedas de misión. El botín de
   monstruos no se reduce. La primera misión del día da una llave de torre.
   Esto evita que acumular ejercicio sea necesario para progresar.
-  En la configuración del tablón puedes excluir ejercicios, manteniendo al
-  menos siete para generar misiones, y ajustar los objetivos al 50, 75, 100,
-  125 o 150 %. El ajuste modifica los objetivos actuales conservando el
-  progreso; los ejercicios excluidos dejan de aparecer en nuevas misiones.
-  Registrar un día de descanso protege la racha, sin otorgar monedas, XP ni
-  progreso de actividad. Una racha ya perdida no se recupera.
+  El tablón usa los ejercicios y objetivos guardados en la partida, pero ya no
+  muestra controles para personalizarlos ni para registrar descansos. Las
+  preferencias y los descansos de partidas anteriores se conservan al actualizar.
 - **Encuentros de misiones:** cada enemigo tiene vida según su especie.
   Tras cada cinco victorias aparece un élite y, tras cada diez, un jefe
   en su lugar. En los demás encuentros hay un 5 % de probabilidad de
@@ -84,7 +81,9 @@ confirmación. Se aceptan las copias exportadas por esta versión.
   150; se calcula con la suma de todos los rangos de la forja y no se reinicia
   cada semana. Una compra hecha antes de actualizar cuenta para esa semana.
   Los rangos se conservan al cambiar o desmantelar objetos y se suman a los
-  demás bonos. El equipo y la forja usan monedas del juego, no dinero real.
+  demás bonos. El contador de compras semanales aparece separado de las mejoras
+  para que no se solape con ellas. El equipo y la forja usan monedas del juego,
+  no dinero real.
 - **Personaje y equipo:** compra equipo con monedas del juego y equípalo. Los
   objetos comprados y los obtenidos en sobres comparten inventario. En la
   pestaña de personaje pulsa Equipar para colocarlo automáticamente en un hueco
@@ -95,8 +94,8 @@ confirmación. Se aceptan las copias exportadas por esta versión.
   nivel del personaje, los porcentajes totales de daño, XP y monedas (equipo,
   mejoras de objetos, atributos, forja y logros) y los rangos de mejoras de
   arena. Es un indicador visual y no añade bonificaciones de combate. El héroe
-  tiene 100 evoluciones visuales: la primera comienza en 1 de poder y se
-  alcanza una nueva cada 10 puntos, hasta la última en 991. El aspecto puede
+  tiene 500 evoluciones visuales: la primera comienza en 1 de poder y se
+  alcanza una nueva cada 10 puntos, hasta la última en 4991. El aspecto puede
   retroceder si disminuye el poder. El inventario muestra solo los objetos
   sin equipar, ordenados de mayor a menor rareza. Sus fondos reflejan la rareza.
   Las copias del mismo objeto son independientes: cada una se puede equipar,
@@ -105,9 +104,8 @@ confirmación. Se aceptan las copias exportadas por esta versión.
   dos pulsaciones: dan 2, 5, 12, 25, 40, 65 o 100 fragmentos según su rareza. El inventario
   se puede filtrar por tipo y muestra hasta 12 objetos por página; al cambiar
   de página la vista baja hasta el final del inventario. Cada objeto se compara
-  con los huecos compatibles equipados. También puedes seleccionar varios
-  objetos, incluso en distintas páginas, y confirmar su desmantelamiento conjunto;
-  los objetos equipados quedan excluidos.
+  con los huecos compatibles equipados. Los objetos no equipados se desmantelan
+  individualmente desde su propia tarjeta.
   En ordenador, personaje y entrenamiento se muestran arriba y el inventario
   ocupa el ancho completo debajo. En pantallas amplias, como 1680 × 1050,
   los textos y controles aumentan de tamaño.
@@ -128,8 +126,8 @@ confirmación. Se aceptan las copias exportadas por esta versión.
   de estadísticas muestra el bono total.
   Bajo el entrenamiento se muestran los bonos efectivos, críticos, fragmentos,
   daño e intervalo de arena, daño base de desafíos y estilo activo. La pestaña
-  **Estadísticas** reúne el progreso de aventura, combate y colección a partir
-  de los datos ya guardados, sin inventar historiales anteriores.
+  **Estadísticas** organiza más de 60 datos guardados y derivados en paneles
+  visuales de aventura, combate, héroe, equipo, economía, habilidades y logros.
 - **Árbol de habilidades:** al llegar a cada nivel se obtiene un punto,
   incluidos los niveles existentes al actualizar; el nivel inicial también da
   uno. En los niveles múltiplos de diez se reciben dos puntos en total. Las
