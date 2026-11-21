@@ -1373,8 +1373,8 @@ test('prestige saves migrate legacy state and reject corrupt points or paths', (
 test('expanded prestige map preserves the original nodes and has reachable non-overlapping clusters', () => {
   const g=game();
   assert.equal(g.run(`(() => {
-    if(PRESTIGE_NODES.length!==220||PRESTIGE_NODES.filter(n=>n.major).length!==20||
-       new Set(PRESTIGE_NODES.map(n=>n.id)).size!==220) return false;
+    if(PRESTIGE_NODES.length!==330||PRESTIGE_NODES.filter(n=>n.major).length!==30||
+       new Set(PRESTIGE_NODES.map(n=>n.id)).size!==330) return false;
     for(const branch of PRESTIGE_BRANCHES) for(let i=1;i<=10;i++){
       const node=PRESTIGE_BY_ID[branch.id+'-'+i];
       const amount=branch.stat==='crit'?1:branch.stat==='critDamage'?5:branch.stat==='offline'?.5:PRESTIGE_AMOUNTS[i-1];
@@ -1384,14 +1384,68 @@ test('expanded prestige map preserves the original nodes and has reachable non-o
     for(const [i,node] of PRESTIGE_NODES.entries()){
       if(node.requires&&!PRESTIGE_BY_ID[node.requires]) return false;
       const radius=node.major?29:18;
-      if(node.x-radius<0||node.y-radius<0||node.x+radius>2200||node.y+radius>2200) return false;
+      if(node.x-radius<0||node.y-radius<0||node.x+radius>PRESTIGE_MAP_SIZE||node.y+radius>PRESTIGE_MAP_SIZE) return false;
       for(const other of PRESTIGE_NODES.slice(i+1)){
         if(Math.hypot(node.x-other.x,node.y-other.y)<radius+(other.major?29:18)) return false;
       }
     }
-    ACHIEVEMENTS.length=0;S=fresh();S.battleUpdated=1000;S.prestige={count:1,points:220,nodes:[]};
+    ACHIEVEMENTS.length=0;S=fresh();S.battleUpdated=1000;S.prestige={count:1,points:330,nodes:[]};
     for(const node of PRESTIGE_NODES) if(!unlockPrestige(node.id,1000)) return false;
     return prestigePointsAvailable()===0&&validateBackup({format:'fitquest-save',version:1,state:S});
+  })()`),true);
+});
+
+test('ascension nodes combine distinct bonuses, enforce paths and persist through reload', () => {
+  const g=game();
+  assert.equal(g.run(`(() => {
+    ACHIEVEMENTS.length=0;S=fresh();S.battleUpdated=1000;S.prestige={count:1,points:100,nodes:[]};
+    if(unlockPrestige('dmg-ascension-1',1000)||unlockPrestige('dmg-ascension-major',1000)) return false;
+    for(let i=1;i<=10;i++) if(!unlockPrestige('dmg-'+i,1000)) return false;
+    if(!unlockPrestige('dmg-major-2',1000)) return false;
+    const base=prestigeMultiplier('dmg');
+    for(let i=1;i<=10;i++) if(!unlockPrestige('dmg-ascension-'+i,1000)) return false;
+    if(!unlockPrestige('dmg-ascension-major',1000)||
+       Math.abs(prestigeMultiplier('dmg')-(base+4.75))>1e-8||criticalBonus()!==76) return false;
+    for(let i=1;i<=10;i++) if(!unlockPrestige('xp-'+i,1000)) return false;
+    if(!unlockPrestige('xp-major-2',1000)||!unlockPrestige('xp-ascension-1',1000)||
+       offlineLimit()!==8.25*3600000) return false;
+    save();return validateBackup({format:'fitquest-save',version:1,state:S});
+  })()`),true);
+  const restored=game(g.saved());
+  assert.equal(restored.run(`(() => {
+    if(criticalBonus()!==76||offlineLimit()!==8.25*3600000) return false;
+    S.prestige.nodes=S.prestige.nodes.filter(id=>id!=='dmg-ascension-5');
+    if(validateBackup({format:'fitquest-save',version:1,state:S})) return false;
+    return resetPrestigeTree(1000)&&criticalBonus()===0&&offlineLimit()===OFFLINE_LIMIT;
+  })()`),true);
+});
+
+test('celestial executioner improves tower and boss damage without changing arena damage', () => {
+  const g=game();
+  assert.equal(g.run(`(() => {
+    ACHIEVEMENTS.length=0;S=fresh();S.battleUpdated=1000;S.prestige={count:1,points:20,nodes:[]};
+    for(let i=1;i<=10;i++) if(!unlockPrestige('critDamage-'+i,1000)) return false;
+    if(!unlockPrestige('critDamage-major-2',1000)||!unlockPrestige('critDamage-ascension-1',1000)||
+       prestigeMultiplier('challengeDamage')!==1.25||battleDamage()!==2) return false;
+    S.tower.floor=50;S.tower.hp=towerMaxHp(50);S.tower.torment=0;S.tower.keys=1;
+    const towerHp=S.tower.hp;
+    if(!attackTower('2026-01-05')||Math.abs(S.tower.hp-(towerHp-30))>1e-8) return false;
+    const boss=bossFor(S.weeklyBoss.index),hp=bossBaseHp(S.weeklyBoss.index);
+    const expected=50*(1-effectiveBossResistance(boss,hp,hp,0,false));
+    if(!attackWeeklyBoss('2026-01-05')||Math.abs(S.weeklyBoss.hp-(hp-expected))>1e-8) return false;
+    return resetPrestigeTree(1000)&&challengeDamage(24)===24&&battleDamage()===2;
+  })()`),true);
+});
+
+test('prestige saves containing all previous nodes remain valid and keep their effects', () => {
+  const g=game();
+  g.run(`S=fresh();S.prestige={count:1,points:230,nodes:PRESTIGE_NODES.filter(node=>!node.effects).map(node=>node.id)};save()`);
+  const restored=game(g.saved());
+  assert.equal(restored.run(`(() => {
+    if(!validateBackup({format:'fitquest-save',version:1,state:S})||S.prestige.nodes.length!==220||
+       prestigePointsAvailable()!==10||prestigeValue('crit')!==19||
+       prestigeValue('critDamage')!==120||prestigeValue('offline')!==9.5) return false;
+    return unlockPrestige('dmg-ascension-1',1000)&&prestigePointsAvailable()===9;
   })()`),true);
 });
 

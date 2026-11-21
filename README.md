@@ -148,12 +148,17 @@ confirmación. Se aceptan las copias exportadas por esta versión.
   completadas, travesía y progreso de desafíos. Las compras de tienda del día
   siguen contando; sus nuevas ofertas usan el nivel 1. Es recomendable
   exportar una copia antes de prestigiar.
-  El mapa tiene 200 nodos pequeños y 20 mejoras mayores en diez ramas: daño,
+  El mapa tiene 300 nodos pequeños y 30 mejoras mayores en diez ramas: daño,
   XP, monedas, fragmentos, una rama universal, probabilidad y daño crítico,
   daño y botín de autobatalla y tiempo sin conexión. Los nodos se agrupan
   alrededor de las mejoras mayores. Cada nodo cuesta un punto: los originales
   mantienen sus requisitos; cada eco exige el nodo original correspondiente y
   cada mejora mayor exige el quinto o décimo nodo original de su rama.
+  Cada rama tiene además una constelación de ascensión con mejoras que combinan
+  dos efectos: su primer nodo exige la segunda mejora mayor anterior, sus
+  siguientes nodos forman una cadena y su legado exige completar esa cadena.
+  Entre ellas, Verdugo celeste combina daño crítico con un multiplicador
+  exclusivo para los ataques de torre y bosses.
   Las mejoras de multiplicador se suman dentro del
   prestigio y se multiplican por los demás bonos; los críticos añaden puntos
   al porcentaje existente (la probabilidad sigue limitada al 75 %). Los nodos
@@ -163,7 +168,8 @@ confirmación. Se aceptan las copias exportadas por esta versión.
   Pasa el ratón o enfoca un nodo para ver sus efectos y requisitos; un clic o
   la activación con teclado lo desbloquea. Se puede desplazar el mapa
   arrastrándolo con el ratón, con el teclado o mediante gestos táctiles; las
-  barras de desplazamiento están ocultas.
+  barras de desplazamiento están ocultas. La rueda del ratón acerca o aleja
+  el mapa alrededor del cursor y los botones de zoom también funcionan en móvil.
 - **Árbol de habilidades:** al llegar a cada nivel se obtiene un punto,
   incluidos los niveles existentes al actualizar; el nivel inicial también da
   uno. En los niveles múltiplos de diez se reciben dos puntos en total. Las

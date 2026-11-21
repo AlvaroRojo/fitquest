@@ -126,7 +126,10 @@
   .prestige-map-scroll{overflow:auto;height:min(680px,70vh);border:1px solid #a87d45;border-radius:12px;background:#100e1a;cursor:grab;scrollbar-width:none;box-shadow:inset 0 0 35px #000,0 0 24px #a8793340}
   .prestige-map-scroll::-webkit-scrollbar{display:none}
   .prestige-map-scroll.dragging{cursor:grabbing;user-select:none}
-  .prestige-map{position:relative;width:2200px;height:2200px;background:
+  .prestige-zoom{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin:8px 0}
+  .prestige-zoom button{margin:0}
+  .prestige-canvas{position:relative;width:2800px;height:2800px;overflow:clip}
+  .prestige-map{position:absolute;left:0;top:0;width:2800px;height:2800px;transform-origin:top left;background:
     radial-gradient(circle at 50% 50%,#8f5fb52e 0,#44305220 18%,transparent 42%),
     radial-gradient(circle at 30% 35%,#e09a291c,transparent 28%),
     radial-gradient(circle at 70% 65%,#426db124,transparent 32%),
@@ -138,10 +141,13 @@
   .prestige-map line.active{stroke:#ffcf74;stroke-opacity:1;stroke-width:3}
   .prestige-orbit{fill:#15111dbb;stroke:#ad854b;stroke-opacity:.5;stroke-width:2}
   .prestige-orbit-inner{fill:none;stroke:#a78a64;stroke-opacity:.28;stroke-width:1;stroke-dasharray:3 7}
+  .prestige-orbit.ascension{fill:#122238bb;stroke:#6ad7e7;stroke-opacity:.8}
+  .prestige-orbit-inner.ascension{stroke:#86dfeb;stroke-opacity:.55}
   .prestige-center,.prestige-node{position:absolute;transform:translate(-50%,-50%);display:grid;place-items:center;border-radius:50%;margin:0}
   .prestige-center{width:90px;height:90px;left:50%;top:50%;border:3px double #f5d28f;background:radial-gradient(circle,#7b528d,#241d31 70%);font-size:2rem;box-shadow:0 0 32px #c79be066,inset 0 0 15px #f7d8a844}
   .prestige-node{width:36px;height:36px;padding:0;border:2px solid #8e7650;background:radial-gradient(circle,#443750,#181622 75%);font-size:.9rem;z-index:1}
   .prestige-node.prestige-major{width:58px;height:58px;font-size:1.35rem;border:4px double #cda56a;background:radial-gradient(circle,#755454,#201a2a 75%);z-index:2}
+  .prestige-node.prestige-ascension{border-color:#72cada;background:radial-gradient(circle,#3b6575,#161b30 75%)}
   .prestige-node[data-unlocked="true"]{border-color:#f6cb70;background:radial-gradient(circle,#987039,#35263a);box-shadow:0 0 14px #dfab5a88}
   .prestige-map .prestige-node:hover:not(:disabled){transform:translate(-50%,-50%);background:radial-gradient(circle,#a57a51,#362a40);animation:prestige-glow 1.6s ease-in-out infinite alternate}
   .prestige-map .prestige-node:active:not(:disabled){transform:translate(-50%,-50%)}
@@ -787,12 +793,18 @@
 <section id="prestige" role="tabpanel" aria-labelledby="tab-prestige" hidden>
   <div class="card">
     <h2>🌟 Árbol de prestigio</h2>
-    <p>Desde el nivel 50, prestigiar concede 1 punto por cada 10 niveles. Pasa el ratón o enfoca un nodo para ver sus efectos; pulsa para desbloquearlo. Arrastra el mapa para explorarlo.</p>
+    <p>Desde el nivel 50, prestigiar concede 1 punto por cada 10 niveles. Pasa el ratón o enfoca un nodo para ver sus efectos; pulsa para desbloquearlo. Arrastra el mapa y usa la rueda para acercar o alejar.</p>
+    <p>✨ Explora 10 constelaciones de ascensión: sus nodos azules combinan dos poderes y culminan en un legado.</p>
     <p>Se reinician nivel, XP, habilidades, pasivas, subclase, tormento y todo el equipo, incluidas sus mejoras. Se conservan racha, recursos, logros, atributos, forja, arena y desafíos.</p>
     <div class="prestige-summary"><strong id="prestige-points"></strong><button id="prestige-start" type="button"></button><button id="prestige-reset" type="button">↺ Redistribuir prestigio</button></div>
     <p id="prestige-multipliers"></p>
+    <div class="prestige-zoom" aria-label="Controles de zoom del árbol">
+      <button id="prestige-zoom-out" type="button" aria-label="Alejar árbol">−</button>
+      <button id="prestige-zoom-reset" type="button" aria-label="Restablecer zoom (100%)">100%</button>
+      <button id="prestige-zoom-in" type="button" aria-label="Acercar árbol">+</button>
+    </div>
     <div class="prestige-map-scroll" id="prestige-scroll" tabindex="0" aria-label="Mapa del árbol de prestigio; arrastra para explorar">
-      <div class="prestige-map" id="prestige-map"></div>
+      <div class="prestige-canvas" id="prestige-canvas"><div class="prestige-map" id="prestige-map"></div></div>
     </div>
     <div class="prestige-detail" id="prestige-detail" aria-live="polite"></div>
     <div class="prestige-tooltip" id="prestige-tooltip" role="tooltip" hidden></div>
@@ -1394,6 +1406,7 @@ const BATTLE_UPGRADES={
 const battleDamage=()=> (2+S.battleUpgrades.damage)*bonus('dmg')*prestigeMultiplier('arenaDamage');
 const battleInterval=()=> BATTLE_INTERVAL-400*S.battleUpgrades.speed;
 const battleLoot=()=> (1+0.1*S.battleUpgrades.loot)*prestigeMultiplier('arenaLoot');
+const challengeDamage=base=>base*bonus('dmg')*prestigeMultiplier('challengeDamage');
 const battleUpgradeCost=stat=>{
   const rank=S.battleUpgrades[stat],upgrade=BATTLE_UPGRADES[stat];
   return upgrade.cost+upgrade.step*rank+(stat==='speed'?0:2*rank*Math.pow(Math.max(0,rank-1),2));
@@ -1544,12 +1557,28 @@ const PRESTIGE_BRANCHES=[
   {id:'offline',name:'Vigilia',icon:'⏳',stat:'offline'}
 ];
 const PRESTIGE_AMOUNTS=[20,30,40,60,80,120,150,180,210,250];
-const PRESTIGE_MAP_CENTER=1100, PRESTIGE_ORBIT_RADIUS=68;
+const PRESTIGE_MAP_SIZE=2800, PRESTIGE_MAP_CENTER=PRESTIGE_MAP_SIZE/2, PRESTIGE_ORBIT_RADIUS=68;
+const PRESTIGE_ASCENSIONS=[
+  {name:'Conquistador estelar',icon:'🔥',effects:[['dmg',25],['critDamage',4]]},
+  {name:'Cronista infinito',icon:'📜',effects:[['xp',25],['offline',.25]]},
+  {name:'Emperador dorado',icon:'👑',effects:[['coin',25],['arenaLoot',25]]},
+  {name:'Alquimista astral',icon:'🧪',effects:[['materials',25],['xp',25]]},
+  {name:'Corazón del cosmos',icon:'🌌',effects:[['all',20],['critDamage',4]]},
+  {name:'Ojo del destino',icon:'👁️',effects:[['crit',.5],['dmg',25]]},
+  {name:'Verdugo celeste',icon:'☄️',effects:[['critDamage',4],['challengeDamage',25]]},
+  {name:'Legión eterna',icon:'🛡️',effects:[['arenaDamage',25],['offline',.25]]},
+  {name:'Tesoro perdido',icon:'💫',effects:[['arenaLoot',25],['materials',25]]},
+  {name:'Guardián del tiempo',icon:'⌛',effects:[['offline',.25],['arenaDamage',25]]}
+];
 const PRESTIGE_CLUSTERS=PRESTIGE_BRANCHES.flatMap((branch,b)=>[0,1].map(group=>{
   const angle=-Math.PI/2+b*2*Math.PI/PRESTIGE_BRANCHES.length,radius=300+group*440;
   return {branch,group,x:PRESTIGE_MAP_CENTER+radius*Math.cos(angle),y:PRESTIGE_MAP_CENTER+radius*Math.sin(angle)};
 }));
-const PRESTIGE_NODES=PRESTIGE_CLUSTERS.flatMap(({branch,group,x,y})=>{
+const PRESTIGE_ASCENSION_CLUSTERS=PRESTIGE_BRANCHES.map((branch,b)=>{
+  const angle=-Math.PI/2+b*2*Math.PI/PRESTIGE_BRANCHES.length;
+  return {branch,ascension:PRESTIGE_ASCENSIONS[b],x:PRESTIGE_MAP_CENTER+1140*Math.cos(angle),y:PRESTIGE_MAP_CENTER+1140*Math.sin(angle)};
+});
+const PRESTIGE_NODES=[...PRESTIGE_CLUSTERS.flatMap(({branch,group,x,y})=>{
   const small=Array.from({length:10},(_,i)=>{
     const index=group*5+Math.floor(i/2)+1,isExtra=i%2===1,angle=-Math.PI/2+i*Math.PI/5;
     const value=PRESTIGE_AMOUNTS[index-1],amount=branch.stat==='crit'?(isExtra?.5:1):
@@ -1562,11 +1591,27 @@ const PRESTIGE_NODES=PRESTIGE_CLUSTERS.flatMap(({branch,group,x,y})=>{
   const amount=branch.stat==='crit'?2:branch.stat==='critDamage'?20:branch.stat==='offline'?1:group?180:100;
   return [...small,{id:`${branch.id}-major-${group+1}`,name:`${branch.name}: ${group?'apoteosis':'maestría'}`,
     icon:branch.icon,stat:branch.stat,amount,major:true,requires:`${branch.id}-${group*5+5}`,x,y}];
-});
+}),...PRESTIGE_ASCENSION_CLUSTERS.flatMap(({branch,ascension,x,y})=>{
+  const effects=scale=>ascension.effects.map(([stat,amount])=>({stat,amount:amount*scale}));
+  const small=Array.from({length:10},(_,i)=>{
+    const angle=-Math.PI/2+i*Math.PI/5;
+    return {id:`${branch.id}-ascension-${i+1}`,name:`${ascension.name} ${i+1}`,icon:ascension.icon,
+      effects:effects(i<5?1:2),requires:i?`${branch.id}-ascension-${i}`:`${branch.id}-major-2`,
+      x:x+PRESTIGE_ORBIT_RADIUS*Math.cos(angle),y:y+PRESTIGE_ORBIT_RADIUS*Math.sin(angle)};
+  });
+  return [...small,{id:`${branch.id}-ascension-major`,name:`${ascension.name}: legado`,icon:ascension.icon,
+    effects:effects(4),major:true,requires:`${branch.id}-ascension-10`,x,y}];
+})];
 const PRESTIGE_BY_ID=Object.fromEntries(PRESTIGE_NODES.map(node=>[node.id,node]));
-const prestigeValue=stat=>PRESTIGE_NODES.reduce((sum,node)=>sum+(node.stat===stat&&S.prestige.nodes.includes(node.id)?node.amount:0),0);
-const prestigeMultiplier=stat=>1+PRESTIGE_NODES.reduce((sum,node)=>
-  sum+(S.prestige.nodes.includes(node.id)&&(node.stat===stat||(node.stat==='all'&&['dmg','xp','coin','materials'].includes(stat)))?node.amount:0),0)/100;
+const prestigeEffects=node=>node.effects||[node];
+function prestigeTotal(stat,includeAll=false){
+  const owned=new Set(S.prestige.nodes);
+  return PRESTIGE_NODES.reduce((sum,node)=>sum+(owned.has(node.id)?
+    prestigeEffects(node).reduce((total,effect)=>total+((effect.stat===stat||
+      (includeAll&&effect.stat==='all'&&['dmg','xp','coin','materials'].includes(stat)))?effect.amount:0),0):0),0);
+}
+const prestigeValue=stat=>prestigeTotal(stat);
+const prestigeMultiplier=stat=>1+prestigeTotal(stat,true)/100;
 const prestigePointsAvailable=()=>S.prestige.points-S.prestige.nodes.length;
 function unlockPrestige(id,now=Date.now()){
   if(!Object.hasOwn(PRESTIGE_BY_ID,id)) return false;
@@ -1935,7 +1980,7 @@ function attackTower(day=today(),onCritical){
   const before=tower.hp,max=Math.round(towerMaxHp(tower.floor)*TORMENTS[tower.torment].hp);
   const guardian=towerGuardian(tower.floor,tower.round);
   let wasCritical=false;
-  const damage=criticalDamage(24*bonus('dmg'),()=>{wasCritical=true});
+  const damage=criticalDamage(challengeDamage(24),()=>{wasCritical=true});
   const dealt=guardian?damage*(1-effectiveBossResistance(guardian,before,max,0,wasCritical)):damage;
   tower.keys--;tower.lastAttack=day;tower.hp-=dealt;
   if(wasCritical&&onCritical) onCritical(dealt);
@@ -1977,7 +2022,7 @@ function attackWeeklyBoss(day=today(),onCritical){
   const before=progress.hp;
   progress.lastAttackWeek=week;progress.lastAttackDay=day;progress.weekAttacks=used+1;progress.hits=(progress.hits||0)+1;
   let wasCritical=false;
-  const baseDamage=40*bonus('dmg'),damage=criticalDamage(baseDamage,()=>{wasCritical=true});
+  const damage=criticalDamage(challengeDamage(40),()=>{wasCritical=true});
   const resistance=effectiveBossResistance(boss,before,max,progress.hits-1,wasCritical);
   const dealt=damage*(1-resistance);
   progress.hp-=dealt;
@@ -2333,7 +2378,7 @@ function renderHeroStats(){
     ['🔩 Fragmentos',`+${statNumber((materialMultiplier()-1)*100)} %`],
     ['⚔️ Daño arena',statNumber(battleDamage())],['⚡ Intervalo arena',`${statNumber(battleInterval()/1000)} s`],
     ['💰 Botín arena',`+${statNumber((battleLoot()-1)*100)} %`],
-    ['🗼 Daño torre',statNumber(24*bonus('dmg'))],['👑 Daño boss base',statNumber(40*bonus('dmg'))],
+    ['🗼 Daño torre',statNumber(challengeDamage(24))],['👑 Daño boss base',statNumber(challengeDamage(40))],
     ['✨ Estilo',S.skillStyle?SKILLS[S.skillStyle].name:'Neutral'],
     ['👑 Subclase',S.subclass?PASSIVE_CLASSES[S.subclass].name:'Ninguna']
   ];
@@ -2547,11 +2592,14 @@ function render(liveOnly=false){
 let selectedPrestige=null;
 function prestigeNodeDescription(node){
   const labels={dmg:'daño',xp:'XP',coin:'monedas',materials:'fragmentos',all:'daño, XP, monedas y fragmentos',
-    arenaDamage:'daño de autobatalla',arenaLoot:'botín de autobatalla',crit:'probabilidad de crítico',critDamage:'daño crítico'};
-  if(node.stat==='offline') return `+${node.amount*60} minutos de progreso sin conexión`;
-  if(node.stat==='crit') return `+${node.amount}% de probabilidad de crítico (máximo 75%)`;
-  if(node.stat==='critDamage') return `+${node.amount}% de daño crítico`;
-  return `+${node.amount}% al multiplicador de ${labels[node.stat]}`;
+    arenaDamage:'daño de autobatalla',arenaLoot:'botín de autobatalla',challengeDamage:'daño de torre y bosses',
+    crit:'probabilidad de crítico',critDamage:'daño crítico'};
+  return prestigeEffects(node).map(({stat,amount})=>{
+    if(stat==='offline') return `+${amount*60} minutos de progreso sin conexión`;
+    if(stat==='crit') return `+${amount}% de probabilidad de crítico (máximo 75%)`;
+    if(stat==='critDamage') return `+${amount}% de daño crítico`;
+    return `+${amount}% al multiplicador de ${labels[stat]}`;
+  }).join(' · ');
 }
 function prestigeNodeState(node){
   if(S.prestige.nodes.includes(node.id)) return 'Nodo adquirido';
@@ -2576,16 +2624,18 @@ function renderPrestige(){
   $('prestige-start').disabled=S.level<50;
   $('prestige-start').textContent=S.level<50?'Prestigio disponible al nivel 50':`🌟 Prestigiar · +${Math.floor(S.level/10)} puntos`;
   $('prestige-reset').disabled=!S.prestige.nodes.length;
-  const orbits=PRESTIGE_CLUSTERS.map(cluster=>
-    `<circle class="prestige-orbit" cx="${cluster.x}" cy="${cluster.y}" r="88"/><circle class="prestige-orbit-inner" cx="${cluster.x}" cy="${cluster.y}" r="${PRESTIGE_ORBIT_RADIUS}"/>`).join('');
+  const orbits=[...PRESTIGE_CLUSTERS,...PRESTIGE_ASCENSION_CLUSTERS].map(cluster=>{
+    const style=cluster.ascension?' ascension':'';
+    return `<circle class="prestige-orbit${style}" cx="${cluster.x}" cy="${cluster.y}" r="88"/><circle class="prestige-orbit-inner${style}" cx="${cluster.x}" cy="${cluster.y}" r="${PRESTIGE_ORBIT_RADIUS}"/>`;
+  }).join('');
   const lines=PRESTIGE_NODES.map(node=>{
     const parent=node.requires?PRESTIGE_BY_ID[node.requires]:{x:PRESTIGE_MAP_CENTER,y:PRESTIGE_MAP_CENTER};
     return `<line x1="${parent.x}" y1="${parent.y}" x2="${node.x}" y2="${node.y}" class="${S.prestige.nodes.includes(node.id)?'active':''}"/>`;
   }).join('');
-  map.innerHTML=`<svg viewBox="0 0 2200 2200" aria-hidden="true">${orbits}${lines}</svg><div class="prestige-center" aria-hidden="true">🌌</div>`;
+  map.innerHTML=`<svg viewBox="0 0 ${PRESTIGE_MAP_SIZE} ${PRESTIGE_MAP_SIZE}" aria-hidden="true">${orbits}${lines}</svg><div class="prestige-center" aria-hidden="true">🌌</div>`;
   for(const node of PRESTIGE_NODES){
     const unlocked=S.prestige.nodes.includes(node.id),button=document.createElement('button');
-    button.type='button';button.className=`prestige-node${node.major?' prestige-major':''}`;button.dataset.unlocked=String(unlocked);
+    button.type='button';button.className=`prestige-node${node.major?' prestige-major':''}${node.effects?' prestige-ascension':''}`;button.dataset.unlocked=String(unlocked);
     button.dataset.prestigeNode=node.id;button.style.left=`${node.x}px`;button.style.top=`${node.y}px`;
     button.textContent=node.icon;
     button.setAttribute('aria-label',`${node.name}: ${prestigeNodeDescription(node)}. ${prestigeNodeState(node)}`);
@@ -2608,6 +2658,31 @@ function renderPrestige(){
   detail.textContent=`${selected.name}: ${prestigeNodeDescription(selected)} · ${prestigeNodeState(selected)}`;
 }
 const prestigeScroll=$('prestige-scroll');
+let prestigeZoom=1;
+function setPrestigeZoom(value,x=prestigeScroll.clientWidth/2,y=prestigeScroll.clientHeight/2){
+  const next=Math.max(.35,Math.min(1.5,value));
+  if(next===prestigeZoom) return;
+  const mapX=(prestigeScroll.scrollLeft+x)/prestigeZoom,mapY=(prestigeScroll.scrollTop+y)/prestigeZoom;
+  prestigeZoom=next;
+  const canvas=$('prestige-canvas');
+  canvas.style.width=`${PRESTIGE_MAP_SIZE*next}px`;canvas.style.height=`${PRESTIGE_MAP_SIZE*next}px`;
+  $('prestige-map').style.transform=`scale(${next})`;
+  prestigeScroll.scrollLeft=mapX*next-x;prestigeScroll.scrollTop=mapY*next-y;
+  $('prestige-zoom-reset').textContent=`${Math.round(next*100)}%`;
+  $('prestige-zoom-reset').setAttribute('aria-label',`Restablecer zoom (${Math.round(next*100)}%)`);
+  $('prestige-zoom-out').disabled=next<=.35;$('prestige-zoom-in').disabled=next>=1.5;
+  $('prestige-tooltip').hidden=true;
+}
+prestigeScroll.addEventListener('wheel',event=>{
+  if(event.ctrlKey||event.metaKey||!event.deltaY) return;
+  event.preventDefault();
+  const rect=prestigeScroll.getBoundingClientRect();
+  setPrestigeZoom(prestigeZoom*(event.deltaY<0?1.15:1/1.15),
+    event.clientX-rect.left-prestigeScroll.clientLeft,event.clientY-rect.top-prestigeScroll.clientTop);
+},{passive:false});
+$('prestige-zoom-in').onclick=()=>setPrestigeZoom(prestigeZoom*1.15);
+$('prestige-zoom-out').onclick=()=>setPrestigeZoom(prestigeZoom/1.15);
+$('prestige-zoom-reset').onclick=()=>setPrestigeZoom(1);
 let prestigeDrag=null,suppressPrestigeClick=false;
 prestigeScroll.addEventListener('pointerdown',event=>{
   if(event.pointerType!=='mouse'||event.button!==0) return;
@@ -3014,7 +3089,7 @@ function renderTower(){
   const max=Math.round(towerMaxHp(floor)*difficulty.hp),hp=tower.torment===null?max:tower.hp,species=(floor-1)%MISSION_MONSTERS.length;
   const guardian=towerGuardian(floor,tower.round);
   const kind=guardian||floor%10===0?'boss':floor%5===0?'elite':'normal';
-  const damage=Math.round(24*bonus('dmg')*(1-(guardian?effectiveBossResistance(guardian,hp,max,0):0))*100)/100;
+  const damage=Math.round(challengeDamage(24)*(1-(guardian?effectiveBossResistance(guardian,hp,max,0):0))*100)/100;
   box.innerHTML=`<div class="expedition-challenge">
     ${challengeStage(species,kind,`Planta ${floor} / ${TOWER_FLOORS}`)}
     <div class="challenge-details">
@@ -3046,7 +3121,7 @@ function renderWeeklyBoss(){
   const torment=progress.torment??S.torment,difficulty=TORMENTS[torment],lootIndex=Math.min(progress.rewardTorment??torment,torment),loot=TORMENTS[lootIndex],multiplier=combatReward(lootIndex),max=Math.round(bossBaseHp(progress.index)*difficulty.hp);
   const hp=progress.torment===null?max:progress.hp;
   const used=progress.lastAttackWeek===weekStart(today())?progress.weekAttacks:0;
-  const damage=Math.round(40*bonus('dmg')*(1-effectiveBossResistance(boss,hp,max,progress.hits||0))*100)/100;
+  const damage=Math.round(challengeDamage(40)*(1-effectiveBossResistance(boss,hp,max,progress.hits||0))*100)/100;
   box.innerHTML=`<div class="expedition-challenge">
     ${challengeStage(boss.species,'boss',`Boss ${position+1} / ${WEEKLY_BOSSES.length} · vuelta ${round}`)}
     <div class="challenge-details">
