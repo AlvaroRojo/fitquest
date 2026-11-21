@@ -262,7 +262,6 @@
   .pack-stage.spinning{box-shadow:inset 0 0 35px #dca35b55,0 0 20px #e6a95233}
   @keyframes loot-flash{0%{opacity:0}15%{opacity:1}100%{opacity:0}}
   @keyframes loot-winner{0%{filter:brightness(1)}20%{filter:brightness(1.8);box-shadow:0 0 35px var(--loot-color)}100%{filter:brightness(1)}}
-  @keyframes pack-burst{0%{transform:scale(.3);opacity:0}20%{opacity:1}100%{transform:scale(var(--burst-size,3));opacity:0}}
   .loot-tier[data-tier="0"]{--loot-color:#c4c6cf;--loot-glow:#aab1c733}
   .loot-tier[data-tier="1"]{--loot-color:#82c88d;--loot-glow:#3aa75a55}
   .loot-tier[data-tier="2"]{--loot-color:#75bff4;--loot-glow:#318cd966}
@@ -273,17 +272,6 @@
   #inventory .inventory-item.loot-tier,#shop .shop-offer.loot-tier{border-color:var(--loot-color);background:radial-gradient(ellipse at 90% 0%,var(--loot-glow),transparent 65%),linear-gradient(145deg,#352d3b,#171c2b);box-shadow:inset 0 1px #fff2,0 0 14px var(--loot-glow)}
   #inventory .inventory-item.is-equipped{box-shadow:inset 0 0 18px var(--loot-glow),0 0 14px var(--loot-glow)}
   #character .slot.is-equipped.loot-tier{border-color:var(--loot-color);background:radial-gradient(ellipse at 50% 0%,var(--loot-glow),transparent 70%),linear-gradient(145deg,#352d3b,#171c2b);box-shadow:inset 0 0 14px var(--loot-glow)}
-  .wheel-stage{position:relative;display:grid;place-items:center;min-height:210px;margin:12px 0}
-  .wheel-stage.burst::after{content:"";position:absolute;z-index:3;width:65px;height:65px;border:4px solid var(--loot-color);border-radius:50%;box-shadow:0 0 25px var(--loot-color),inset 0 0 20px var(--loot-color);pointer-events:none;animation:pack-burst 1.2s ease-out forwards}
-  .wheel-flare{position:absolute;z-index:2;width:220px;aspect-ratio:1;border-radius:50%;opacity:0;pointer-events:none;background:repeating-conic-gradient(from 0deg,transparent 0 13deg,var(--loot-color) 16deg,transparent 20deg 30deg);mask-image:radial-gradient(circle,transparent 15%,#000 38%,transparent 72%)}
-  .wheel-stage.burst .wheel-flare{animation:wheel-flare 1.2s ease-out forwards}
-  .wheel-stage.burst .loot-wheel{box-shadow:0 0 35px var(--loot-color),inset 0 0 20px var(--loot-glow)}
-  @keyframes wheel-flare{0%{opacity:0;transform:scale(.3) rotate(0)}25%{opacity:.9}100%{opacity:0;transform:scale(var(--flare-size,1)) rotate(35deg)}}
-  .wheel-stage::before{content:"▼";position:absolute;top:0;z-index:2;color:#fff0c8;font-size:1.6rem;text-shadow:0 0 8px #f6a63f}
-  .loot-wheel{display:grid;place-items:center;width:185px;aspect-ratio:1;border:6px solid #e7bb72;border-radius:50%;background:conic-gradient(#a7b3bd 0 51.4deg,#62a576 51.4deg 102.8deg,#4c98c5 102.8deg 154.2deg,#d9a64a 154.2deg 205.6deg,#9b64bf 205.6deg 257deg,#c65a58 257deg 308.4deg,#5ecabc 308.4deg);box-shadow:0 0 22px #e5a46477,inset 0 0 20px #0009;transition:transform 2.8s cubic-bezier(.15,.65,.1,1)}
-  .loot-wheel span{display:grid;place-items:center;width:54px;height:54px;border:2px solid #e8bf7b;border-radius:50%;background:#27202e;font-size:1.6rem}
-  .wheel-stage.spinning .loot-wheel{box-shadow:0 0 35px #ffd17faa,inset 0 0 20px #fff7}
-  .wheel-stage.burst .loot-wheel span{animation:loot-winner 1.2s ease-out}
   .battle-layout{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));gap:12px}
   .battle-layout>.card{margin:0}
   .battle-stage{min-height:360px;background:radial-gradient(ellipse at 50% 80%,#be624b88,transparent 35%),radial-gradient(ellipse at 50% 30%,#71558e,#13152a 70%)}
@@ -376,7 +364,7 @@
     .navigation{padding:7px;margin-bottom:10px}
     .navigation button{min-height:48px;padding:9px}
     #adventure:not([hidden]),#character:not([hidden]){display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px;align-items:start}
-    #character:not([hidden]){grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:start;gap:8px}
+    #character:not([hidden]){grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:stretch;gap:8px}
     #adventure:not([hidden]){grid-template-columns:minmax(0,2fr) minmax(0,3fr);gap:10px;align-items:stretch}
     #adventure>.card,#character>.card{margin-bottom:0}
     #adventure>.card{padding:17px}
@@ -445,8 +433,7 @@
     #adventure .quest-board .complete{min-height:32px;padding:4px}
     #weekly-progress .week-card{padding:6px;gap:6px}
     #weekly-progress .milestone{padding:3px 6px;font-size:.8rem}
-    #journey{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px;align-items:center}
-    #journey .reset-footer{margin:0}
+    #adventure>.reset-footer{grid-column:1/-1;margin:0}
     #store .armory-card{padding:10px}
     #store .armory-intro{margin:3px 0}
     #store .armory-section{margin-top:7px;padding:8px}
@@ -619,8 +606,8 @@
 <div class="card" id="journey">
   <h2>🗺️ Travesía del héroe</h2>
   <div id="weekly-progress"></div>
-  <div class="reset-footer"><button id="reset" type="button">Reiniciar partida</button></div>
 </div>
+<div class="reset-footer"><button id="reset" type="button">Reiniciar partida</button></div>
 </section>
 
 <section id="character" role="tabpanel" aria-labelledby="tab-character" hidden>
@@ -646,6 +633,7 @@
     <table aria-labelledby="global-stats-heading"><tbody>
       <tr><th scope="row">📜 Misiones completadas</th><td id="stat-missions"></td></tr>
       <tr><th scope="row">⚔️ Monstruos derrotados</th><td id="stat-kills"></td></tr>
+      <tr><th scope="row">🏟️ Victorias de arena</th><td id="stat-arena"></td></tr>
       <tr><th scope="row">🌱 Días de actividad</th><td id="stat-days"></td></tr>
       <tr><th scope="row">🏆 Victorias de desafío</th><td id="stat-dungeons"></td></tr>
       <tr><th scope="row">🎁 Sobres abiertos</th><td id="stat-packs"></td></tr>
@@ -703,12 +691,6 @@
   <div id="pack-list" class="pack-list"></div>
   <div id="pack-stage" class="pack-stage loot-tier" data-tier="0" aria-hidden="true"><div class="pack-reel" id="pack-reel"><div class="pack-reel-card loot-tier" data-tier="3"><b>🎁</b><small>Abre un sobre</small></div></div></div>
   <p id="pack-result" class="pack-result" role="status" aria-live="polite"></p>
-  <section class="armory-section" aria-labelledby="wheel-title">
-    <h3 id="wheel-title">🎡 Ruleta de daño</h3>
-    <div id="wheel-list" class="pack-list"></div>
-    <div class="wheel-stage loot-tier" id="wheel-stage" data-tier="0" aria-hidden="true"><div class="loot-wheel" id="loot-wheel"><span>⚔️</span></div><div class="wheel-flare"></div></div>
-    <p id="wheel-result" class="pack-result" role="status" aria-live="polite"></p>
-  </section>
 </div>
 </section>
 
@@ -746,7 +728,7 @@
 
 <section id="dungeons" role="tabpanel" aria-labelledby="tab-dungeons" hidden>
 <div class="card expedition-hub">
-  <div class="expedition-heading"><div><h2>🏰 Portal de desafíos</h2><p>Elige tu próxima aventura.</p></div><span class="key-gem" aria-hidden="true">🗝️</span></div>
+  <div class="expedition-heading"><div><h2>🏰 Portal de desafíos</h2></div><span class="key-gem" aria-hidden="true">🗝️</span></div>
   <div class="expedition-nav" aria-label="Desafíos disponibles">
     <button type="button" data-dungeon-view="tower" aria-pressed="true" aria-controls="dungeon-tower">🗼 Torre de 100 plantas</button>
     <button type="button" data-dungeon-view="bosses" aria-pressed="false" aria-controls="dungeon-bosses">👑 Bosses semanales</button>
@@ -1097,7 +1079,7 @@ const heroPower=()=>S.level+Object.keys(ATTRIBUTES).reduce((sum,stat)=>sum+statB
   Object.values(S.battleUpgrades).reduce((sum,rank)=>sum+rank,0);
 const heroEvolution=power=>Math.max(1,Math.min(100,Math.floor((power-1)/10)+1));
 const globalStats=()=>({
-  missions:S.totalMissions,kills:S.kills,days:S.activeDays,
+  missions:S.totalMissions,kills:S.kills,arena:S.autoKills,days:S.activeDays,
   dungeons:S.challengeClears,packs:S.packsOpened,achievements:S.achievements.length,
   chapters:S.weeklyRewards,streak:S.streak
 });
@@ -1125,14 +1107,17 @@ const PACKS=[
   {id:'gold',name:'Sobre dorado',icon:'🥇',level:15,cost:800,weights:[5,15,35,30,10,4,1]},
   {id:'arcane',name:'Sobre arcano',icon:'🔮',level:30,cost:1800,weights:[1,4,10,30,30,20,5]}
 ];
-const packReelLayout=()=>({winner:24+Math.floor(Math.random()*29),offset:Math.floor(Math.random()*81)-40,duration:3800+Math.floor(Math.random()*1401)});
+const packReelLayout=width=>{
+  const padding=Math.ceil((width/2+40)/136)+1;
+  return {start:padding,winner:padding+24+Math.floor(Math.random()*29),padding,offset:Math.floor(Math.random()*81)-40,duration:3800+Math.floor(Math.random()*1401)};
+};
 const rarityWeight=(weight,tier,torment)=>weight*Math.pow(1+0.15*torment,tier);
 function packOdds(pack,level,torment=0){
   const eligible=pack.weights.map((weight,tier)=>level>=TIER_LVL[tier]?rarityWeight(weight,tier,torment):0);
   const total=eligible.reduce((sum,weight)=>sum+weight,0);
   return eligible.map(weight=>weight/total);
 }
-function samplePackItem(pack,stat=null){
+function samplePackItem(pack){
   const odds=packOdds(pack,S.level,S.torment);
   let roll=Math.random(),tier=0;
   for(let i=0;i<odds.length;i++){
@@ -1140,19 +1125,19 @@ function samplePackItem(pack,stat=null){
     if(roll<odds[i]){tier=i;break}
     roll-=odds[i];
   }
-  const pool=ITEMS.filter(item=>item.tier===tier&&item.lvl<=S.level&&(!stat||item.stat===stat));
+  const pool=ITEMS.filter(item=>item.tier===tier&&item.lvl<=S.level);
   const item=pool[Math.floor(Math.random()*pool.length)];
   return item;
 }
-function drawPack(id,stat=null){
+function drawPack(id){
   const pack=PACKS.find(option=>option.id===id);
   if(!pack||S.level<pack.level||S.coins<pack.cost) return null;
-  const item=samplePackItem(pack,stat),tier=item.tier;
+  const item=samplePackItem(pack),tier=item.tier;
   S.coins-=pack.cost;
   const instance=addItem(item.id);
   S.packsOpened++;
   const message=`${TIER_ICONS[tier]} ${TIER_NAMES[tier]}: ${item.name} · añadido al inventario`;
-  log(`${stat==='dmg'?'🎡 Ruleta de daño':'🎁 '+pack.name}: ${message}`);
+  log(`🎁 ${pack.name}: ${message}`);
   unlockAchievements();
   return {message,tier,item:itemById(instance)};
 }
@@ -1557,7 +1542,7 @@ if(legacyTicks){
 }
 
 const $=id=>document.getElementById(id);
-let dismantleConfirm=null, inventoryPage=0, lootTimer=null, wheelRotation=0;
+let dismantleConfirm=null, inventoryPage=0, lootTimer=null;
 const INVENTORY_PAGE_SIZE=12;
 function monsterArt(index){
   const colors=['#746b9b','#805c85','#77656f','#8a5270','#696d83','#704e9f','#526f82','#85556c'];
@@ -1831,9 +1816,9 @@ function renderBattleUpgrades(){
   }
 }
 function renderPacks(){
-  const box=$('pack-list'),wheelBox=$('wheel-list');
-  const focused=document.activeElement?.dataset.pack,focusedWheel=document.activeElement?.dataset.wheel;
-  box.replaceChildren();wheelBox.replaceChildren();
+  const box=$('pack-list');
+  const focused=document.activeElement?.dataset.pack;
+  box.replaceChildren();
   for(const pack of PACKS){
     const locked=S.level<pack.level,odds=packOdds(pack,S.level,S.torment);
     const card=document.createElement('div');card.className='pack-offer';
@@ -1848,12 +1833,12 @@ function renderPacks(){
       const result=drawPack(pack.id);
       save();render();
       if(!result){$('pack-result').textContent='No se puede abrir este sobre.';return}
-      const reel=$('pack-reel'),stage=$('pack-stage'),layout=packReelLayout();
-      const {winner,offset,duration}=layout;
+      const reel=$('pack-reel'),stage=$('pack-stage'),layout=packReelLayout(stage.clientWidth);
+      const {start,winner,padding,offset,duration}=layout;
       stage.classList.remove('reveal');stage.classList.add('spinning');stage.dataset.tier=result.tier;
       reel.replaceChildren();
       let winningCard;
-      for(let i=0;i<winner+5;i++){
+      for(let i=0;i<=winner+padding;i++){
         const item=i===winner?result.item:samplePackItem(pack);
         const card=document.createElement('div');card.className='pack-reel-card loot-tier';
         if(i===winner) winningCard=card;
@@ -1861,7 +1846,7 @@ function renderPacks(){
         card.innerHTML=`<b>${GROUPS[item.g].icon}</b><small>${TIER_ICONS[item.tier]} ${TIER_NAMES[item.tier]}<br>${item.name}</small>`;
         reel.appendChild(card);
       }
-      reel.style.transition='none';reel.style.transform='translateX(-64px)';
+      reel.style.transition='none';reel.style.transform=`translateX(-${start*136+64}px)`;
       void reel.offsetWidth;
       reel.style.transition='';
       reel.style.transitionDuration=`${duration}ms`;
@@ -1876,35 +1861,8 @@ function renderPacks(){
       renderPacks();
     };
     card.appendChild(button);box.appendChild(card);
-    const wheelCard=document.createElement('div');wheelCard.className='pack-offer';
-    wheelCard.innerHTML=`<strong>🎡 ${pack.name}</strong><small>Desbloqueo: nivel ${pack.level} · ${pack.cost} monedas · solo daño</small><div class="pack-odds" aria-label="Probabilidades actuales">${probabilities}</div>`;
-    const spin=document.createElement('button');spin.type='button';spin.dataset.wheel=pack.id;
-    spin.textContent=locked?`Disponible al nivel ${pack.level}`:`Girar · ${pack.cost} 🪙`;
-    spin.setAttribute('aria-label',`${spin.textContent} con ${pack.name}`);
-    spin.disabled=locked||S.coins<pack.cost||lootTimer!==null;
-    spin.onclick=()=>{
-      settleBattle();const result=drawPack(pack.id,'dmg');
-      save();render();
-      if(!result){$('wheel-result').textContent='No se puede girar la ruleta.';return}
-      const wheel=$('loot-wheel');
-      const stage=$('wheel-stage');stage.classList.remove('burst');stage.classList.add('spinning');stage.dataset.tier=result.tier;
-      stage.style.setProperty('--burst-size',String(2+result.tier*.7));
-      stage.style.setProperty('--flare-size',String(.6+result.tier*.12));
-      const target=(360-(result.tier+.5)*360/7)%360;
-      wheelRotation+=1800+(target-wheelRotation%360+360)%360;
-      wheel.style.transform=`rotate(${wheelRotation}deg)`;
-      $('wheel-result').textContent='La ruleta está girando...';
-      const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
-      lootTimer=setTimeout(()=>{
-        stage.classList.remove('spinning');stage.classList.add('burst');$('wheel-result').textContent=result.message;
-        lootTimer=setTimeout(()=>{stage.classList.remove('burst');lootTimer=null;renderPacks()},reduced?50:1200);
-      },reduced?50:2800);
-      renderPacks();
-    };
-    wheelCard.appendChild(spin);wheelBox.appendChild(wheelCard);
   }
   if(focused) box.querySelector(`[data-pack="${focused}"]:not(:disabled)`)?.focus({preventScroll:true});
-  if(focusedWheel) wheelBox.querySelector(`[data-wheel="${focusedWheel}"]:not(:disabled)`)?.focus({preventScroll:true});
 }
 function renderAttributes(){
   const box=$('attributes');box.innerHTML='';
@@ -1961,7 +1919,7 @@ function renderChar(){
   }
   $('bonuses').innerHTML=Object.entries(ATTRIBUTES).map(([stat,definition])=>{
     const b=statBreakdown(stat);
-    return `<div class="character-stat"><strong>${definition.icon} ${definition.name} · +${b.total}% ${STAT_TXT[stat]}</strong><small>Atributo +${b.attributes}% · Equipo +${b.equipment}% · Forja +${b.forge}% · Logros +${b.achievements}%</small></div>`;
+    return `<div class="character-stat"><strong>${definition.icon} ${definition.name} · +${b.total}% ${STAT_TXT[stat]}</strong></div>`;
   }).join('');
   $('materials').textContent=`🔩 Fragmentos: ${S.materials}`;
   $('inventory-status').textContent='';
@@ -2099,7 +2057,7 @@ function renderTower(){
   button.disabled=tower.lastAttack===today()||tower.keys<1;
   button.onclick=()=>{
     settleBattle();const attacked=attackTower();save();render();
-    $('expedition-status').textContent=attacked?'Ataque de torre realizado.':'No se puede atacar la torre ahora.';
+    $('expedition-status').textContent=attacked?'':'No se puede atacar la torre ahora.';
   };
   box.querySelector('.challenge-details').appendChild(button);
 }
@@ -2129,7 +2087,7 @@ function renderWeeklyBoss(){
   button.textContent=button.disabled?'Ya atacaste esta semana':'⚔️ Atacar al boss';
   button.onclick=()=>{
     settleBattle();const attacked=attackWeeklyBoss();save();render();
-    $('expedition-status').textContent=attacked?'Ataque semanal realizado.':'No se puede atacar al boss esta semana.';
+    $('expedition-status').textContent=attacked?'':'No se puede atacar al boss esta semana.';
   };
   box.querySelector('.challenge-details').appendChild(button);
 }
@@ -2156,7 +2114,7 @@ $('inventory-next').onclick=()=>{inventoryPage++;dismantleConfirm=null;renderCha
 $('reset').onclick=()=>{
   const b=$('reset');
   if(b.dataset.armed){clearTimeout(resetTimer);delete b.dataset.armed;b.textContent='Reiniciar partida';
-    clearTimeout(lootTimer);lootTimer=null;S=fresh();dismantleConfirm=null;inventoryPage=0;$('inventory-type').value='all';$('inventory-equipped').value='all';$('pack-result').textContent='';$('wheel-result').textContent='';$('wheel-stage').classList.remove('burst','spinning');$('pack-stage').classList.remove('spinning','reveal');$('pack-reel').replaceChildren();$('pack-reel').style.transform='translateX(-64px)';$('mission-status').textContent='';$('torment-status').textContent='';save();render();return}
+    clearTimeout(lootTimer);lootTimer=null;S=fresh();dismantleConfirm=null;inventoryPage=0;$('inventory-type').value='all';$('inventory-equipped').value='all';$('pack-result').textContent='';$('pack-stage').classList.remove('spinning','reveal');$('pack-reel').replaceChildren();$('pack-reel').style.transform='translateX(-64px)';$('mission-status').textContent='';$('torment-status').textContent='';save();render();return}
   b.dataset.armed=1;b.textContent='¿Seguro? Pulsa otra vez para borrar';
   resetTimer=setTimeout(()=>{delete b.dataset.armed;b.textContent='Reiniciar partida'},4000);
 };

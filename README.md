@@ -112,10 +112,10 @@ eliminarla.
   añade un 1 % a daño, XP o monedas, respectivamente. El siguiente rango
   cuesta 100 + 50 monedas por rango actual. Estos bonos se suman a los del
   equipo, forja y logros y se aplican también a la arena, la torre y los bosses. El panel
-  de estadísticas muestra el total y el aporte de cada una de estas fuentes.
+  de estadísticas muestra el bono total.
   Bajo el entrenamiento se muestran las misiones, los monstruos derrotados
   (incluidos los de misión, arena, torre y bosses), los días de actividad,
-  las victorias de desafío, los sobres, los logros y capítulos registrados,
+  las victorias de arena y de desafío, los sobres, los logros y capítulos registrados,
   y la racha actual.
 - **Logros:** desbloquean mejoras permanentes al alcanzar sus objetivos. Las
   misiones se cuentan desde esta versión; los niveles y monstruos derrotados
@@ -138,11 +138,8 @@ eliminarla.
   inventario, incluso si es repetido, sin devolución de monedas. La compra se
   guarda inmediatamente, antes de mostrar el carrusel animado, cuyo recorrido
   y punto de parada cambian en cada apertura, y su destello de
-  revelación según la rareza. La **ruleta de
-  daño** permite elegir cualquiera de los sobres con las mismas probabilidades
-  y precio, pero solo entrega espadas, brazos y anillos de daño. Al detenerse,
-  muestra una explosión adaptada a la rareza. Las tiradas también cuentan como
-  sobres abiertos. Las animaciones respetan la preferencia del sistema de
+  revelación según la rareza. El carrusel añade objetos de relleno a ambos lados
+  para que no se vea su final. Las animaciones respetan la preferencia del sistema de
   reducir movimiento.
 - **Autobatalla:** siempre está activa y recorre 16 tipos de monstruos.
   Los élites y jefes de la arena son únicamente visuales: su vida y botín

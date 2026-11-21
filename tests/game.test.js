@@ -232,8 +232,8 @@ test('global statistics use saved counters and all defeated monsters', () => {
     S.weeklyRewards=3; S.streak=5; S.owned=['sword_0_0','shield_0_0'];
     const stats=globalStats();
     return stats.missions===12 && stats.kills===27 && stats.days===8 &&
-      stats.dungeons===2 && stats.packs===4 && stats.achievements===2 &&
-      stats.chapters===3 && stats.streak===5 && Object.keys(stats).length===8;
+      stats.dungeons===2 && stats.arena===18 && stats.packs===4 && stats.achievements===2 &&
+      stats.chapters===3 && stats.streak===5 && Object.keys(stats).length===9;
   })()`),true);
 });
 
@@ -244,6 +244,13 @@ test('character inventory marks equipped items and keeps compact filterable layo
   assert.match(script, /row\.className=worn\?'inventory-item is-equipped':'inventory-item'/);
   assert.match(script, /class="equipped-badge">✓ Equipado/);
   assert.match(script, /b\.className=it\?'slot is-equipped':'slot'/);
+});
+
+test('character displays arena victories and total bonuses without source breakdown', () => {
+  assert.match(html, /Victorias de arena<\/th><td id="stat-arena"/);
+  const bonuses=script.slice(script.indexOf("$('bonuses').innerHTML="),script.indexOf("$('materials').textContent="));
+  assert.match(bonuses,/b\.total/);
+  assert.doesNotMatch(bonuses,/b\.(attributes|equipment|forge|achievements)/);
 });
 
 test('equipped inventory items sort first without changing the saved order', () => {
@@ -410,7 +417,7 @@ test('mission board omits manual changes and the visible activity log', () => {
 });
 
 test('journey places milestones under chapter progress and reset at the bottom', () => {
-  assert.match(html, /id="journey">[\s\S]*?id="weekly-progress"><\/div>\s*<div class="reset-footer"><button id="reset"[^>]*>Reiniciar partida<\/button><\/div>\s*<\/div>\s*<\/section>/);
+  assert.match(html, /id="journey">[\s\S]*?id="weekly-progress"><\/div>\s*<\/div>\s*<div class="reset-footer"><button id="reset"[^>]*>Reiniciar partida<\/button><\/div>\s*<\/section>/);
   assert.equal((html.match(/id="reset"/g) || []).length, 1);
   assert.match(script, /class="chapter-progress"><h3>[\s\S]*?class="bar mis"[\s\S]*?class="milestones"/);
 });
@@ -1167,12 +1174,19 @@ test('buying training, forge, arena upgrades and store items saves newly earned 
 test('pack carousel varies its path while stopping within the winning card', () => {
   const g=game();
   assert.equal(g.run(`(() => {
-    Math.random=()=>0;const first=packReelLayout();
-    Math.random=()=>0.999999999;const last=packReelLayout();
-    return first.winner===24 && last.winner===52 && first.offset===-40 && last.offset===40 &&
+    Math.random=()=>0;const first=packReelLayout(1680);
+    Math.random=()=>0.999999999;const last=packReelLayout(3840);
+    return first.winner-first.start===24 && last.winner-last.start===52 && first.offset===-40 && last.offset===40 &&
       first.duration===3800 && last.duration===5200 &&
+      first.padding*136-64>=1680/2+40 && last.padding*136-64>=3840/2+40 &&
       Math.abs(first.offset)<64 && Math.abs(last.offset)<64;
   })()`),true);
+});
+
+test('damage roulette is removed while ordinary packs remain', () => {
+  assert.doesNotMatch(html, /Ruleta de daño|wheel-stage|wheel-list|wheel-result/);
+  assert.match(html, /id="pack-list"/);
+  assert.match(html, /id="pack-reel"/);
 });
 
 test('365 simulated activity days produce the annual milestone', () => {
@@ -1294,21 +1308,6 @@ test('pack draws include high unlocked tiers and retain duplicate copies', () =>
     S.materials=0;
     if(!dismantle(S.owned[0]) || S.materials!==65) return false;
     return true;
-  })()`),true);
-});
-
-test('damage roulette uses pack costs and odds but awards only damage equipment', () => {
-  const g=game();
-  assert.equal(g.run(`(() => {
-    S=fresh(); S.level=40; S.coins=1000000; S.achievements=ACHIEVEMENTS.map(a=>a.id);
-    for(let i=0;i<100;i++){
-      const result=drawPack('arcane','dmg');
-      if(!result || result.item.stat!=='dmg' || result.item.tier!==result.tier || result.item.lvl>S.level) return false;
-    }
-    Math.random=()=>0;
-    S=fresh(); S.coins=200; S.achievements=ACHIEVEMENTS.map(a=>a.id);
-    const first=drawPack('basic','dmg'),second=drawPack('basic','dmg');
-    return first.item.stat==='dmg' && second.item.id!==first.item.id && S.coins===0 && S.packsOpened===2;
   })()`),true);
 });
 
