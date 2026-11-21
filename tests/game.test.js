@@ -804,7 +804,7 @@ test('weekly bosses retain health, enforce one attack per week and advance once'
   assert.equal(game(restored.saved()).run('S.weeklyBoss.index'),8);
 });
 
-test('level dungeons require level, use no keys and share the daily expedition limit', () => {
+test('level dungeons can be repeated after unlocking but share the active encounter', () => {
   const g=game();
   assert.equal(g.run(`(() => {
     S=fresh(); S.keys=2;
@@ -812,12 +812,56 @@ test('level dungeons require level, use no keys and share the daily expedition l
     S.level=5;
     if(!startDungeon('level-5') || S.keys!==2 || startDungeon('crypt')) return false;
     S.dungeonRun=null;
-    if(startDungeon('crypt') || startDungeon('level-5')) return false;
-    S.lastDungeonDay=null;
-    if(!startDungeon('crypt')) return false;
+    if(!startDungeon('level-5') || startDungeon('level-10')) return false;
     S.dungeonRun=null;
-    return !startDungeon('level-5');
+    if(!startDungeon('crypt')) return false;
+    if(startDungeon('level-5')) return false;
+    S.dungeonRun=null;
+    return !startDungeon('crypt') && startDungeon('level-5') && S.keys===2;
   })()`),true);
+});
+
+test('classic expeditions fight automatically across enemies and persist offline progress', () => {
+  const g=game();
+  assert.equal(g.run(`(() => {
+    S=fresh(); S.achievements=ACHIEVEMENTS.map(a=>a.id); S.torment=1;
+    if(!startDungeon('crypt',1000)) return false;
+    settleLevelDungeon(11000);
+    if(S.dungeonRun.stage!==0 || S.dungeonRun.hp!==63-12*bonus('dmg')) return false;
+    settleLevelDungeon(16000);
+    if(S.dungeonRun.autoUpdated!==11000) return false;
+    save(); return true;
+  })()`),true);
+  const restored=game(g.saved());
+  assert.equal(restored.run(`(() => {
+    settleLevelDungeon(10000000);
+    const snapshot=JSON.stringify([S.coins,S.xp,S.materials,S.kills,S.dungeonClears]);
+    settleLevelDungeon(20000000);
+    return !S.dungeonRun && S.kills===3 && S.dungeonClears===1 && S.materials===7 &&
+      snapshot===JSON.stringify([S.coins,S.xp,S.materials,S.kills,S.dungeonClears]) &&
+      !startDungeon('crypt');
+  })()`),true);
+});
+
+test('legacy classic expedition retains its stage and health when automation starts', () => {
+  const first=game();
+  first.run(`S=fresh(); S.dungeonRun={id:'crypt',stage:1,hp:17,torment:0}; save()`);
+  const restored=game(first.saved());
+  assert.equal(restored.run(`(() => {
+    const run=S.dungeonRun, start=run.autoUpdated;
+    if(run.stage!==1 || run.hp!==17 || !Number.isFinite(start)) return false;
+    settleLevelDungeon(start+10000);
+    return run.stage===1 && run.hp===17-12*bonus('dmg');
+  })()`),true);
+});
+
+test('automatic classic expedition awards the same rewards as individual hits', () => {
+  const manual=game(), automatic=game();
+  for(const g of [manual,automatic]) g.run(`S=fresh(); S.achievements=ACHIEVEMENTS.map(a=>a.id); S.torment=3; startDungeon('crypt',1000)`);
+  manual.run(`while(S.dungeonRun) attackDungeon()`);
+  automatic.run(`settleLevelDungeon(10000000)`);
+  const result=`JSON.stringify([S.coins,S.level,S.xp,S.materials,S.kills,S.dungeonClears])`;
+  assert.equal(automatic.run(result),manual.run(result));
 });
 
 test('level dungeon boss fights automatically offline and preserves progress', () => {

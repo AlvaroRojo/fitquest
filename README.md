@@ -97,9 +97,9 @@ eliminarla.
   mejorar o desmantelar por separado.
   Desmantela objetos no equipados con
   dos pulsaciones: dan 2, 5, 12, 25, 40, 65 o 100 fragmentos según su rareza. El inventario
-  se puede filtrar por tipo y estado y muestra hasta 4 objetos por página.
-  En ordenador, personaje, entrenamiento e inventario se muestran juntos
-  en un panel compacto.
+  se puede filtrar por tipo y estado y muestra hasta 12 objetos por página.
+  En ordenador, personaje y entrenamiento se muestran arriba y el inventario
+  ocupa el ancho completo debajo.
   Puedes usar fragmentos para mejorar un objeto sin un máximo de nivel; cada mejora añade un 1 %
   a su estadística. El coste es 5 + 3 por nivel de mejora actual + 2 por
   índice de rareza (común 0 a divino 6). Desmantelar elimina el objeto y
@@ -163,11 +163,12 @@ eliminarla.
   número 13 la garantiza. Las demás misiones del día no generan llaves.
   No se generan llaves sobrantes una vez que ya hay suficientes para abrir
   todas las mazmorras. Una llave abre una mazmorra de forma permanente.
-  Se puede iniciar una expedición al día; tiene tres enemigos y un jefe al
-  final. El jugador ataca manualmente, con los mismos bonos de equipo y
-  logros. El botín es XP y monedas por enemigo y cinco fragmentos al
-  terminar. El encuentro se conserva al cerrar el juego, pero no avanza
-  automáticamente mientras está cerrado.
+  Se puede iniciar una expedición del vacío al día; tiene tres encuentros,
+  el último contra un jefe. Los ataques son automáticos cada 10 segundos,
+  con los mismos bonos de equipo y logros, incluso con el juego cerrado.
+  El botín es XP y monedas por enemigo y cinco fragmentos al terminar. Las
+  expediciones ya iniciadas conservan su enemigo y vida al activar la
+  automatización.
 - **Torre de 100 plantas:** la primera misión de cada día da una llave de
   torre distinta de las llaves de mazmorra. Se pueden acumular y cada ataque
   consume una; solo se permite un ataque al día para toda la torre. La vida
@@ -181,16 +182,15 @@ eliminarla.
   fragmentos y se abre el siguiente. El ataque causa 40 de daño base con los
   bonos generales. Vencer al último completa el desafío.
 - **Mazmorras por nivel:** ocho expediciones adicionales se desbloquean
-  automáticamente entre los niveles 5 y 75 sin consumir llaves. Comparten el
-  límite de una expedición iniciada al día y el encuentro activo con las
-  mazmorras anteriores. Cada una enfrenta a un único boss automáticamente:
+  automáticamente entre los niveles 5 y 75 sin consumir llaves. Se pueden
+  repetir sin límite diario, pero solo puede haber una mazmorra activa entre
+  estas y las del vacío. Cada una enfrenta a un único boss automáticamente:
   un golpe de 12 de daño base cada 10 segundos con los bonos generales, incluso
   con el juego cerrado y sin límite de tiempo sin conexión. Al vencer se
   reciben las monedas y XP de tres enemigos y 5 fragmentos, con los bonos y el
   tormento fijado. Las expediciones por nivel que ya estaban en curso pasan al
   boss conservando la proporción de vida restante y las recompensas pendientes;
-  el combate automático
-  comienza al cargar esta versión. Las mazmorras anteriores siguen manuales.
+  el combate automático comienza al cargar esta versión.
 - **Tormento global:** en la pestaña **Tormento**, todos los rangos están
   visibles para comparar sus efectos y seleccionar uno disponible. El santuario muestra
   la dificultad activa; los rangos bloqueados indican el nivel necesario.
