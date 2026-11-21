@@ -971,9 +971,9 @@ test('tower round bonuses also apply to partial rewards and survive torment chan
   assert.equal(g.run(`(() => {
     ACHIEVEMENTS.length=0;S=fresh();S.level=20;S.battleUpdated=1000;
     S.tower.round=1;S.tower.floor=100;S.tower.hp=towerMaxHp(100);S.tower.keys=1;
-    if(S.tower.hp!==336||!attackTower('2026-01-05')||S.coins!==9||S.tower.hp!==312) return false;
+    if(S.tower.hp!==336||!attackTower('2026-01-05')||S.coins!==6||S.tower.hp!==318) return false;
     selectTorment(1,1000);
-    return Math.abs(S.tower.hp-546)<1e-8&&S.tower.rewardTorment===0;
+    return Math.abs(S.tower.hp-556.5)<1e-8&&S.tower.rewardTorment===0;
   })()`),true);
 });
 
@@ -1097,7 +1097,8 @@ test('torment sanctuary displays unlocks and saves the selected difficulty', () 
   assert.equal(elements['torment-current'].textContent,'Tormento I');
   assert.equal(elements['torment-hp'].textContent,'×1.75');
   assert.equal(elements['torment-reward'].textContent,'×1.4');
-  assert.equal(elements['torment-target'].textContent,'+5%');
+  assert.equal(elements['torment-target'].textContent,'Sin aumento');
+  assert.match(box.children[1].innerHTML,/ejercicio sin aumento/);
   assert.equal(box.children[1]['aria-pressed'],'true');
   assert.match(elements['torment-status'].textContent,/Tormento I aplicado a todo el juego/);
   state.level=20;
@@ -1108,14 +1109,14 @@ test('torment sanctuary displays unlocks and saves the selected difficulty', () 
   assert.equal(state.torment,0);
 });
 
-test('active missions immediately change target and rewards without losing progress or drifting', () => {
+test('changing torment updates rewards without changing active mission targets or progress', () => {
   const g=game();
   assert.equal(g.run(`(() => {
     Math.random=()=>0.5; S=fresh(); S.level=120;
     S.achievements=ACHIEVEMENTS.map(a=>a.id);
     const ex=byId(S.active[0]),original=missionTarget(ex);
     S.done[ex.id]=3;
-    if(!selectTorment(12) || missionTarget(ex)!==Math.ceil(original*1.6) ||
+    if(!selectTorment(12) || missionTarget(ex)!==original ||
        S.done[ex.id]!==3 || S.missionTorments[ex.id]!==12 ||
        missionEstimate(ex).coins!==Math.round(10*bonus('coin')*DIFFICULTIES[missionDifficulty(ex)].reward*22.5)) return false;
     for(let i=0;i<20;i++){selectTorment(1);selectTorment(12)}
@@ -1462,7 +1463,7 @@ test('mission preferences update targets without drift and preserve partial prog
   assert.equal(g.run(`(() => {
     S=fresh();S.level=120;const ex=byId(S.active[0]),initial=missionTarget(ex);S.done[ex.id]=3;
     if(!setMissionScale(50)||missionTarget(ex)!==Math.ceil(initial/2)||S.done[ex.id]!==3) return false;
-    selectTorment(12);if(missionTarget(ex)!==Math.ceil(initial*.5*1.6-1e-10)) return false;
+    selectTorment(12);if(missionTarget(ex)!==Math.ceil(initial*.5-1e-10)) return false;
     for(let i=0;i<10;i++){setMissionScale(75);setMissionScale(50)}
     setMissionScale(100);selectTorment(0);
     if(missionTarget(ex)!==initial || S.done[ex.id]!==3 || setMissionScale(0)) return false;
@@ -1530,17 +1531,106 @@ test('bosses have distinct resistance conditions and cycle to stronger new encou
   })()`),true);
 });
 
-test('new mission targets use their original unrounded base when lowering torment', () => {
+test('new mission targets use their unrounded base regardless of torment', () => {
   const g=game();
   assert.equal(g.run(`(() => {
     S=fresh();S.level=120;selectTorment(12);
     const ex=byId(S.active[2]);
     delete S.targets[ex.id];delete S.missionTargetReferences[ex.id];
     const base=target(ex,S.level)*DIFFICULTIES[missionDifficulty(ex)].target;
-    if(missionTarget(ex)!==Math.ceil(base*1.6)) return false;
+    if(missionTarget(ex)!==Math.ceil(base)) return false;
     selectTorment(0);
     return missionTarget(ex)===Math.ceil(base);
   })()`),true);
+});
+
+test('legacy mission targets migrate once with references, estimates and preserved progress', () => {
+  const first=game();
+  first.run(`(() => {
+    S=fresh();S.level=120;S.torment=12;S.missionScale=75;
+    const [a,b,c]=S.active;
+    S.targets[a]=48;S.missionTorments[a]=12;
+    S.missionTargetReferences[a]={target:40.2,torment:0,scale:100};S.done[a]=8;
+    S.targets[b]=32;S.missionTorments[b]=12;S.done[b]=23;
+    S.targets[c]=40;S.missionTorments[c]=4;
+    S.missionTargetReferences[c]={target:30,torment:4,scale:100};
+    delete S.independentMissionTargets;save();
+  })()`);
+  const restored=game(first.saved());
+  assert.equal(restored.run(`(() => {
+    const [a,b,c]=S.active;
+    if(S.targets[a]!==31||S.targets[b]!==23||S.targets[c]!==19||
+       S.done[a]!==8||S.done[b]!==23||S.missionTorments[a]!==12) return false;
+    setMissionScale(100);
+    if(S.targets[a]!==41||S.targets[b]!==27||S.targets[c]!==25) return false;
+    setMissionScale(50);if(S.targets[b]!==23) return false;
+    const missions=S.totalMissions;completeMission(byId(b));
+    if(S.totalMissions!==missions+1||S.active.includes(b)) return false;
+    save();return true;
+  })()`),true);
+  const saved=restored.saved(),again=game(saved);
+  again.run('save()');
+  assert.deepEqual(again.saved().targets,saved.targets);
+  assert.equal(again.saved().totalMissions,saved.totalMissions);
+});
+
+test('streak survives long inactivity and increases only once per active day', () => {
+  const g=game();
+  assert.equal(g.run(`(() => {
+    S=fresh();S.streak=7;S.day='2020-01-01';S.lastActive='2020-01-01';
+    S.battleUpdated=Date.now();S.monsterHp=1e9;
+    rollDay();if(S.streak!==7) return false;
+    completeMission(byId(S.active[0]));
+    if(S.streak!==8||S.lastActive!==today()) return false;
+    completeMission(byId(S.active[0]));
+    save();return S.streak===8;
+  })()`),true);
+  assert.equal(game(g.saved()).run('S.streak'),8);
+});
+
+test('tower guardians apply conditional resistance and report effective critical damage', () => {
+  const g=game();
+  assert.equal(g.run(`(() => {
+    const dawn=towerGuardian(25,1),dusk=towerGuardian(50,1);
+    if(towerGuardian(25,0)||towerGuardian(24,1)||
+      bossResistance(dawn,51,100,0)!==.15||bossResistance(dawn,50,100,0)!==0||
+      bossResistance(dusk,51,100,0)!==0||bossResistance(dusk,50,100,0)!==.2||
+      bossResistance(towerGuardian(75,1),20,100,0)!==.12||
+      bossResistance(towerGuardian(100,1),20,100,0)!==.25) return false;
+    ACHIEVEMENTS.length=0;S=fresh();S.tower.round=1;S.tower.floor=100;S.tower.hp=towerMaxHp(100);
+    S.tower.torment=0;S.tower.keys=2;S.skills.precision=5;Math.random=()=>0;
+    let reported=0;if(!attackTower('2026-01-01',d=>reported=d)||reported!==27) return false;
+    S.skillStyle='hunter';reported=0;
+    return attackTower('2026-01-02',d=>reported=d)&&Math.abs(reported-35.7)<1e-8;
+  })()`),true);
+});
+
+test('endgame milestones award exclusive copies once, with valid saves and ordinary loot unaffected', () => {
+  const g=game();
+  assert.equal(g.run(`(() => {
+    S=fresh();S.level=120;S.achievements=ACHIEVEMENTS.map(a=>a.id);
+    S.tower.round=1;S.tower.floor=25;S.tower.hp=1;S.tower.torment=0;S.tower.keys=1;
+    if(!attackTower('2026-01-01')||!S.owned.includes('tower_relic')||S.tower.floor!==26) return false;
+    S.journeyRound=1;S.weeklyRewards=52;S.journeyStartDays=0;S.activeDays=52;
+    const materials=S.materials;claimJourneyRewards(1);
+    const ordinary=Array.from({length:13},(_,i)=>materialReward((3+Math.min(i+1,20))*1.25*TORMENTS[1].reward)).reduce((a,b)=>a+b,0);
+    if(S.weeklyRewards!==65||S.materials-materials!==ordinary+materialReward(38*1.25*TORMENTS[1].reward)||
+       !S.owned.includes('journey_relic')) return false;
+    claimJourneyRewards(1);if(S.owned.filter(id=>itemTypeId(id)==='journey_relic').length!==1) return false;
+    addItem('tower_relic');if(!autoEquipItem('tower_relic')||!dismantle('tower_relic#1')) return false;
+    if(ITEMS.some(item=>item.id==='tower_relic'||item.id==='journey_relic')||
+       !validateBackup({format:'fitquest-save',version:1,state:S})) return false;
+    ensureShopStock();if(S.shopStock.offers.some(id=>id==='tower_relic'||id==='journey_relic')) return false;
+    S.materials+=8000;
+    for(let i=0;i<20;i++) if(craftItem('sword',3).id.startsWith('tower_relic')) return false;
+    for(let i=0;i<100;i++) if(samplePackItem(PACKS[3]).id.startsWith('tower_relic')) return false;
+    save();return true;
+  })()`),true);
+  const saved=g.saved(),restored=game(saved);
+  assert.equal(restored.run(`S.eq.sword==='tower_relic'&&S.owned.includes('journey_relic')&&
+    validateBackup({format:'fitquest-save',version:1,state:S})`),true);
+  restored.run('claimJourneyRewards(1);save()');
+  assert.deepEqual(restored.saved().owned,saved.owned);
 });
 
 test('a newly assigned mission and its torment are saved immediately', () => {

@@ -667,6 +667,7 @@
 <div class="card">
   <h2>📜 Tablón de encargos <small id="cnt"></small></h2>
   <div id="missions" class="quest-board"></div>
+  <p id="adventure-next"></p>
   <p id="mission-status" class="mission-status" role="status" aria-live="polite"></p>
 </div>
 <div class="card" id="journey">
@@ -721,6 +722,7 @@
     <h2>🌳 Árbol de habilidades</h2>
     <p>Un punto por nivel; los niveles múltiplos de 10 otorgan dos en total. Para desbloquear un nodo nuevo necesitas 5 rangos en el anterior.</p>
     <p id="skill-points"></p>
+    <p id="skills-next"></p>
     <div class="skill-controls" aria-label="Controles del árbol de habilidades">
       <button id="reset-skills" type="button">↺ Redistribuir puntos</button>
       <button id="neutral-style" type="button">⚖️ Estilo neutral</button>
@@ -736,6 +738,7 @@
       <p>Se desbloquea al nivel 50. Obtienes un punto por nivel desde el 50, incluso si ya lo superaste.</p>
       <p>Necesitas 3 rangos en el nodo anterior para desbloquear el siguiente. Con 20 puntos invertidos eliges una subclase; redistribuye para cambiarla.</p>
       <p id="passive-points"></p>
+      <p id="passives-next"></p>
     </div>
     <div class="skill-controls"><button id="reset-passives" type="button">↺ Redistribuir pasivas</button></div>
     <h3>👑 Subclase ancestral</h3>
@@ -785,6 +788,7 @@
 <div class="card">
   <h2>🎁 Sobres de botín</h2>
   <p id="pack-guarantee" role="status"></p>
+  <p id="packs-next"></p>
   <div id="pack-list" class="pack-list"></div>
   <div id="pack-stage" class="pack-stage loot-tier" data-tier="0" aria-hidden="true"><div class="pack-reel" id="pack-reel"><div class="pack-reel-card loot-tier" data-tier="3"><b>🎁</b><small>Abre un sobre</small></div></div></div>
   <p id="pack-result" class="pack-result" role="status" aria-live="polite"></p>
@@ -852,6 +856,7 @@
     <div class="torment-stat"><small>⚔️ Objetivo de misión</small><strong id="torment-target"></strong></div>
   </div>
   <div class="torment-picker">
+    <p id="torment-next"></p>
     <h3>Elegir tormento <small>Normal y 12 rangos · desbloqueos por nivel</small></h3>
     <div class="torment-options" id="torment-options" aria-label="Niveles de tormento"></div>
   </div>
@@ -1094,7 +1099,11 @@ for(const [g,d] of Object.entries(GROUPS)) for(let t=0;t<TIER_NAMES.length;t++){
     stat:d.stat,tier:t,pct:Math.round(TIER_PCT[t]*d.w),cost:Math.round(TIER_COST[t]*d.w),lvl:TIER_LVL[t]
   }));
 }
-const ITEM=Object.fromEntries(ITEMS.map(i=>[i.id,i]));
+const EXCLUSIVE_ITEMS=[
+  {id:'tower_relic',g:'sword',name:'Espada del guardián',stat:'dmg',tier:3,pct:Math.round(TIER_PCT[3]*GROUPS.sword.w),lvl:15},
+  {id:'journey_relic',g:'shield',name:'Escudo del caminante',stat:'xp',tier:3,pct:TIER_PCT[3],lvl:15}
+];
+const ITEM=Object.fromEntries([...ITEMS,...EXCLUSIVE_ITEMS].map(i=>[i.id,i]));
 const itemTypeId=id=>typeof id==='string'?id.split('#')[0]:'';
 const itemById=id=>{
   const item=ITEM[itemTypeId(id)];
@@ -1437,8 +1446,6 @@ function selectTorment(index,now=Date.now()){
   for(const id of S.active) missionTarget(byId(id));
   settleBattle(now);
   for(const id of S.active){
-    const reference=S.missionTargetReferences[id] ??= {target:S.targets[id],torment:S.missionTorments[id],scale:S.missionScale};
-    S.targets[id]=Math.max(1,Math.ceil(reference.target*S.missionScale/(reference.scale??100)*(1+0.05*index)/(1+0.05*reference.torment)-1e-10));
     S.missionTorments[id]=index;
   }
   const encounter=S.encounter;
@@ -1474,7 +1481,7 @@ const fresh = () => ({level:1,xp:0,coins:0,owned:[],eq:{},streak:0,kills:0,
   targets:{},missionTorments:{},missionTargetReferences:{},exerciseEnabled:EXERCISES.map(e=>e.id),missionScale:100,skills:{},skillStyle:null,passives:{},subclass:null,arenaBalanceVersion:1,levelBalanceVersion:1,totalMissions:0,packsOpened:0,packMisses:0,achievements:[],missionKills:0,autoKills:0,autoMonsterHp:monsterHp(0),autoTorment:0,battleUpdated:Date.now(),
   challengeClears:0,materials:0,activeDays:0,lastActivityDay:null,
   weeklyRewards:0,journeyRound:0,journeyStartDays:0,balanceVersion:1,unlimitedMissionsVersion:1,upgrades:{},attributes:{dmg:0,xp:0,coin:0},encounter:nextEncounter(0),
-  missionDifficultyVersion:1,legacyMissions:{},shopStock:null,forgeRanks:{dmg:0,xp:0,coin:0},forgeLastWeek:null,forgeWeek:null,forgeWeekPurchases:0,
+  missionDifficultyVersion:1,independentMissionTargets:1,legacyMissions:{},shopStock:null,forgeRanks:{dmg:0,xp:0,coin:0},forgeLastWeek:null,forgeWeek:null,forgeWeekPurchases:0,
   battleUpgrades:{damage:0,speed:0,loot:0},
   torment:0,
   tower:{floor:1,round:0,hp:towerMaxHp(1,0),keys:0,lastAttack:null,torment:null},
@@ -1579,8 +1586,25 @@ if(!S.missionDifficultyVersion){
 }
 S.legacyMissions ??= {};
 while(S.active.length<SLOTS) S.active.push(randomMission([...S.active,...migratedCompletedMissions]));
+if(!S.independentMissionTargets){
+  for(const id of S.active){
+    if(!S.targets[id]) continue;
+    const ref=S.missionTargetReferences[id];
+    const base=ref?ref.target*S.missionScale/(ref.scale??100)/(1+.05*ref.torment):
+      S.targets[id]/(1+.05*(S.missionTorments[id]??0));
+    S.targets[id]=Math.max(S.done[id]||0,1,Math.ceil(base-1e-10));
+    S.missionTargetReferences[id]={target:base,torment:0,scale:S.missionScale};
+  }
+  S.independentMissionTargets=1;
+}
 
 function log(t){S.log.unshift(t);S.log=S.log.slice(0,40)}
+function grantEndgameReward(id,round,milestone,torment){
+  const reward=id==='journey_relic'?TORMENTS[torment].reward:combatReward(torment);
+  const fragments=materialReward((25+milestone)*towerRewardMultiplier(round)*reward);
+  S.materials+=fragments;addItem(id);
+  log(`🎁 Hito de vuelta ${round+1}: ${ITEM[id].name} y +${fragments} fragmentos`);
+}
 function ensureShopStock(day=today()){
   const sameDay=S.shopStock && S.shopStock.day===day;
   if(!sameDay) S.shopStock={day,level:S.level,torment:S.torment,offers:[],sold:[]};
@@ -1644,6 +1668,7 @@ function claimJourneyRewards(torment=S.torment){
     const coins=Math.round((35+3*chapter)*multiplier*TORMENTS[torment].reward),materials=materialReward((3+Math.min(chapter,20))*multiplier*TORMENTS[torment].reward);
     S.coins+=coins;S.materials+=materials;
     log(`🌟 Travesía ${chapter}/${JOURNEY_CHAPTERS} · vuelta ${round+1}: +${coins} monedas y +${materials} fragmentos`);
+    if(round>0&&chapter%13===0) grantEndgameReward('journey_relic',round,chapter,torment);
   }
 }
 function startJourneyRound(){
@@ -1683,7 +1708,7 @@ function missionTarget(ex){
   if(!S.targets[ex.id]){
     const base=Math.max(1,target(ex,S.level)*DIFFICULTIES[missionDifficulty(ex)].target*S.missionScale/100);
     S.missionTargetReferences[ex.id]={target:base,torment:0,scale:S.missionScale};
-    S.targets[ex.id]=Math.ceil(base*(1+0.05*S.missionTorments[ex.id]));
+    S.targets[ex.id]=Math.ceil(base);
   }
   return S.targets[ex.id];
 }
@@ -1692,16 +1717,13 @@ function setMissionScale(scale){
   for(const id of S.active){
     missionTarget(byId(id));
     const ref=S.missionTargetReferences[id] ??= {target:S.targets[id],torment:S.missionTorments[id],scale:S.missionScale};
-    S.targets[id]=Math.max(1,Math.ceil(ref.target*scale/(ref.scale??100)*(1+0.05*S.missionTorments[id])/(1+0.05*ref.torment)-1e-10));
+    S.targets[id]=Math.max(S.done[id]||0,1,Math.ceil(ref.target*scale/(ref.scale??100)-1e-10));
   }
   S.missionScale=scale;
   return true;
 }
 function rollDay(){
   const t=today(); if(S.day===t) return false;
-  // la racha sobrevive si ayer hubo actividad o descanso
-  const last=Math.max(S.lastActive?+new Date(S.lastActive):0,S.lastRest?+new Date(S.lastRest):0);
-  if(!last || (new Date(t)-last)/864e5>1) S.streak=0;
   S.day=t;S.bonus={};S.completedToday=0;
   return true;
 }
@@ -1785,16 +1807,31 @@ function attackTower(day=today(),onCritical){
   tower.rewardTorment=Math.min(tower.rewardTorment??tower.torment,tower.torment);
   const torment=tower.rewardTorment,multiplier=combatReward(torment)*towerRewardMultiplier(tower.round||0);
   const before=tower.hp,max=Math.round(towerMaxHp(tower.floor)*TORMENTS[tower.torment].hp);
-  tower.keys--;tower.lastAttack=day;tower.hp-=criticalDamage(24*bonus('dmg'),onCritical);
+  const guardian=towerGuardian(tower.floor,tower.round);
+  let wasCritical=false;
+  const damage=criticalDamage(24*bonus('dmg'),()=>{wasCritical=true});
+  const dealt=guardian?damage*(1-effectiveBossResistance(guardian,before,max,0,wasCritical)):damage;
+  tower.keys--;tower.lastAttack=day;tower.hp-=dealt;
+  if(wasCritical&&onCritical) onCritical(dealt);
   if(tower.hp<=0){
     const floor=tower.floor,coins=Math.round((20+floor*5)*bonus('coin')*multiplier);
     const xp=Math.round((25+floor*4)*bonus('xp')*multiplier),materials=materialReward((2+Math.floor(floor/10))*multiplier);
     S.coins+=coins;gain(xp);S.materials+=materials;S.kills++;S.challengeClears++;
     tower.floor++;tower.hp=tower.floor<=TOWER_FLOORS?towerMaxHp(tower.floor):0;tower.torment=null;tower.rewardTorment=null;
     log(`🗼 Planta ${floor} superada: +${coins} monedas, +${xp} XP y +${materials} fragmentos`);
+    if(guardian) grantEndgameReward('tower_relic',tower.round,floor,torment);
     unlockAchievements(torment);
   }else grantChallengeProgress('Torre',before-tower.hp,max,20+tower.floor*5,25+tower.floor*4,2+Math.floor(tower.floor/10),torment,towerRewardMultiplier(tower.round||0));
   return true;
+}
+function towerGuardian(floor,round){
+  if(!round||floor%25!==0) return null;
+  return [
+    {name:'Guardián del alba',ability:'Escudo del alba',resistance:.15,rule:'opening'},
+    {name:'Centinela del ocaso',ability:'Furia del ocaso',resistance:.2,rule:'wounded'},
+    {name:'Vigía del vacío',ability:'Barrera del vacío',resistance:.12},
+    {name:'Señor de la torre',ability:'Armadura ancestral',resistance:.25}
+  ][floor/25-1];
 }
 function startTowerRound(){
   if(S.tower.floor<=TOWER_FLOORS) return false;
@@ -2224,6 +2261,7 @@ function journeyMarkup(){
   return `<div class="week-card"><div class="journey-summary"><div class="chapter">🌌 Crónicas del héroe · ${completed}/${JOURNEY_CHAPTERS} · vuelta ${S.journeyRound+1}</div>
     <p>${completed===JOURNEY_CHAPTERS?'Puedes comenzar otra vuelta cuando quieras.':`${progress}/${required} días de actividad para avanzar`}</p>
     ${completed===JOURNEY_CHAPTERS?'<button id="journey-next-round" type="button">🌌 Comenzar otra vuelta</button>':''}
+    ${S.journeyRound>0&&completed<JOURNEY_CHAPTERS?`<p>🎁 Próximo hito: capítulo ${Math.ceil(next/13)*13} · ${ITEM.journey_relic.name} y fragmentos.</p>`:''}
     <p class="reward">${reward}</p><small>Los días de actividad no tienen que ser consecutivos; descansar no borra el progreso.</small></div>
     <div class="chapter-progress"><h3>${completed===JOURNEY_CHAPTERS?'🏆 Leyenda de la travesía':`✨ Camino al capítulo ${next}`}</h3>
     <div class="bar mis"><div style="width:${percent}%"></div></div>
@@ -2296,6 +2334,13 @@ function render(liveOnly=false){
   $('offline-limit').textContent=`Progreso sin conexión: máximo ${offlineLimit()/3600000} horas.`;
   renderPacks();
   if(!$('statistics').hidden) renderStatistics();
+  const nextPack=PACKS.find(pack=>pack.level>S.level);
+  const nextTorment=TORMENTS.find(torment=>torment.level>S.level);
+  $('adventure-next').textContent=`✨ Próximo nivel: ${statNumber(Math.max(0,xpNeeded(S.level)-S.xp))} XP · 🗺️ Travesía: ${S.weeklyRewards-S.journeyRound*JOURNEY_CHAPTERS}/${JOURNEY_CHAPTERS} capítulos`;
+  $('skills-next').textContent=`Siguiente punto: nivel ${S.level+1} · próximo doble punto: nivel ${(Math.floor(S.level/10)+1)*10}`;
+  $('passives-next').textContent=S.level<50?'Próxima pasiva: nivel 50':`Siguiente punto ancestral: nivel ${S.level+1}`;
+  $('packs-next').textContent=nextPack?`Próximo sobre: ${nextPack.name} al nivel ${nextPack.level}`:'Todos los sobres desbloqueados';
+  $('torment-next').textContent=nextTorment?`Próximo tormento: ${nextTorment.name} al nivel ${nextTorment.level}`:'Todos los tormentos desbloqueados';
   if(liveOnly && !dayChanged) return;
   $('missions').innerHTML='';
   for(const ex of S.active.map(byId)){
@@ -2419,7 +2464,7 @@ function renderTorment(){
   $('torment-current').textContent=current.name;
   $('torment-hp').textContent=`×${current.hp}`;
   $('torment-reward').textContent=`×${current.reward}`;
-  $('torment-target').textContent=`+${S.torment*5}%`;
+  $('torment-target').textContent='Sin aumento';
   box.replaceChildren();
   TORMENTS.forEach((torment,index)=>{
     const option=document.createElement('button');
@@ -2427,7 +2472,7 @@ function renderTorment(){
     option.type='button';option.className='torment-option';option.dataset.torment=index;
     option.disabled=locked;option.setAttribute('aria-pressed',String(selected));
     option.innerHTML=`<strong>${index?'🔥':'✦'} ${torment.name}</strong>
-      <small>💀 Vida ×${torment.hp} · 💰 Combate ×${Number(combatReward(index).toFixed(2))}<br>📜 Misiones ×${torment.reward} · objetivo +${index*5}%</small>
+      <small>💀 Vida ×${torment.hp} · 💰 Combate ×${Number(combatReward(index).toFixed(2))}<br>📜 Misiones ×${torment.reward} · ejercicio sin aumento</small>
       <span class="torment-option-state">${locked?`🔒 Nivel ${torment.level}`:selected?'✦ Activo':'Disponible'}</span>`;
     box.appendChild(option);
   });
@@ -2711,13 +2756,16 @@ function renderTower(){
   }
   const floor=tower.floor,torment=tower.torment??S.torment,difficulty=TORMENTS[torment],lootIndex=Math.min(tower.rewardTorment??torment,torment),loot=TORMENTS[lootIndex],multiplier=combatReward(lootIndex)*towerRewardMultiplier(tower.round||0);
   const max=Math.round(towerMaxHp(floor)*difficulty.hp),hp=tower.torment===null?max:tower.hp,species=(floor-1)%MISSION_MONSTERS.length;
-  const kind=floor%10===0?'boss':floor%5===0?'elite':'normal';
-  const damage=Math.round(24*bonus('dmg')*100)/100;
+  const guardian=towerGuardian(floor,tower.round);
+  const kind=guardian||floor%10===0?'boss':floor%5===0?'elite':'normal';
+  const damage=Math.round(24*bonus('dmg')*(1-(guardian?effectiveBossResistance(guardian,hp,max,0):0))*100)/100;
   box.innerHTML=`<div class="expedition-challenge">
     ${challengeStage(species,kind,`Planta ${floor} / ${TOWER_FLOORS}`)}
     <div class="challenge-details">
       <span class="challenge-pill">🗼 Planta ${floor} / ${TOWER_FLOORS} · vuelta ${tower.round+1} · 🔷 ${tower.keys} llaves</span>
-      <h3>${MISSION_MONSTERS[species].name}</h3>
+      <h3>${guardian?guardian.name:MISSION_MONSTERS[species].name}</h3>
+      ${guardian?`<p><small>✨ ${bossAbilityText(guardian)} · recompensa especial: ${ITEM.tower_relic.name} y fragmentos.</small></p>`:''}
+      ${tower.round>0&&!guardian?`<p><small>Próximo guardián: planta ${Math.ceil(floor/25)*25} · recompensa exclusiva y fragmentos.</small></p>`:''}
       <span class="challenge-pill">🔥 ${difficulty.name}</span>
       <div class="bar challenge-progress" aria-label="Progreso de la torre"><div style="width:${(floor-1)/TOWER_FLOORS*100}%"></div></div>
       <p>❤️ ${Math.max(0,Math.ceil(hp))} / ${max} · ⚔️ ${damage} daño</p>
@@ -2867,7 +2915,7 @@ window.addEventListener('storage',event=>{
   catch(error){alert('No se puede leer la partida actualizada en otra pestaña.');throw error}
   if(!S.skills || !S.passives || !S.exerciseEnabled || S.missionScale==null ||
      S.packMisses==null || S.journeyRound==null || S.journeyStartDays==null ||
-     S.tower?.round==null || S.weeklyBoss?.weekAttacks==null){location.reload();return}
+     !S.independentMissionTargets || S.tower?.round==null || S.weeklyBoss?.weekAttacks==null){location.reload();return}
   migrateRemovedDungeons();
   $('torment-status').textContent='';
   render();

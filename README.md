@@ -28,13 +28,13 @@ confirmación. Se aceptan las copias exportadas por esta versión.
   médica: ejercicios distintos pueden tener dificultades reales diferentes.
   Las misiones antiguas mantienen su categoría hasta completarse.
   Se pueden completar sin límite al día. Hay 20 tipos de ejercicios y el
-  objetivo se fija al comenzar cada misión y se ajusta al cambiar el tormento;
+  objetivo se fija al comenzar cada misión y no cambia al cambiar el tormento;
   descansar y adaptar el ejercicio siempre es más importante
   que una recompensa. Los objetivos no son recomendaciones médicas. Si una
   partida anterior tenía progreso parcial, termina la parte restante antes
   de confirmar; únicamente se recompensará la parte que faltaba.
-  El tormento añade un 5 % al objetivo por rango y multiplica su XP y monedas;
-  al cambiarlo se actualizan las misiones activas conservando su progreso.
+  El tormento multiplica su XP y monedas sin aumentar el objetivo del ejercicio.
+  Los objetivos antiguos se ajustan una vez, conservando el progreso registrado.
   Adapta siempre el ejercicio a tu capacidad, independientemente del objetivo.
   El tablón muestra una estimación del daño, XP y oro (G) de cada encargo.
   El daño incluye los bonos de equipo, atributos, logros y racha; la
@@ -242,7 +242,11 @@ confirmación. Se aceptan las copias exportadas por esta versión.
   La planta 100 completa la torre. Se puede iniciar otra vuelta opcional tantas
   veces como se desee: cada vuelta adicional aumenta un 50 % la vida base y
   un 25 % las recompensas, conservando las llaves, el historial y el límite
-  de un ataque por día. El ataque causa 24 de daño base, con los bonos generales
+  de un ataque por día. Desde la segunda vuelta, las plantas 25, 50, 75 y 100
+  tienen guardianes con resistencias distintas; cada victoria da fragmentos y
+  una Espada del guardián exclusiva, además del botín habitual. Las copias
+  tienen los mismos atributos que una espada legendaria normal.
+  El ataque causa 24 de daño base, con los bonos generales
   de daño.
 - **Bosses semanales:** hay doce enemigos en orden. Se permiten hasta tres
   ataques por semana natural (lunes a domingo, hora local), con un
@@ -267,8 +271,8 @@ confirmación. Se aceptan las copias exportadas por esta versión.
   1,4/1,8/2,5/3,5/4,5/5,5/7/9/11,5/14,5/18/22,5. El botín de enemigos,
   torre y bosses utiliza otro multiplicador: `vida × (1 + 0,02 × rango)`,
   para mejorar la recompensa por vida derrotada al subir el tormento.
-  Cada rango también añade un 5 % al objetivo de las misiones. Los
-  sobres y la selección diaria de la tienda favorecen más las rarezas altas:
+  El objetivo del ejercicio no aumenta con el tormento. Los sobres y la
+  selección diaria de la tienda favorecen más las rarezas altas:
   el peso de cada rareza se multiplica por `(1 + 0,02 × rango) ^ índice`,
   excluyendo las rarezas bloqueadas por nivel y normalizando después.
   Las monedas y fragmentos de logros y capítulos también aumentan; las llaves,
@@ -300,6 +304,12 @@ confirmación. Se aceptan las copias exportadas por esta versión.
   actividad; cada vuelta adicional requiere un día de actividad más por
   capítulo y aumenta las recompensas base un 25 %.
   Los días anteriores al comienzo de una vuelta no se vuelven a recompensar.
+  Desde la segunda vuelta, cada 13 capítulos se entregan fragmentos y un
+  Escudo del caminante exclusivo, con los atributos de un escudo legendario
+  normal. No se entregan recompensas de hitos retroactivas.
+
+La racha se conserva aunque pasen días sin jugar y aumenta una vez por cada
+día distinto de actividad. No se recuperan rachas perdidas anteriormente.
 
 La XP necesaria para el siguiente nivel es `100 + 20 × n + 6 × n² + n³`,
 donde `n` es el nivel actual menos uno. Al actualizar, la XP dentro del nivel y
