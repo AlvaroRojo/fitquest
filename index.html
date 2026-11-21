@@ -478,6 +478,76 @@
     #torment .torment-note{margin:4px 0 0;font-size:.75rem}
     #torment-status:empty{display:none}
   }
+  @media(min-width:1500px) and (min-height:850px){
+    html{font-size:17px}
+    body{padding:12px}
+    body:has(#adventure:not([hidden])) .status-card,body:has(#character:not([hidden])) .status-card,body:has(#store:not([hidden])) .status-card,body:has(#torment:not([hidden])) .status-card{padding:8px 16px;margin-bottom:8px}
+    body:has(#adventure:not([hidden])) .navigation,body:has(#character:not([hidden])) .navigation,body:has(#store:not([hidden])) .navigation,body:has(#torment:not([hidden])) .navigation{padding:7px;margin-bottom:8px}
+    body:has(#adventure:not([hidden])) .navigation button,body:has(#character:not([hidden])) .navigation button,body:has(#store:not([hidden])) .navigation button,body:has(#torment:not([hidden])) .navigation button{min-height:44px;padding:8px;font-size:.95rem}
+    #adventure>.card,#character>.card{padding:14px}
+    #adventure .card h2,#character .card h2{margin-bottom:9px;font-size:1.2rem}
+    #adventure .encounter-stage{min-height:260px}
+    #adventure .encounter-stage .full-creature{max-height:270px;width:clamp(200px,17vw,270px)}
+    #adventure .encounter-card{gap:8px}
+    #adventure .encounter-health,#adventure .encounter-info{padding:9px 11px}
+    #adventure .quest-board{gap:7px}
+    #adventure .quest-board .mission{padding:10px;gap:5px;font-size:1rem}
+    #adventure .mission-icon{width:38px;height:38px;font-size:1.2rem}
+    #adventure .quest-rewards span{padding:4px 5px;font-size:.85rem}
+    #adventure .quest-board .complete{min-height:40px;padding:7px}
+    #weekly-progress .week-card{padding:9px;gap:9px}
+    #weekly-progress .milestone{padding:5px 8px;font-size:.9rem}
+    #character .hero-power{padding:8px 11px}
+    #character .hero-power strong{font-size:1.1rem}
+    #character .hero-power small{font-size:.9rem}
+    #character .hero-layout .slot,#character .jewelry-slots .slot{min-height:52px;padding:5px;font-size:.9rem}
+    #character .hero-stage{min-height:200px}
+    #character .hero-art{width:min(100%,150px);max-height:205px}
+    #character .jewelry-heading{font-size:1rem}
+    #character .character-stat{padding:7px;font-size:.9rem}
+    #character .training-card>p{font-size:.9rem}
+    #character .attribute{padding:8px 10px;font-size:.95rem}
+    #character .attribute small{font-size:.88rem}
+    #character .attribute button{padding:7px}
+    #character .global-stats h3{font-size:1rem}
+    #character .global-stats th,#character .global-stats td{padding:4px 8px;font-size:.9rem}
+    #store .armory-card{padding:16px}
+    #store .armory-section{margin-top:10px;padding:12px}
+    #shop,#store .forge-options{gap:8px}
+    #shop .shop-offer,.forge-option{gap:6px;padding:10px;font-size:1.05rem}
+    #shop .shop-offer small,#store .forge-option small{font-size:.9rem}
+    #shop .shop-offer button,.forge-option button{padding:7px}
+    #torment .torment-sanctuary{padding:16px}
+    #torment .torment-hero{grid-template-columns:minmax(0,1fr) 100px}
+    #torment .torment-sanctuary h2{font-size:1.6rem}
+    #torment .torment-intro{font-size:.95rem}
+    #torment .torment-emblem{width:85px;height:85px}
+    #torment .torment-emblem span{font-size:2.7rem}
+    #torment .torment-current,#torment .torment-stat{padding:8px 11px}
+    #torment .torment-stat small{font-size:.9rem}
+    #torment .torment-picker{margin-top:10px}
+    #torment .torment-picker h3{padding:8px 11px}
+    #torment .torment-options{gap:7px;padding:0 10px 10px}
+    #torment .torment-option{gap:3px;padding:9px;font-size:.95rem}
+    #torment .torment-option strong{font-size:1rem}
+    #torment .torment-option small{font-size:.85rem}
+    #torment .torment-option .torment-option-state{font-size:.85rem}
+    #torment .torment-note{margin-top:7px;font-size:.85rem}
+  }
+  @media(min-width:1500px) and (min-height:850px) and (max-height:949px){
+    html{font-size:16px}
+    #adventure .quest-board .mission{padding:8px;gap:4px}
+    #adventure .quest-board .complete{min-height:36px;padding:5px}
+    #torment .torment-sanctuary{padding:12px}
+    #torment .torment-hero{grid-template-columns:minmax(0,1fr) 75px}
+    #torment .torment-emblem{width:65px;height:65px}
+    #torment .torment-current,#torment .torment-stat{padding:5px 8px}
+    #torment .torment-picker{margin-top:6px}
+    #torment .torment-picker h3{padding:5px 8px}
+    #torment .torment-options{gap:5px;padding:0 7px 7px}
+    #torment .torment-option{gap:1px;padding:6px}
+    #torment .torment-note{margin-top:4px}
+  }
   @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none !important;transition:none !important}}
   @media(max-width:700px){.navigation{grid-template-columns:repeat(2,minmax(0,1fr))}}
   @media(min-width:360px) and (max-width:700px){

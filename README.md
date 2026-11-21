@@ -99,7 +99,8 @@ eliminarla.
   dos pulsaciones: dan 2, 5, 12, 25, 40, 65 o 100 fragmentos según su rareza. El inventario
   se puede filtrar por tipo y estado y muestra hasta 12 objetos por página.
   En ordenador, personaje y entrenamiento se muestran arriba y el inventario
-  ocupa el ancho completo debajo.
+  ocupa el ancho completo debajo. En pantallas amplias, como 1680 × 1050,
+  los textos y controles aumentan de tamaño.
   Puedes usar fragmentos para mejorar un objeto sin un máximo de nivel; cada mejora añade un 1 %
   a su estadística. El coste es 5 + 3 por nivel de mejora actual + 2 por
   índice de rareza (común 0 a divino 6). Desmantelar elimina el objeto y
