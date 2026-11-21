@@ -32,6 +32,7 @@ test('navigation starts in adventure and selects one accessible tab', () => {
   assert.match(html, /id="tab-adventure"[^>]*aria-selected="true"/);
   assert.match(html, /<section id="adventure" role="tabpanel" aria-labelledby="tab-adventure">/);
   const panels = Object.fromEntries([...sections,'skills','passives','prestige'].map(id => [id, { hidden: !['adventure','skills'].includes(id) }]));
+  panels['prestige-scroll']={dataset:{},scrollWidth:900,clientWidth:300,scrollHeight:900,clientHeight:300};
   const element = dataset => ({
     dataset, attributes: {}, handlers: {},
     addEventListener(type, handler) { this.handlers[type] = handler; },
@@ -51,6 +52,7 @@ test('navigation starts in adventure and selects one accessible tab', () => {
     },
     $: id => panels[id],
     render: () => {},
+    renderPrestige: () => {},
   });
   vm.runInContext(
     script.slice(script.indexOf('const navigationButtons='), script.indexOf('function animateHit(')) +
@@ -1309,6 +1311,77 @@ test('switching subclass settles pending combat with the previous bonuses and pe
     save();return true;
   })()`),true);
   assert.equal(game(g.saved()).run(`S.subclass==='oracle'&&passiveSpent()===20`),true);
+});
+
+test('prestige resets level and equipment while preserving progression and difficulty damage', () => {
+  const g=game();
+  assert.equal(g.run(`(() => {
+    ACHIEVEMENTS.length=0;S=fresh();S.level=49;S.battleUpdated=1000;
+    if(performPrestige(1000)) return false;
+    S.level=55;S.streak=30;S.coins=500;S.materials=200;S.achievements=['mission1'];
+    S.attributes.dmg=7;S.forgeRanks.dmg=2;S.battleUpgrades.damage=3;S.activeDays=30;
+    S.tower.floor=12;S.tower.keys=4;S.weeklyBoss.index=2;S.weeklyBoss.hp=10;
+    S.skills.might=4;S.passives.war1=5;S.skillStyle='berserker';
+    addItem('sword_0_0');addItem('shield_0_0');autoEquipItem('sword_0_0');S.upgrades.sword_0_0=3;
+    S.shopStock={day:today(),level:55,torment:0,offers:['sword_0_0'],sold:['sword_0_0']};
+    selectTorment(5,1000);S.done[S.active[0]]=5;
+    if(!performPrestige(1000)||S.level!==1||S.xp!==0||S.torment!==0||S.autoTorment!==0||
+       S.prestige.points!==5||S.prestige.count!==1||S.owned.length||Object.keys(S.eq).length||
+       Object.keys(S.upgrades).length||Object.keys(S.skills).length||Object.keys(S.passives).length||
+       S.skillStyle!==null||S.subclass!==null) return false;
+    if(S.streak!==30||S.coins!==500||S.materials!==200||S.attributes.dmg!==7||
+       S.forgeRanks.dmg!==2||S.battleUpgrades.damage!==3||S.tower.floor!==12||S.tower.keys!==4||
+       S.weeklyBoss.index!==2||S.activeDays!==30||S.done[S.active[0]]!==5||
+       S.targets[S.active[0]]<5||S.shopStock.level!==1||S.shopStock.soldSlots[0]!=='sword_0_0') return false;
+    ensureShopStock();if(S.shopStock.sold.length!==1||S.shopStock.offers[0]!=='sword_0_0') return false;
+    if(!validateBackup({format:'fitquest-save',version:1,state:S})) return false;
+    save();return true;
+  })()`),true);
+  assert.equal(game(g.saved()).run(`S.level===1&&S.streak===30&&S.prestige.points===5&&S.owned.length===0`),true);
+});
+
+test('prestige nodes require connected paths and multiply bonuses and rewards', () => {
+  const g=game();
+  assert.equal(g.run(`(() => {
+    ACHIEVEMENTS.length=0;S=fresh();S.level=50;S.battleUpdated=1000;
+    if(!performPrestige(1000)||S.prestige.points!==5||unlockPrestige('dmg-2',1000)||
+       unlockPrestige('toString',1000)||!unlockPrestige('dmg-1',1000)||
+       unlockPrestige('dmg-1',1000)||!unlockPrestige('dmg-2',1000)||!unlockPrestige('all-1',1000)) return false;
+    if(Math.abs(bonus('dmg')-1.7)>1e-8||Math.abs(bonus('xp')-1.2)>1e-8||
+       Math.abs(bonus('coin')-1.2)>1e-8||materialReward(100)!==120||prestigePointsAvailable()!==2) return false;
+    S.activeDays=3;claimJourneyRewards(0);
+    if(S.coins!==Math.round(38*1.2)||S.materials!==Math.round(4*1.2)) return false;
+    save();return true;
+  })()`),true);
+  const restored=game(g.saved());
+  assert.equal(restored.run(`prestigePointsAvailable()===2&&Math.abs(bonus('dmg')-1.7)<1e-8&&resetPrestigeTree(1000)&&prestigePointsAvailable()===5&&bonus('dmg')===1`),true);
+});
+
+test('prestige saves migrate legacy state and reject corrupt points or paths', () => {
+  const first=game();first.run(`S=fresh();delete S.prestige;save()`);
+  const restored=game(first.saved());
+  assert.equal(restored.run(`(() => {
+    if(S.prestige.count!==0||S.prestige.points!==0||!validateBackup({format:'fitquest-save',version:1,state:S})) return false;
+    S.prestige={count:1,points:5,nodes:['dmg-2']};
+    if(validateBackup({format:'fitquest-save',version:1,state:S})) return false;
+    S.prestige.nodes=['dmg-1','dmg-1'];if(validateBackup({format:'fitquest-save',version:1,state:S})) return false;
+    S.prestige.nodes=['dmg-1'];S.prestige.points=0;
+    return !validateBackup({format:'fitquest-save',version:1,state:S});
+  })()`),true);
+});
+
+test('repeated prestige accumulates points and completed branches stack multiplicatively', () => {
+  const g=game();
+  assert.equal(g.run(`(() => {
+    ACHIEVEMENTS.length=0;S=fresh();S.level=150;S.battleUpdated=1000;
+    if(!performPrestige(1000)||S.prestige.points!==15||performPrestige(1000)) return false;
+    S.level=150;if(!performPrestige(1000)||S.prestige.points!==30||S.prestige.count!==2) return false;
+    for(const node of PRESTIGE_NODES) if(!unlockPrestige(node.id,1000)) return false;
+    if(prestigePointsAvailable()!==0||Math.abs(bonus('dmg')-8)>1e-8||
+       Math.abs(bonus('xp')-8)>1e-8||Math.abs(bonus('coin')-8)>1e-8||
+       materialReward(100)!==800||heroPower()<=1) return false;
+    return validateBackup({format:'fitquest-save',version:1,state:S});
+  })()`),true);
 });
 
 test('passive backup validation rejects locked, invalid or overspent progress', () => {

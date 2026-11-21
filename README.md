@@ -94,8 +94,9 @@ confirmación. Se aceptan las copias exportadas por esta versión.
   arrastrar un objeto a un hueco concreto o pulsar un hueco equipado para
   vaciarlo. La joyería se muestra por separado. El marcador de poder suma el
   nivel del personaje, los porcentajes totales de daño, XP y monedas (equipo,
-  mejoras de objetos, atributos, forja y logros) y los rangos de mejoras de
-  arena. Es un indicador visual y no añade bonificaciones de combate. El héroe
+  mejoras de objetos, atributos, forja y logros), el efecto multiplicativo de
+  prestigio y los rangos de mejoras de arena. Es un indicador visual y no añade
+  bonificaciones de combate. El héroe
   tiene 500 evoluciones visuales: la primera comienza en 1 de poder y se
   alcanza una nueva cada 10 puntos, hasta la última en 4991. El aspecto puede
   retroceder si disminuye el poder. El inventario muestra solo los objetos
@@ -135,9 +136,25 @@ confirmación. Se aceptan las copias exportadas por esta versión.
   daño e intervalo de arena, daño base de desafíos y estilo activo. La pestaña
   **Estadísticas** organiza más de 60 datos guardados y derivados en paneles
   visuales de aventura, combate, héroe, equipo, economía, habilidades y logros.
-- **Parangón:** reúne los árboles de habilidades y pasivas ancestrales.
-  La tercera pestaña reserva espacio para prestigio, que aún no está
-  implementado ni reinicia la partida.
+- **Parangón y prestigio:** reúne los árboles de habilidades, pasivas
+  ancestrales y prestigio. Desde el nivel 50 se puede prestigiar: se obtiene
+  un punto por cada diez niveles completos alcanzados, acumulable entre
+  prestigios. Antes del reinicio se aplica la autobatalla pendiente.
+  Se reinician el nivel, XP, habilidades, pasivas, subclase, tormento y todo
+  el equipo, equipado o no, incluidas sus mejoras. Los objetivos activos se
+  ajustan al nivel 1 sin perder progreso ya registrado; se conserva el
+  porcentaje de vida de los enemigos y desafíos al pasar a Normal. Se conservan
+  la racha, recursos, logros, atributos, forja, mejoras de arena, misiones
+  completadas, travesía y progreso de desafíos. Las compras de tienda del día
+  siguen contando; sus nuevas ofertas usan el nivel 1. Es recomendable
+  exportar una copia antes de prestigiar.
+  El mapa tiene cinco ramas conectadas de seis nodos: daño, XP, monedas,
+  fragmentos y una rama universal. Cada nodo cuesta un punto y exige el nodo
+  anterior de su rama; sus mejoras se suman dentro del multiplicador de
+  prestigio y se multiplican por los demás bonos. El multiplicador de monedas
+  también afecta a recompensas de travesía y logros; el de fragmentos no
+  afecta al desmantelamiento. Redistribuir devuelve todos los puntos gratis.
+  El mapa es desplazable y cada nodo se puede seleccionar con teclado.
 - **Árbol de habilidades:** al llegar a cada nivel se obtiene un punto,
   incluidos los niveles existentes al actualizar; el nivel inicial también da
   uno. En los niveles múltiplos de diez se reciben dos puntos en total. Las
