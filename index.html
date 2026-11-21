@@ -679,6 +679,8 @@
     <h2>🌳 Árbol de habilidades</h2>
     <p>Un punto por nivel; los niveles múltiplos de 10 otorgan dos en total. Desbloquea un nodo anterior para avanzar por su rama.</p>
     <p id="skill-points"></p>
+    <button id="reset-skills" type="button">↺ Redistribuir puntos</button>
+    <button id="neutral-style" type="button">⚖️ Estilo neutral</button>
     <div id="skill-tree" class="skill-tree"></div>
     <p id="skill-status" role="status" aria-live="polite"></p>
   </div>
@@ -774,7 +776,7 @@
   <div class="torment-current"><small>Dificultad activa</small><strong id="torment-current"></strong></div>
   <div class="torment-stats" aria-label="Efectos del tormento activo">
     <div class="torment-stat"><small>💀 Vida enemiga</small><strong id="torment-hp"></strong></div>
-    <div class="torment-stat"><small>💰 Recompensas</small><strong id="torment-reward"></strong></div>
+    <div class="torment-stat"><small>💰 Misiones y logros</small><strong id="torment-reward"></strong></div>
     <div class="torment-stat"><small>⚔️ Objetivo de misión</small><strong id="torment-target"></strong></div>
   </div>
   <div class="torment-picker">
@@ -783,6 +785,7 @@
   </div>
   <p id="torment-status" role="status" aria-live="polite"></p>
   <p class="torment-note">El tormento se aplica al instante y conserva el progreso. El botín de cada enemigo usa el tormento más bajo en el que recibió daño, para que cambiar al final no aumente su recompensa.</p>
+  <p class="torment-note">El botín de combate escala con la vida del enemigo y añade un 2 % por rango; misiones, capítulos y logros mantienen el multiplicador indicado arriba.</p>
   <p class="torment-note">Los objetivos son mecánicas de juego: adapta siempre el ejercicio a tu capacidad.</p>
 </div>
 </section>
@@ -849,8 +852,10 @@ const ENCOUNTER_TYPES = {
 const KEY = 'fitquest-save';
 
 const today = () => { const d=new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; };
-const xpNeeded = l => Math.round(100+20*(l-1)+6*(l-1)*(l-1));
-const monsterHp = n => Math.round(50+12*n+2*n*n);
+const oldXpNeeded = l => Math.round(100+20*(l-1)+6*(l-1)*(l-1));
+const xpNeeded = l => Math.round(oldXpNeeded(l)+Math.pow(l-1,3));
+const oldArenaHp = n => Math.round(50+12*n+2*n*n);
+const monsterHp = n => Math.round(50+12*n+2*Math.pow(n,1.7));
 const missionMonsterHp = n => Math.round(50+4*Math.sqrt(n));
 function nextEncounter(kills,torment=0){
   if(kills===0) return {kind:'normal',species:0,maxHp:Math.round(missionMonsterHp(0)*TORMENTS[torment].hp),legacy:true,torment};
@@ -900,17 +905,21 @@ const SKILL_BRANCHES=[
     {id:'might',name:'Fuerza ancestral',stat:'dmg',amount:2},
     {id:'blade',name:'Filo imparable',stat:'dmg',amount:3},
     {id:'fury',name:'Furia del héroe',stat:'dmg',amount:4},
-    {id:'legend',name:'Leyenda de guerra',stat:'dmg',amount:5}]},
+    {id:'legend',name:'Leyenda de guerra',stat:'dmg',amount:5},
+    {id:'berserker',name:'Berserker',style:'berserker',description:'+30% daño · −20% XP y monedas'}]},
   {name:'🎯 Precisión',nodes:[
     {id:'precision',name:'Ojo certero',stat:'crit',amount:1},
     {id:'impact',name:'Impacto brutal',stat:'critDamage',amount:3},
     {id:'focus',name:'Precisión mortal',stat:'crit',amount:1},
-    {id:'execution',name:'Verdugo',stat:'critDamage',amount:5}]},
+    {id:'execution',name:'Verdugo',stat:'critDamage',amount:5},
+    {id:'deadeye',name:'Instinto letal',stat:'crit',amount:2},
+    {id:'hunter',name:'Cazador',style:'hunter',description:'+15% crítico · +25% daño crítico · críticos ignoran resistencia de bosses · −15% daño'}]},
   {name:'🪙 Fortuna',nodes:[
     {id:'fortune',name:'Buscador de oro',stat:'coin',amount:2},
     {id:'prosperity',name:'Prosperidad',stat:'coin',amount:3},
     {id:'salvage',name:'Afinidad arcana',stat:'materials',amount:2},
-    {id:'treasure',name:'Tesoro eterno',stat:'coin',amount:5}]},
+    {id:'treasure',name:'Tesoro eterno',stat:'coin',amount:5},
+    {id:'seeker',name:'Buscatesoros',style:'seeker',description:'+20% XP y monedas · 10% de duplicar fragmentos de enemigos de misión · −20% daño'}]},
   {name:'📘 Sabiduría',nodes:[
     {id:'learning',name:'Aprendiz',stat:'xp',amount:2},
     {id:'wisdom',name:'Sabiduría antigua',stat:'xp',amount:3},
@@ -919,22 +928,32 @@ const SKILL_BRANCHES=[
 ];
 const SKILLS=Object.fromEntries(SKILL_BRANCHES.flatMap(branch=>branch.nodes.map((node,i)=>[node.id,{...node,requires:i?branch.nodes[i-1].id:null}])));
 const SKILL_MAX=20;
+const skillMax=node=>node.style?1:SKILL_MAX;
 const skillBonus=stat=>Object.values(SKILLS).reduce((sum,node)=>sum+(node.stat===stat?(S.skills[node.id]||0)*node.amount:0),0);
 const skillPoints=()=>S.level+Math.floor(S.level/10)-Object.values(S.skills).reduce((sum,rank)=>sum+rank,0);
 function unlockSkill(id,now=Date.now()){
   if(!Object.hasOwn(SKILLS,id)) return false;
   const node=SKILLS[id];
-  if(skillPoints()<1 || (S.skills[id]||0)>=SKILL_MAX || (node.requires&&!S.skills[node.requires])) return false;
+  if(skillPoints()<1 || (S.skills[id]||0)>=skillMax(node) || (node.requires&&!S.skills[node.requires])) return false;
   settleBattle(now);
   S.skills[id]=(S.skills[id]||0)+1;
+  if(node.style && !S.skillStyle) S.skillStyle=node.style;
   return true;
 }
-const criticalChance=()=>Math.min(75,skillBonus('crit'));
+function selectSkillStyle(style,now=Date.now()){
+  if(style!==null && (!Object.hasOwn(SKILLS,style)||!SKILLS[style].style||!S.skills[style])) return false;
+  settleBattle(now);S.skillStyle=style;return true;
+}
+function resetSkills(now=Date.now()){
+  settleBattle(now);S.skills={};S.skillStyle=null;
+}
+const criticalChance=()=>Math.min(75,skillBonus('crit')+(S.skillStyle==='hunter'?15:0));
+const criticalBonus=()=>skillBonus('critDamage')+(S.skillStyle==='hunter'?25:0);
 function criticalDamage(damage){
-  return criticalChance()>0 && Math.random()*100<criticalChance()?damage*(1.5+skillBonus('critDamage')/100):damage;
+  return criticalChance()>0 && Math.random()*100<criticalChance()?damage*(1.5+criticalBonus()/100):damage;
 }
 const materialReward=amount=>Math.round(amount*(1+skillBonus('materials')/100));
-const attributeCost=rank=>100+50*rank;
+const attributeCost=rank=>100+50*rank+2*rank*Math.pow(Math.max(0,rank-1),2);
 const ITEMS=[];
 for(const [g,d] of Object.entries(GROUPS)) for(let t=0;t<TIER_NAMES.length;t++){
   const names=t<d.names.length?(Array.isArray(d.names[t])?d.names[t]:[d.names[t]]):[`${d.label} ${TIER_NAMES[t].toLowerCase()}`];
@@ -1135,7 +1154,12 @@ const statBreakdown=stat=>{
   const forge=equipment>0?(S.forgeRanks[stat]||0):0,skills=skillBonus(stat);
   return {attributes,equipment,achievements,forge,skills,total:attributes+equipment+achievements+forge+skills};
 };
-const bonus=stat=>1+statBreakdown(stat).total/100;
+const bonus=stat=>{
+  const modifier=S.skillStyle==='berserker'?(stat==='dmg'?1.3:.8):
+    S.skillStyle==='hunter'?(stat==='dmg'?.85:1):
+    S.skillStyle==='seeker'?(stat==='dmg'?.8:1.2):1;
+  return (1+statBreakdown(stat).total/100)*modifier;
+};
 const heroPower=()=>S.level+Object.keys(ATTRIBUTES).reduce((sum,stat)=>sum+statBreakdown(stat).total,0)+
   Object.values(S.battleUpgrades).reduce((sum,rank)=>sum+rank,0);
 const heroEvolution=power=>Math.max(1,Math.min(100,Math.floor((power-1)/10)+1));
@@ -1161,7 +1185,10 @@ const BATTLE_UPGRADES={
 const battleDamage=()=> (2+S.battleUpgrades.damage)*bonus('dmg');
 const battleInterval=()=> BATTLE_INTERVAL-400*S.battleUpgrades.speed;
 const battleLoot=()=> 1+0.1*S.battleUpgrades.loot;
-const battleUpgradeCost=stat=>BATTLE_UPGRADES[stat].cost+BATTLE_UPGRADES[stat].step*S.battleUpgrades[stat];
+const battleUpgradeCost=stat=>{
+  const rank=S.battleUpgrades[stat],upgrade=BATTLE_UPGRADES[stat];
+  return upgrade.cost+upgrade.step*rank+(stat==='speed'?0:2*rank*Math.pow(Math.max(0,rank-1),2));
+};
 function autoEncounter(kills){
   return {species:kills%MISSION_MONSTERS.length,kind:kills%10===9?'boss':kills%5===4?'elite':'normal'};
 }
@@ -1175,7 +1202,7 @@ const packReelLayout=width=>{
   const padding=Math.ceil((width/2+40)/136)+1;
   return {start:padding,winner:padding+24+Math.floor(Math.random()*29),padding,offset:Math.floor(Math.random()*81)-40,duration:3800+Math.floor(Math.random()*1401)};
 };
-const rarityWeight=(weight,tier,torment)=>weight*Math.pow(1+0.15*torment,tier);
+const rarityWeight=(weight,tier,torment)=>weight*Math.pow(1+0.05*torment,tier);
 function packOdds(pack,level,torment=0){
   const eligible=pack.weights.map((weight,tier)=>level>=TIER_LVL[tier]?rarityWeight(weight,tier,torment):0);
   const total=eligible.reduce((sum,weight)=>sum+weight,0);
@@ -1244,6 +1271,7 @@ const TORMENTS=[
   {name:'Tormento XI',level:110,hp:60,reward:18},
   {name:'Tormento XII',level:120,hp:85,reward:22.5}
 ];
+const combatReward=torment=>TORMENTS[torment].hp*(1+0.02*torment);
 const autoMaxHp=(kills,torment)=>Math.round(monsterHp(kills)*TORMENTS[torment].hp);
 function selectTorment(index,now=Date.now()){
   if(!Number.isInteger(index)||!TORMENTS[index]||S.level<TORMENTS[index].level) return false;
@@ -1282,7 +1310,7 @@ const FULL_REWARD_MISSIONS=6, WEEKLY_DAYS=3, JOURNEY_CHAPTERS=52;
 
 const fresh = () => ({level:1,xp:0,coins:0,owned:[],eq:{},streak:0,kills:0,
   day:today(),done:{},bonus:{},lastActive:null,lastRest:null,monsterHp:monsterHp(0),log:[],active:pickMissions(),completedToday:0,
-  targets:{},missionTorments:{},missionTargetReferences:{},exerciseEnabled:EXERCISES.map(e=>e.id),missionScale:100,skills:{},totalMissions:0,packsOpened:0,achievements:[],missionKills:0,autoKills:0,autoMonsterHp:monsterHp(0),autoTorment:0,battleUpdated:Date.now(),
+  targets:{},missionTorments:{},missionTargetReferences:{},exerciseEnabled:EXERCISES.map(e=>e.id),missionScale:100,skills:{},skillStyle:null,arenaBalanceVersion:1,levelBalanceVersion:1,totalMissions:0,packsOpened:0,achievements:[],missionKills:0,autoKills:0,autoMonsterHp:monsterHp(0),autoTorment:0,battleUpdated:Date.now(),
   challengeClears:0,materials:0,activeDays:0,lastActivityDay:null,
   weeklyRewards:0,balanceVersion:1,unlimitedMissionsVersion:1,upgrades:{},attributes:{dmg:0,xp:0,coin:0},encounter:nextEncounter(0),
   missionDifficultyVersion:1,legacyMissions:{},shopStock:null,forgeRanks:{dmg:0,xp:0,coin:0},forgeLastWeek:null,forgeWeek:null,forgeWeekPurchases:0,
@@ -1302,6 +1330,7 @@ S.missionTargetReferences ??= {};
 S.exerciseEnabled ??= EXERCISES.map(e=>e.id);
 S.missionScale ??= 100;
 S.skills ??= {};
+S.skillStyle ??= null;
 S.autoTorment ??= 0;
 S.totalMissions ??= 0;
 S.packsOpened ??= 0;
@@ -1342,14 +1371,23 @@ if(S.missionKills==null){
   delete S.autoBattle;
 }
 if(!S.balanceVersion){
-  const oldXpNeeded=Math.round(100*Math.pow(1.25,S.level-1));
-  if(Number.isFinite(oldXpNeeded) && oldXpNeeded>0) S.xp=Math.min(xpNeeded(S.level)-1,Math.round(S.xp/oldXpNeeded*xpNeeded(S.level)));
+  const legacyXpNeeded=Math.round(100*Math.pow(1.25,S.level-1));
+  if(Number.isFinite(legacyXpNeeded) && legacyXpNeeded>0) S.xp=Math.min(oldXpNeeded(S.level)-1,Math.round(S.xp/legacyXpNeeded*oldXpNeeded(S.level)));
   for(const [hp,kills] of [['monsterHp','missionKills'],['autoMonsterHp','autoKills']]){
     const oldMax=Math.round(50*Math.pow(1.2,S[kills]));
-    const newMax=hp==='monsterHp'?missionMonsterHp(S[kills]):monsterHp(S[kills]);
+    const newMax=hp==='monsterHp'?missionMonsterHp(S[kills]):oldArenaHp(S[kills]);
     if(Number.isFinite(oldMax) && oldMax>0) S[hp]=Math.max(0.01,Math.min(newMax,S[hp]/oldMax*newMax));
   }
   S.balanceVersion=1;
+}
+if(!S.levelBalanceVersion){
+  S.xp=Math.min(xpNeeded(S.level)-1,Math.round(S.xp/oldXpNeeded(S.level)*xpNeeded(S.level)));
+  S.levelBalanceVersion=1;
+}
+if(!S.arenaBalanceVersion){
+  const oldMax=Math.round(oldArenaHp(S.autoKills)*TORMENTS[S.autoTorment].hp);
+  S.autoMonsterHp=S.autoMonsterHp/oldMax*autoMaxHp(S.autoKills,S.autoTorment);
+  S.arenaBalanceVersion=1;
 }
 S.encounter ??= {kind:'normal',species:S.missionKills%MONSTERS.length,maxHp:missionMonsterHp(S.missionKills),legacy:true};
 S.encounter.torment ??= 0;
@@ -1507,11 +1545,12 @@ function hit(dmg,arena='mission'){
     const encounter=automatic?null:S.encounter;
     const type=encounter?ENCOUNTER_TYPES[encounter.kind]:ENCOUNTER_TYPES.normal;
     const torment=automatic?(S.autoRewardTorment??S.autoTorment):(encounter.rewardTorment??encounter.torment);
-    const difficulty=TORMENTS[torment];
+    const rewardMultiplier=combatReward(torment);
     const loot=automatic?battleLoot():1;
-    const reward=Math.round((10+S[kills]*2)*bonus('coin')*type.coins*loot*difficulty.reward);
-    const materials=materialReward(type.materials*difficulty.reward);
-    S.coins+=reward;gain(Math.round((20+S[kills]*3)*bonus('xp')*type.xp*loot*difficulty.reward));
+    const reward=Math.round((10+S[kills]*2)*bonus('coin')*type.coins*loot*rewardMultiplier);
+    let materials=materialReward(type.materials*rewardMultiplier);
+    if(materials>0 && !automatic && S.skillStyle==='seeker' && Math.random()<.1) materials*=2;
+    S.coins+=reward;gain(Math.round((20+S[kills]*3)*bonus('xp')*type.xp*loot*rewardMultiplier));
     S.materials+=materials;
     const monster=automatic?MISSION_MONSTERS[autoEncounter(S.autoKills).species].name:encounter.legacy?MONSTERS[S[kills]%MONSTERS.length]:encounter.kind==='lucky'?'🍀 Goblin de la suerte':MISSION_MONSTERS[encounter.species].name;
     S[kills]++;S.kills++;
@@ -1560,16 +1599,17 @@ function attackTower(day=today()){
   if(tower.floor>TOWER_FLOORS || tower.keys<1 || tower.lastAttack===day) return false;
   if(tower.torment===null){tower.torment=S.torment;tower.hp=Math.round(towerMaxHp(tower.floor)*TORMENTS[tower.torment].hp)}
   tower.rewardTorment=Math.min(tower.rewardTorment??tower.torment,tower.torment);
-  const torment=tower.rewardTorment,difficulty=TORMENTS[torment];
+  const torment=tower.rewardTorment,multiplier=combatReward(torment);
+  const before=tower.hp,max=Math.round(towerMaxHp(tower.floor)*TORMENTS[tower.torment].hp);
   tower.keys--;tower.lastAttack=day;tower.hp-=criticalDamage(24*bonus('dmg'));
   if(tower.hp<=0){
-    const floor=tower.floor,coins=Math.round((20+floor*5)*bonus('coin')*difficulty.reward);
-    const xp=Math.round((25+floor*4)*bonus('xp')*difficulty.reward),materials=materialReward((2+Math.floor(floor/10))*difficulty.reward);
+    const floor=tower.floor,coins=Math.round((20+floor*5)*bonus('coin')*multiplier);
+    const xp=Math.round((25+floor*4)*bonus('xp')*multiplier),materials=materialReward((2+Math.floor(floor/10))*multiplier);
     S.coins+=coins;gain(xp);S.materials+=materials;S.kills++;S.challengeClears++;
     tower.floor++;tower.hp=tower.floor<=TOWER_FLOORS?towerMaxHp(tower.floor):0;tower.torment=null;tower.rewardTorment=null;
     log(`🗼 Planta ${floor} superada: +${coins} monedas, +${xp} XP y +${materials} fragmentos`);
     unlockAchievements(torment);
-  }
+  }else grantChallengeProgress('Torre',before-tower.hp,max,20+tower.floor*5,25+tower.floor*4,2+Math.floor(tower.floor/10),torment);
   return true;
 }
 function attackWeeklyBoss(day=today()){
@@ -1577,20 +1617,34 @@ function attackWeeklyBoss(day=today()){
   if(progress.lastAttackWeek===week) return false;
   if(progress.torment===null){progress.torment=S.torment;progress.hp=Math.round(bossBaseHp(progress.index)*TORMENTS[progress.torment].hp)}
   progress.rewardTorment=Math.min(progress.rewardTorment??progress.torment,progress.torment);
-  const torment=progress.rewardTorment,difficulty=TORMENTS[torment];
+  const torment=progress.rewardTorment,multiplier=combatReward(torment);
   const max=Math.round(bossBaseHp(progress.index)*TORMENTS[progress.torment].hp);
+  const before=progress.hp;
   const resistance=bossResistance(boss,progress.hp,max,progress.hits||0);
   progress.lastAttackWeek=week;progress.hits=(progress.hits||0)+1;
-  progress.hp-=criticalDamage(40*bonus('dmg'))*(1-resistance);
+  const baseDamage=40*bonus('dmg'),damage=criticalDamage(baseDamage);
+  progress.hp-=damage*(1-(S.skillStyle==='hunter'&&damage>baseDamage?0:resistance));
   if(progress.hp<=0){
-    const rank=progress.index+1,coins=Math.round((150+rank*100)*bonus('coin')*difficulty.reward);
-    const xp=Math.round((100+rank*80)*bonus('xp')*difficulty.reward),materials=materialReward((10+rank*5)*difficulty.reward);
+    const rank=progress.index+1,coins=Math.round((150+rank*100)*bonus('coin')*multiplier);
+    const xp=Math.round((100+rank*80)*bonus('xp')*multiplier),materials=materialReward((10+rank*5)*multiplier);
     S.coins+=coins;gain(xp);S.materials+=materials;S.kills++;S.challengeClears++;
     progress.index++;progress.hp=bossBaseHp(progress.index);progress.torment=null;progress.rewardTorment=null;progress.hits=0;
     log(`👑 ${boss.name} derrotado: +${coins} monedas, +${xp} XP y +${materials} fragmentos`);
     unlockAchievements(torment);
+  }else{
+    const rank=progress.index+1;
+    grantChallengeProgress('Boss',before-progress.hp,max,150+rank*100,100+rank*80,10+rank*5,torment);
   }
   return true;
+}
+function grantChallengeProgress(name,damage,max,coins,xp,materials,torment){
+  const fraction=Math.min(1,Math.max(0,damage/max))*.2*combatReward(torment);
+  const gold=Math.floor(coins*bonus('coin')*fraction);
+  const experience=Math.floor(xp*bonus('xp')*fraction);
+  const fragments=Math.floor(materials*(1+skillBonus('materials')/100)*fraction);
+  S.coins+=gold;gain(experience);S.materials+=fragments;
+  log(`⚔️ ${name}: recompensa de progreso +${gold} monedas, +${experience} XP y +${fragments} fragmentos`);
+  unlockAchievements(torment);
 }
 function dismantle(id){
   const item=itemById(id);
@@ -1697,9 +1751,10 @@ function validateBackup(data){
      s.exerciseEnabled.length<7 || new Set(s.exerciseEnabled).size!==s.exerciseEnabled.length || s.exerciseEnabled.some(id=>!byId(id))) return false;
   if(Object.entries(s.eq).some(([slot,id])=>!EQ_SLOTS.some(entry=>entry.k===slot&&entry.g===itemById(id)?.g)||!s.owned.includes(id)) ||
      new Set(Object.values(s.eq)).size!==Object.values(s.eq).length) return false;
-  if(Object.entries(s.skills).some(([id,rank])=>!Object.hasOwn(SKILLS,id)||!Number.isInteger(rank)||rank<0||rank>SKILL_MAX) ||
+  if(Object.entries(s.skills).some(([id,rank])=>!Object.hasOwn(SKILLS,id)||!Number.isInteger(rank)||rank<0||rank>skillMax(SKILLS[id])) ||
      Object.values(s.skills).reduce((sum,rank)=>sum+rank,0)>s.level+Math.floor(s.level/10) ||
      Object.entries(s.skills).some(([id,rank])=>rank>0 && SKILLS[id].requires && !(s.skills[SKILLS[id].requires]>0))) return false;
+  if(s.skillStyle!=null && (!Object.hasOwn(SKILLS,s.skillStyle)||!SKILLS[s.skillStyle].style||!s.skills[s.skillStyle])) return false;
   const nonnegative=map=>Object.values(map).every(value=>Number.isFinite(value)&&value>=0);
   if(['done','bonus','targets','upgrades','attributes','forgeRanks','battleUpgrades'].some(key=>!nonnegative(s[key])) ||
      Object.keys(ATTRIBUTES).some(key=>!Number.isFinite(s.attributes[key])||!Number.isFinite(s.forgeRanks[key])) ||
@@ -1956,7 +2011,9 @@ function render(liveOnly=false){
 function renderSkills(){
   const box=$('skill-tree'),labels={dmg:'daño',xp:'XP',coin:'monedas de misiones y enemigos',crit:'probabilidad de crítico',critDamage:'daño crítico',materials:'fragmentos de recompensas'};
   const focused=document.activeElement?.dataset.skill;
-  $('skill-points').textContent=`✨ Puntos disponibles: ${skillPoints()} · 🎯 Crítico: ${criticalChance()} % · daño crítico: ${150+skillBonus('critDamage')} %`;
+  $('skill-points').textContent=`✨ Puntos disponibles: ${skillPoints()} · 🎯 Crítico: ${criticalChance()} % · daño crítico: ${150+criticalBonus()} % · estilo: ${S.skillStyle?SKILLS[S.skillStyle].name:'Neutral'}`;
+  $('reset-skills').disabled=!Object.values(S.skills).some(rank=>rank>0);
+  $('neutral-style').disabled=!S.skillStyle;
   box.replaceChildren();
   for(const branch of SKILL_BRANCHES){
     const column=document.createElement('div');column.className='skill-branch';
@@ -1965,11 +2022,11 @@ function renderSkills(){
       const skill=SKILLS[node.id],rank=S.skills[node.id]||0,button=document.createElement('button');
       button.className='skill-node';button.type='button';
       button.dataset.active=String(rank>0);button.dataset.skill=node.id;
-      button.innerHTML=`<strong>${node.name} · ${rank}/${SKILL_MAX}</strong><small>+${node.amount}% ${labels[node.stat]} por punto${skill.requires&&!S.skills[skill.requires]?' · requiere nodo anterior':''}</small>`;
-      button.disabled=skillPoints()<1 || rank>=SKILL_MAX || !!(skill.requires&&!S.skills[skill.requires]);
+      button.innerHTML=`<strong>${node.name} · ${rank}/${skillMax(node)}${node.style&&S.skillStyle===node.style?' · activo':''}</strong><small>${node.style?node.description:`+${node.amount}% ${labels[node.stat]} por punto`}${skill.requires&&!S.skills[skill.requires]?' · requiere nodo anterior':''}</small>`;
+      button.disabled=node.style&&rank?S.skillStyle===node.style:skillPoints()<1 || rank>=skillMax(node) || !!(skill.requires&&!S.skills[skill.requires]);
       button.onclick=()=>{
-        const unlocked=unlockSkill(node.id);save();render();
-        $('skill-status').textContent=unlocked?`${node.name} mejorado a ${S.skills[node.id]}.`:'No se puede mejorar esta habilidad.';
+        const unlocked=node.style&&rank?selectSkillStyle(node.style):unlockSkill(node.id);save();render();
+        $('skill-status').textContent=unlocked?`${node.name} ${node.style?'desbloqueado o activado':`mejorado a ${S.skills[node.id]}`}.`:'No se puede mejorar esta habilidad.';
       };
       column.appendChild(button);
     }
@@ -2011,7 +2068,7 @@ function renderTorment(){
     option.type='button';option.className='torment-option';option.dataset.torment=index;
     option.disabled=locked;option.setAttribute('aria-pressed',String(selected));
     option.innerHTML=`<strong>${index?'🔥':'✦'} ${torment.name}</strong>
-      <small>💀 Vida ×${torment.hp} · 💰 Botín ×${torment.reward}<br>⚔️ Misiones +${index*5}%</small>
+      <small>💀 Vida ×${torment.hp} · 💰 Combate ×${Number(combatReward(index).toFixed(2))}<br>📜 Misiones ×${torment.reward} · objetivo +${index*5}%</small>
       <span class="torment-option-state">${locked?`🔒 Nivel ${torment.level}`:selected?'✦ Activo':'Disponible'}</span>`;
     box.appendChild(option);
   });
@@ -2153,8 +2210,8 @@ function renderChar(){
     $(jewelry?'jewelry':'eq').appendChild(b);
   }
   $('bonuses').innerHTML=Object.entries(ATTRIBUTES).map(([stat,definition])=>{
-    const b=statBreakdown(stat);
-    return `<div class="character-stat"><strong>${definition.icon} ${definition.name} · +${b.total}% ${STAT_TXT[stat]}</strong></div>`;
+    const effective=Math.round((bonus(stat)-1)*10000)/100;
+    return `<div class="character-stat"><strong>${definition.icon} ${definition.name} · ${effective>=0?'+':''}${effective}% ${STAT_TXT[stat]}${S.skillStyle?` · ${SKILLS[S.skillStyle].name}`:''}</strong></div>`;
   }).join('');
   $('materials').textContent=`🔩 Fragmentos: ${S.materials}`;
   $('inventory-status').textContent='';
@@ -2279,7 +2336,7 @@ function renderTower(){
     box.innerHTML='<h3>🗼 Torre de 100 plantas</h3><p>🏆 ¡Has conquistado la torre!</p>';
     return;
   }
-  const floor=tower.floor,torment=tower.torment??S.torment,difficulty=TORMENTS[torment],loot=TORMENTS[Math.min(tower.rewardTorment??torment,torment)];
+  const floor=tower.floor,torment=tower.torment??S.torment,difficulty=TORMENTS[torment],lootIndex=Math.min(tower.rewardTorment??torment,torment),loot=TORMENTS[lootIndex],multiplier=combatReward(lootIndex);
   const max=Math.round(towerMaxHp(floor)*difficulty.hp),hp=tower.torment===null?max:tower.hp,species=(floor-1)%MISSION_MONSTERS.length;
   const kind=floor%10===0?'boss':floor%5===0?'elite':'normal';
   const damage=Math.round(24*bonus('dmg')*100)/100;
@@ -2293,21 +2350,21 @@ function renderTower(){
       <p>❤️ ${Math.max(0,Math.ceil(hp))} / ${max} · ⚔️ ${damage} daño</p>
       <div class="bar hp"><div style="width:${Math.max(0,100*hp/max)}%"></div></div>
       <p><small>La primera misión de cada día da 1 llave de torre. Cada ataque consume 1 llave; máximo 1 ataque diario. La vida se conserva.</small></p>
-      <p><small>Botín máximo actual (${loot.name}): ${Math.round((20+floor*5)*loot.reward)} monedas y ${Math.round((25+floor*4)*loot.reward)} XP antes de bonos · ${materialReward((2+Math.floor(floor/10))*loot.reward)} fragmentos. Puede bajar si atacas en un tormento menor.</small></p>
+      <p><small>Victoria (${loot.name}): ${Math.round((20+floor*5)*multiplier)} monedas y ${Math.round((25+floor*4)*multiplier)} XP antes de bonos · ${materialReward((2+Math.floor(floor/10))*multiplier)} fragmentos. Los ataques sin victoria dan hasta un 20 % adicional proporcional al daño.</small></p>
     </div></div>`;
   const button=document.createElement('button');button.type='button';button.className='complete';
   button.textContent=tower.lastAttack===today()?'Ya atacaste hoy':tower.keys<1?'Necesitas una llave de torre':'⚔️ Atacar · 1 🔷';
   button.disabled=tower.lastAttack===today()||tower.keys<1;
   button.onclick=()=>{
-    settleBattle();const attacked=attackTower();save();render();
-    $('expedition-status').textContent=attacked?'':'No se puede atacar la torre ahora.';
+    settleBattle();const attacked=attackTower(),message=attacked?S.log[0]:'';save();render();
+    $('expedition-status').textContent=attacked?message:'No se puede atacar la torre ahora.';
   };
   box.querySelector('.challenge-details').appendChild(button);
 }
 function renderWeeklyBoss(){
   const box=$('dungeon-bosses'),progress=S.weeklyBoss,boss=bossFor(progress.index);
   const rank=progress.index+1,round=Math.floor(progress.index/WEEKLY_BOSSES.length)+1,position=progress.index%WEEKLY_BOSSES.length;
-  const torment=progress.torment??S.torment,difficulty=TORMENTS[torment],loot=TORMENTS[Math.min(progress.rewardTorment??torment,torment)],max=Math.round(bossBaseHp(progress.index)*difficulty.hp);
+  const torment=progress.torment??S.torment,difficulty=TORMENTS[torment],lootIndex=Math.min(progress.rewardTorment??torment,torment),loot=TORMENTS[lootIndex],multiplier=combatReward(lootIndex),max=Math.round(bossBaseHp(progress.index)*difficulty.hp);
   const hp=progress.torment===null?max:progress.hp;
   const damage=Math.round(40*bonus('dmg')*(1-bossResistance(boss,hp,max,progress.hits||0))*100)/100;
   box.innerHTML=`<div class="expedition-challenge">
@@ -2320,15 +2377,15 @@ function renderWeeklyBoss(){
       <p>❤️ ${Math.max(0,Math.ceil(hp))} / ${max} · ⚔️ ${damage} daño</p>
       <div class="bar hp"><div style="width:${Math.max(0,100*hp/max)}%"></div></div>
       <p><small>Un ataque en total por semana, de lunes a domingo. La vida se conserva; el siguiente boss aparece al vencer al actual.</small></p>
-      <p><small>Botín máximo actual (${loot.name}): ${Math.round((150+rank*100)*loot.reward)} monedas y ${Math.round((100+rank*80)*loot.reward)} XP antes de bonos · ${materialReward((10+rank*5)*loot.reward)} fragmentos. Puede bajar si atacas en un tormento menor.</small></p>
+      <p><small>Victoria (${loot.name}): ${Math.round((150+rank*100)*multiplier)} monedas y ${Math.round((100+rank*80)*multiplier)} XP antes de bonos · ${materialReward((10+rank*5)*multiplier)} fragmentos. Los ataques sin victoria dan hasta un 20 % adicional proporcional al daño.</small></p>
     </div></div>
     <div class="boss-roster" aria-label="Progreso de bosses">${WEEKLY_BOSSES.map((entry,i)=>`<span>${i<position?'✅':i===position?'⚔️':'🔒'} ${entry.name}</span>`).join('')}</div>`;
   const button=document.createElement('button');button.type='button';button.className='complete';
   button.disabled=progress.lastAttackWeek===weekStart(today());
   button.textContent=button.disabled?'Ya atacaste esta semana':'⚔️ Atacar al boss';
   button.onclick=()=>{
-    settleBattle();const attacked=attackWeeklyBoss();save();render();
-    $('expedition-status').textContent=attacked?'':'No se puede atacar al boss esta semana.';
+    settleBattle();const attacked=attackWeeklyBoss(),message=attacked?S.log[0]:'';save();render();
+    $('expedition-status').textContent=attacked?message:'No se puede atacar al boss esta semana.';
   };
   box.querySelector('.challenge-details').appendChild(button);
 }
@@ -2343,6 +2400,14 @@ for(const button of document.querySelectorAll('[data-dungeon-view]')){
   });
 }
 let resetTimer;
+$('reset-skills').onclick=()=>{
+  if(!Object.values(S.skills).some(rank=>rank>0)) return;
+  if(!confirm('¿Redistribuir todas las habilidades gratis? Recuperarás todos los puntos y volverás al estilo neutral.')) return;
+  resetSkills();save();render();$('skill-status').textContent='Puntos recuperados. Elige tus habilidades de nuevo.';
+};
+$('neutral-style').onclick=()=>{
+  if(selectSkillStyle(null)){save();render();$('skill-status').textContent='Estilo neutral activado.'}
+};
 for(const [id,group] of Object.entries(GROUPS)){
   const option=document.createElement('option');option.value=id;option.textContent=group.label;
   $('inventory-type').appendChild(option);

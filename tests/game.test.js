@@ -107,8 +107,8 @@ test('attribute training validates type and cost and continues past the old cap'
     if(!trainAttribute('dmg') || S.coins!==0 || bonus('dmg')!==1.01)return false;
     S.coins=100000;
     for(let i=1;i<20;i++) if(!trainAttribute('dmg'))return false;
-    const remaining=S.coins;
-    if(!trainAttribute('dmg') || S.coins!==remaining-1100 || S.attributes.dmg!==21) return false;
+    const remaining=S.coins,cost=attributeCost(20);
+    if(!trainAttribute('dmg') || S.coins!==remaining-cost || S.attributes.dmg!==21) return false;
     save(); return true;
   })()`),true);
   const saved=g.saved();
@@ -249,7 +249,7 @@ test('character inventory hides equipped items and filters only by type', () => 
 test('character displays arena victories and total bonuses without source breakdown', () => {
   assert.match(html, /Victorias de arena<\/th><td id="stat-arena"/);
   const bonuses=script.slice(script.indexOf("$('bonuses').innerHTML="),script.indexOf("$('materials').textContent="));
-  assert.match(bonuses,/b\.total/);
+  assert.match(bonuses,/bonus\(stat\)/);
   assert.doesNotMatch(bonuses,/b\.(attributes|equipment|forge|achievements)/);
 });
 
@@ -630,13 +630,13 @@ test('upgraded arena has equivalent online and capped offline progress', () => {
   })()`),true);
 });
 
-test('arena cycles through all illustrated monsters without changing health scaling', () => {
+test('arena cycles through all illustrated monsters with softened health scaling', () => {
   const g=game();
   assert.equal(g.run(`(() => {
     const encounters=Array.from({length:16},(_,i)=>autoEncounter(i));
     return new Set(encounters.map(e=>e.species)).size===16 &&
       encounters[4].kind==='elite' && encounters[9].kind==='boss' &&
-      autoEncounter(16).species===0 && monsterHp(9)===320;
+      autoEncounter(16).species===0 && monsterHp(9)===Math.round(50+12*9+2*9**1.7);
   })()`),true);
 });
 
@@ -847,6 +847,7 @@ test('torment sanctuary displays unlocks and saves the selected difficulty', () 
   const context=vm.createContext({
     S:state,
     TORMENTS:[{name:'Normal',level:1,hp:1,reward:1},{name:'Tormento I',level:10,hp:1.75,reward:1.4},{name:'Tormento II',level:20,hp:2.5,reward:1.8}],
+    combatReward:index=>[1,1.785,2.6][index],
     document:{activeElement:null,createElement:()=>({dataset:{},setAttribute(name,value){this[name]=value}})},
     $:id=>elements[id],
     selectTorment:index=>{if(state.level<[1,10,20][index]) return false;state.torment=index;return true},
@@ -1020,6 +1021,99 @@ test('critical and fragment skills affect combat and rewards', () => {
   })()`),true);
 });
 
+test('skill specializations, critical cap and refunds preserve arena timing and points', () => {
+  const g=game();
+  assert.equal(g.run(`(() => {
+    S=fresh();S.level=200;S.achievements=ACHIEVEMENTS.map(a=>a.id);S.battleUpdated=1000;
+    for(const id of ['precision','impact','focus','execution','deadeye']){
+      const count=id==='precision'||id==='focus'?20:id==='deadeye'?18:1;
+      for(let i=0;i<count;i++) if(!unlockSkill(id,1000)) return false;
+    }
+    if(criticalChance()!==75 || !unlockSkill('hunter',1000) || S.skillStyle!=='hunter' ||
+       criticalChance()!==75 || criticalBonus()!==33) return false;
+    const hunter=bonus('dmg');
+    if(!selectSkillStyle(null,1000) || hunter>=bonus('dmg') || selectSkillStyle('berserker',1000)) return false;
+    const total=S.level+Math.floor(S.level/10);
+    if(!selectSkillStyle('hunter',1000)) return false;
+    resetSkills(11000);
+    return S.autoMonsterHp<autoMaxHp(S.autoKills,S.autoTorment) && S.skillStyle===null &&
+      skillPoints()===total && Object.keys(S.skills).length===0;
+  })()`),true);
+});
+
+test('hunter criticals pierce boss resistance and seeker can duplicate mission fragments', () => {
+  const g=game();
+  assert.equal(g.run(`(() => {
+    S=fresh();S.level=120;S.achievements=ACHIEVEMENTS.map(a=>a.id);
+    S.skills={precision:1,impact:1,focus:1,execution:1,deadeye:1,hunter:1};
+    S.skillStyle='hunter';S.weeklyBoss.index=3;S.weeklyBoss.hp=650;S.weeklyBoss.torment=0;
+    Math.random=()=>0;
+    const damage=40*bonus('dmg')*(1.5+criticalBonus()/100);
+    if(!attackWeeklyBoss('2026-01-05') || Math.abs(S.weeklyBoss.hp-(650-damage))>1e-8) return false;
+    S=fresh();S.level=120;S.achievements=ACHIEVEMENTS.map(a=>a.id);
+    S.skills={fortune:1,prosperity:1,salvage:1,treasure:1,seeker:1};S.skillStyle='seeker';
+    S.encounter={kind:'elite',species:0,maxHp:100,torment:0};S.monsterHp=1;hit(1);
+    return S.materials===materialReward(2)*2;
+  })()`),true);
+});
+
+test('arena health migration keeps saved health percentage once', () => {
+  const first=game();
+  first.run(`S=fresh();S.autoKills=1000;S.autoTorment=2;S.torment=2;S.level=20;
+    S.autoMonsterHp=oldArenaHp(1000)*TORMENTS[2].hp*.37;delete S.arenaBalanceVersion;save()`);
+  const restored=game(first.saved());
+  assert.equal(restored.run(`Math.abs(S.autoMonsterHp/autoMaxHp(1000,2)-.37)<1e-10 && S.arenaBalanceVersion===1`),true);
+  restored.run('save()');
+  assert.equal(game(restored.saved()).run(`Math.abs(S.autoMonsterHp/autoMaxHp(1000,2)-.37)<1e-10`),true);
+});
+
+test('level curve migration preserves the level and XP fraction exactly once', () => {
+  const first=game();
+  first.run(`S=fresh();S.level=80;S.xp=Math.floor(oldXpNeeded(80)*.4);delete S.levelBalanceVersion;save()`);
+  const saved=first.saved(),restored=game(saved);
+  const expected=Math.round(saved.xp / restored.run('oldXpNeeded(80)') * restored.run('xpNeeded(80)'));
+  assert.equal(restored.run('S.level'),80);
+  assert.equal(restored.run('S.xp'),expected);
+  restored.run('save()');
+  assert.equal(game(restored.saved()).run('S.xp'),expected);
+});
+
+test('upgrade costs grow faster without reducing existing ranks or early affordability', () => {
+  const g=game();
+  assert.equal(g.run(`(() => {
+    S=fresh();
+    if(attributeCost(0)!==100 || attributeCost(1)!==150 || attributeCost(100)<=5100) return false;
+    S.battleUpgrades.damage=100;
+    if(battleUpgradeCost('damage')<=5100 || battleDamage()!==102) return false;
+    S.battleUpgrades.speed=1;
+    return battleUpgradeCost('speed')===375;
+  })()`),true);
+});
+
+test('combat reward per enemy health rises with torment and divine drops remain rare', () => {
+  const g=game();
+  assert.equal(g.run(`(() => {
+    for(let i=1;i<TORMENTS.length;i++) if(combatReward(i)/TORMENTS[i].hp<=combatReward(i-1)/TORMENTS[i-1].hp) return false;
+    const normal=packOdds(PACKS[3],120,0)[6],high=packOdds(PACKS[3],120,12)[6];
+    return normal===.05 && high>normal && high<.2 && monsterHp(1000)<500000 && monsterHp(1000)>100000;
+  })()`),true);
+});
+
+test('partial challenge rewards are proportional to damage and respect attack limits', () => {
+  const g=game();
+  assert.equal(g.run(`(() => {
+    S=fresh();S.level=120;S.achievements=ACHIEVEMENTS.map(a=>a.id);S.battleUpdated=1000;
+    S.tower.floor=100;S.tower.hp=towerMaxHp(100);S.tower.keys=2;
+    const before=S.tower.hp,damage=24*bonus('dmg'),coin=bonus('coin');
+    if(!attackTower('2026-01-05') || S.coins!==Math.floor(520*coin*.2*damage/before)) return false;
+    const coins=S.coins;if(attackTower('2026-01-05')||S.coins!==coins) return false;
+    S=fresh();S.level=120;S.achievements=ACHIEVEMENTS.map(a=>a.id);S.battleUpdated=1000;
+    selectTorment(12,1000);const max=Math.round(180*TORMENTS[12].hp),hit=40*bonus('dmg');
+    if(!attackWeeklyBoss('2026-01-05')||S.coins!==Math.floor(250*bonus('coin')*.2*hit/max*combatReward(12))) return false;
+    const prior=S.coins;return !attackWeeklyBoss('2026-01-06') && S.coins===prior;
+  })()`),true);
+});
+
 test('mission preferences update targets without drift and preserve partial progress', () => {
   const g=game();
   assert.equal(g.run(`(() => {
@@ -1059,7 +1153,7 @@ test('torment rewards are capped by the lowest difficulty used for enemy damage'
     if(!attackTower('2026-01-06')||S.coins-coins!==Math.round(520*bonus('coin'))) return false;
     S=fresh();S.level=120;S.achievements=ACHIEVEMENTS.map(a=>a.id);S.battleUpdated=1000;
     selectTorment(12,1000);S.monsterHp=1;hit(1);
-    return S.coins===Math.round(10*bonus('coin')*22.5);
+    return S.coins===Math.round(10*bonus('coin')*combatReward(12));
   })()`),true);
 });
 
@@ -1147,11 +1241,11 @@ test('tower torment changes immediately and persists health and rewards', () => 
   })()`),true);
   const restored=game(g.saved());
   assert.equal(restored.run(`(() => {
-    const coins=Math.round((20+50*5)*bonus('coin'));
-    const xp=Math.round((25+50*4)*bonus('xp'));
+    const coins=S.coins+Math.round((20+50*5)*bonus('coin'));
+    const xp=S.xp+Math.round((25+50*4)*bonus('xp')),materials=S.materials+7;
     S.tower.hp=1;
     if(!attackTower('2026-01-06') || S.coins!==coins || S.xp!==xp ||
-      S.materials!==7 || S.tower.floor!==51 || S.tower.torment!==null) return false;
+      S.materials!==materials || S.tower.floor!==51 || S.tower.torment!==null) return false;
     return true;
   })()`),true);
 });
@@ -1169,10 +1263,11 @@ test('boss torment changes immediately but rewards cannot exceed the lowest atta
   })()`),true);
   const restored=game(g.saved());
   assert.equal(restored.run(`(() => {
-    const coins=Math.round(250*bonus('coin')*1.8),xp=Math.round(180*bonus('xp')*1.8);
+    const coins=S.coins+Math.round(250*bonus('coin')*combatReward(2)),xp=S.xp+Math.round(180*bonus('xp')*combatReward(2));
+    const materials=S.materials+Math.round(15*combatReward(2));
     S.weeklyBoss.hp=1;
     return attackWeeklyBoss('2026-01-12') && S.coins===coins && S.xp===xp &&
-      S.materials===Math.round(15*1.8) && S.weeklyBoss.index===1 && S.weeklyBoss.torment===null;
+      S.materials===materials && S.weeklyBoss.index===1 && S.weeklyBoss.torment===null;
   })()`),true);
 });
 
@@ -1185,6 +1280,7 @@ test('legacy ongoing challenges preserve health percentage when changing torment
   assert.equal(restored.run(`(() => {
     if(S.tower.torment!==0 || S.weeklyBoss.torment!==0 ||
       S.tower.hp!==100 || S.weeklyBoss.hp!==170) return false;
+    S.achievements=ACHIEVEMENTS.map(a=>a.id);
     selectTorment(4);
     const dmg=bonus('dmg');
     if(!attackTower('2026-01-05') || !attackWeeklyBoss('2026-01-05')) return false;

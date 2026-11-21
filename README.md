@@ -121,7 +121,9 @@ confirmación. Se aceptan las copias exportadas por esta versión.
 - **Entrenamiento del héroe:** en la pestaña Personaje puedes comprar rangos
   sin límite de Poder, Sabiduría y Fortuna con monedas del juego. Cada rango
   añade un 1 % a daño, XP o monedas, respectivamente. El siguiente rango
-  cuesta 100 + 50 monedas por rango actual. Estos bonos se suman a los del
+  cuesta `100 + 50 × rango + 2 × rango × max(0, rango − 1)²` monedas.
+  Los rangos existentes se conservan; el coste crece más en niveles avanzados
+  para evitar que el oro y el daño se disparen sin control. Estos bonos se suman a los del
   equipo, forja y logros y se aplican también a la arena, la torre y los bosses. El panel
   de estadísticas muestra el bono total.
   Bajo el entrenamiento se muestran las misiones, los monstruos derrotados
@@ -132,7 +134,16 @@ confirmación. Se aceptan las copias exportadas por esta versión.
   incluidos los niveles existentes al actualizar; el nivel inicial también da
   uno. En los niveles múltiplos de diez se reciben dos puntos en total. Las
   cuatro ramas ofrecen daño, crítico, monedas, XP y fragmentos de recompensas.
-  Cada nodo admite 20 rangos y requiere un punto en el nodo anterior de su rama.
+  Los nodos normales admiten 20 rangos y requieren un punto en el nodo anterior
+  de su rama. Instinto letal permite llegar al 75 % de probabilidad crítica.
+  También hay tres especializaciones de un punto: Berserker (+30 % daño,
+  −20 % XP y monedas), Cazador (+15 puntos de crítico, +25 puntos de daño
+  crítico, críticos que ignoran la resistencia de bosses y −15 % daño) y
+  Buscatesoros (+20 % XP y monedas, 10 % de probabilidad de duplicar los
+  fragmentos al derrotar un enemigo de misión y −20 % daño).
+  Solo una puede estar activa; se puede cambiar entre las desbloqueadas o
+  volver al estilo neutral. **Redistribuir puntos** los recupera todos gratis,
+  previa confirmación, y restablece el estilo neutral.
   Los bonos de daño, monedas y XP se suman a los demás bonos; los de fragmentos
   afectan a enemigos, logros y travesía, no al desmantelamiento. Los golpes
   críticos pueden producirse en misiones, arena, torre y bosses, tienen una
@@ -164,11 +175,13 @@ confirmación. Se aceptan las copias exportadas por esta versión.
 - **Autobatalla:** siempre está activa y recorre 16 tipos de monstruos.
   Los élites y jefes de la arena son únicamente visuales: su vida y botín
   siguen la misma progresión que los demás enemigos de arena.
-  El ataque inicial causa 2 de daño cada 10 segundos, con los bonos generales
+  La vida base del enemigo `n` es `50 + 12 × n + 2 × n^1,7`, redondeada;
+  crece más despacio que antes. La vida restante de partidas existentes se
+  convierte proporcionalmente una sola vez. El ataque inicial causa 2 de daño cada 10 segundos, con los bonos generales
   de daño. Tres mejoras permanentes usan monedas del juego: daño (+1 al daño
-  base por rango; coste 100 + 50 por rango), velocidad (-0,4 s por rango;
+  base por rango; coste `100 + 50 × rango + 2 × rango × max(0, rango − 1)²`), velocidad (-0,4 s por rango;
   coste 250 + 125 por rango, máximo 20 rangos y 2 s) y botín (+10 % a las
-  monedas y XP de arena por rango; coste 200 + 100 por rango). Daño y botín
+  monedas y XP de arena por rango; coste `200 + 100 × rango + 2 × rango × max(0, rango − 1)²`). Daño y botín
   no tienen límite. Antes de mejorar se calcula el combate pendiente con las
   mejoras anteriores; al cambiar la velocidad se conserva la fracción del
   ataque en curso. Al volver se aplican como máximo ocho horas desde la última
@@ -182,6 +195,9 @@ confirmación. Se aceptan las copias exportadas por esta versión.
   consume una; solo se permite un ataque al día para toda la torre. La vida
   del enemigo se conserva entre días. Derrotarlo concede monedas, XP y
   fragmentos y abre la siguiente planta; el daño sobrante no se traslada.
+  Cada ataque no letal concede adicionalmente hasta un 20 % del botín de
+  victoria, proporcional al daño causado respecto a la vida máxima. Se redondea
+  hacia abajo y usa el tormento mínimo en el que se ha atacado.
   La planta 100 completa la torre. El ataque causa 24 de daño base, con los
   bonos generales de daño.
 - **Bosses semanales:** hay doce enemigos en orden. Se permite un único ataque
@@ -189,7 +205,8 @@ confirmación. Se aceptan las copias exportadas por esta versión.
   conserva entre semanas. Al derrotar al boss se reciben monedas, XP y
   fragmentos y se abre el siguiente. El ataque causa 40 de daño base con los
   bonos generales. Cada boss tiene una resistencia propia; algunas se activan
-  según su vida o en ataques alternos. Al vencer al último comienza otra vuelta
+  según su vida o en ataques alternos. Los ataques no letales dan la misma
+  recompensa proporcional de progreso que en la torre. Al vencer al último comienza otra vuelta
   con un 50 % más de vida base por vuelta y recompensas crecientes. Quienes ya
   habían vencido a los ocho bosses anteriores continúan desde el noveno.
 - **Modos retirados:** las expediciones del vacío y las mazmorras por nivel
@@ -201,10 +218,13 @@ confirmación. Se aceptan las copias exportadas por esta versión.
   Hay Normal y doce rangos,
   desbloqueados cada diez niveles desde el 10 hasta el 120. Los rangos I a XII
   multiplican la vida enemiga por 1,75/2,5/4/6/8/11/15/21/30/42/60/85 y
-  las monedas, XP y fragmentos por 1,4/1,8/2,5/3,5/4,5/5,5/7/9/11,5/14,5/18/22,5.
+  las monedas, XP y fragmentos de misiones, capítulos y logros por
+  1,4/1,8/2,5/3,5/4,5/5,5/7/9/11,5/14,5/18/22,5. El botín de enemigos,
+  torre y bosses utiliza otro multiplicador: `vida × (1 + 0,02 × rango)`,
+  para mejorar la recompensa por vida derrotada al subir el tormento.
   Cada rango también añade un 5 % al objetivo de las misiones. Los
   sobres y la selección diaria de la tienda favorecen más las rarezas altas:
-  el peso de cada rareza se multiplica por `(1 + 0,15 × rango) ^ índice`,
+  el peso de cada rareza se multiplica por `(1 + 0,05 × rango) ^ índice`,
   excluyendo las rarezas bloqueadas por nivel y normalizando después.
   Las monedas y fragmentos de logros y capítulos también aumentan; las llaves,
   los objetos y los porcentajes
@@ -232,10 +252,10 @@ confirmación. Se aceptan las copias exportadas por esta versión.
   un año. Los días que ya había registrados antes de esta versión cuentan:
   sus recompensas se entregan automáticamente una sola vez.
 
-Esta versión suaviza la subida de vida de los monstruos y la experiencia
-necesaria para niveles superiores. Al actualizar, la vida restante de cada
-monstruo y la XP dentro del nivel se convierten proporcionalmente, sin
-perder niveles ni objetos.
+La XP necesaria para el siguiente nivel es `100 + 20 × n + 6 × n² + n³`,
+donde `n` es el nivel actual menos uno. Al actualizar, la XP dentro del nivel y
+la vida restante del enemigo de arena se convierten proporcionalmente una sola
+vez, sin perder niveles ni objetos.
 
 Los bonos de cada estadística se suman entre sí. Las misiones, el equipo y las
 recompensas son mecánicas de juego, no un plan de entrenamiento: adapta cada
@@ -256,3 +276,9 @@ reales a largo plazo.
 ## Desarrollo
 
 Para ejecutar las pruebas de las mecánicas con Node.js: `node --test tests/game.test.js`.
+Para simular tres estrategias durante 30, 90 y 365 días:
+`TZ=UTC node tests/balance-simulation.js`. La simulación usa una semilla fija,
+sesiones de una hora de arena en 2, 3 o 5 días por semana, 2, 3 o 4 misiones
+por sesión y estrategias automáticas de inversión y tormento. Son escenarios de
+juego, no recomendaciones de ejercicio; no predicen resultados de todas las
+partidas ni sustituyen las pruebas con jugadores.
