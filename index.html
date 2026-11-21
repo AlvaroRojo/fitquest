@@ -363,7 +363,8 @@
   #shop{margin-top:12px}
   .pack-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr));gap:10px}
   .pack-offer{display:flex;flex-direction:column;gap:8px;padding:14px;border:1px solid #a87d4c;border-radius:12px;background:linear-gradient(145deg,#493931,#1d2130)}
-  .pack-offer strong{color:#ffe0a2}.pack-offer button{margin:0;margin-top:auto}
+  .pack-offer strong{color:#ffe0a2}.pack-offer button{margin:0}
+  .pack-actions{display:grid;gap:6px;margin-top:auto}
   .pack-odds{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:3px 8px;color:#d8c6a9;font-size:.8rem}
   .pack-stage{position:relative;height:180px;margin:12px 0;border:1px solid #a87d4c;border-radius:12px;background:radial-gradient(ellipse,#765274,#171c2b 70%);overflow:hidden}
   .pack-stage::after{content:"▼";position:absolute;z-index:3;top:3px;left:50%;transform:translateX(-50%);color:#fff0c8;font-size:1.4rem;text-shadow:0 0 8px #f6a63f}
@@ -376,6 +377,11 @@
   .pack-stage.reveal::before{animation:loot-flash 1.6s ease-out}
   .pack-stage.reveal .winner{animation:loot-winner 1.6s ease-out}
   .pack-stage.spinning{box-shadow:inset 0 0 35px #dca35b55,0 0 20px #e6a95233}
+  .pack-batch-results{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,130px),1fr));gap:8px;list-style:none;padding:0;margin:12px 0}
+  .pack-batch-results[hidden]{display:none}
+  .pack-batch-card{display:grid;place-items:center;align-content:center;gap:4px;min-height:130px;padding:10px;border:2px solid var(--loot-color);border-radius:10px;background:radial-gradient(ellipse,var(--loot-glow),#171c2b 78%);text-align:center;box-shadow:inset 0 0 18px var(--loot-glow);animation:pack-batch-reveal .55s ease-out both;animation-delay:calc(var(--reveal-order) * 100ms)}
+  .pack-batch-card b{font-size:2rem}.pack-batch-card small{color:#fff0d4;overflow-wrap:anywhere}
+  @keyframes pack-batch-reveal{from{opacity:0;transform:scale(.8);filter:brightness(1.8)}to{opacity:1;transform:scale(1);filter:brightness(1)}}
   @keyframes loot-flash{0%{opacity:0}15%{opacity:1}100%{opacity:0}}
   @keyframes loot-winner{0%{filter:brightness(1)}20%{filter:brightness(1.8);box-shadow:0 0 35px var(--loot-color)}100%{filter:brightness(1)}}
   .loot-tier[data-tier="0"]{--loot-color:#c4c6cf;--loot-glow:#aab1c733}
@@ -868,6 +874,7 @@
   <p id="packs-next"></p>
   <div id="pack-list" class="pack-list"></div>
   <div id="pack-stage" class="pack-stage loot-tier" data-tier="0" aria-hidden="true"><div class="pack-reel" id="pack-reel"><div class="pack-reel-card loot-tier" data-tier="3"><b>🎁</b><small>Abre un sobre</small></div></div></div>
+  <ul id="pack-batch-results" class="pack-batch-results" aria-label="Recompensas de los diez sobres" hidden></ul>
   <p id="pack-result" class="pack-result" role="status" aria-live="polite"></p>
 </div>
 </section>
@@ -1461,11 +1468,8 @@ function samplePackItem(pack){
   const item=pool[Math.floor(Math.random()*pool.length)];
   return item;
 }
-function drawPack(id){
-  const pack=PACKS.find(option=>option.id===id);
-  if(!pack||S.level<pack.level||S.coins<pack.cost) return null;
+function awardPack(pack){
   const item=samplePackItem(pack),tier=item.tier;
-  S.coins-=pack.cost;
   const instance=addItem(item.id);
   S.packsOpened++;
   S.packMisses=tier>=PACK_HIGH_TIER?0:Math.min(PACK_GUARANTEE_MISSES,(S.packMisses??0)+1);
@@ -1473,6 +1477,18 @@ function drawPack(id){
   log(`🎁 ${pack.name}: ${message}`);
   unlockAchievements();
   return {message,tier,item:itemById(instance)};
+}
+function drawPack(id){
+  const pack=PACKS.find(option=>option.id===id);
+  if(!pack||S.level<pack.level||S.coins<pack.cost) return null;
+  S.coins-=pack.cost;
+  return awardPack(pack);
+}
+function drawTenPacks(id){
+  const pack=PACKS.find(option=>option.id===id);
+  if(!pack||S.level<pack.level||S.coins<pack.cost*10) return null;
+  S.coins-=pack.cost*10;
+  return Array.from({length:10},()=>awardPack(pack));
 }
 function openPack(id){return drawPack(id)?.message??null}
 const WEEKLY_BOSSES=[
@@ -2870,7 +2886,7 @@ function renderBattleUpgrades(){
 }
 function renderPacks(){
   const box=$('pack-list');
-  const focused=document.activeElement?.dataset.pack;
+  const focused=document.activeElement?.dataset.pack,focusedCount=document.activeElement?.dataset.packCount;
   const misses=S.packMisses??0,unlocked=S.level>=TIER_LVL[PACK_HIGH_TIER];
   $('pack-guarantee').textContent=`Garantía global: ${misses} / ${PACK_GUARANTEE_MISSES} sobres sin legendario o superior. `+
     (unlocked?(misses>=PACK_GUARANTEE_MISSES?'El próximo sobre garantiza uno.':'Al alcanzar 20, el siguiente garantiza uno.'):
@@ -2881,7 +2897,7 @@ function renderPacks(){
     const card=document.createElement('div');card.className='pack-offer';
     const probabilities=odds.map((chance,tier)=>`<span>${TIER_ICONS[tier]} ${TIER_NAMES[tier]}: ${(chance*100).toFixed(2)} %${S.level<TIER_LVL[tier]?` (nivel ${TIER_LVL[tier]})`:''}</span>`).join('');
     card.innerHTML=`<strong>${pack.icon} ${pack.name}</strong><small>Desbloqueo: nivel ${pack.level} · ${pack.cost} monedas</small><div class="pack-odds" aria-label="Probabilidades actuales">${probabilities}</div>`;
-    const button=document.createElement('button');button.type='button';button.dataset.pack=pack.id;
+    const button=document.createElement('button');button.type='button';button.dataset.pack=pack.id;button.dataset.packCount='1';
     button.textContent=locked?`Disponible al nivel ${pack.level}`:`Abrir · ${pack.cost} 🪙`;
     button.setAttribute('aria-label',`${button.textContent} ${pack.name}`);
     button.disabled=locked||S.coins<pack.cost||lootTimer!==null;
@@ -2890,7 +2906,9 @@ function renderPacks(){
       const result=drawPack(pack.id);
       save();render();
       if(!result){$('pack-result').textContent='No se puede abrir este sobre.';return}
-      const reel=$('pack-reel'),stage=$('pack-stage'),layout=packReelLayout(stage.clientWidth);
+      const reel=$('pack-reel'),stage=$('pack-stage');
+      $('pack-batch-results').hidden=true;$('pack-batch-results').replaceChildren();stage.hidden=false;
+      const layout=packReelLayout(stage.clientWidth);
       const {start,winner,padding,offset,duration}=layout;
       stage.classList.remove('reveal');stage.classList.add('spinning');stage.dataset.tier=result.tier;
       reel.replaceChildren();
@@ -2917,9 +2935,33 @@ function renderPacks(){
       },reduced?50:duration);
       renderPacks();
     };
-    card.appendChild(button);box.appendChild(card);
+    const batchButton=document.createElement('button');batchButton.type='button';batchButton.dataset.pack=pack.id;batchButton.dataset.packCount='10';
+    batchButton.textContent=`Abrir ×10 · ${pack.cost*10} 🪙`;
+    batchButton.setAttribute('aria-label',`${batchButton.textContent} ${pack.name}${locked?` · nivel ${pack.level}`:''}`);
+    batchButton.disabled=locked||S.coins<pack.cost*10||lootTimer!==null;
+    batchButton.onclick=()=>{
+      settleBattle();
+      const results=drawTenPacks(pack.id);
+      save();render();
+      if(!results){$('pack-result').textContent='No se pueden abrir diez sobres.';return}
+      const stage=$('pack-stage'),batch=$('pack-batch-results');
+      stage.hidden=true;batch.replaceChildren();batch.hidden=false;
+      results.forEach((result,i)=>{
+        const item=result.item,card=document.createElement('li');
+        card.className='pack-batch-card loot-tier';card.dataset.tier=result.tier;
+        card.style.setProperty('--reveal-order',i);
+        card.innerHTML=`<b>${GROUPS[item.g].icon}</b><small>${TIER_ICONS[item.tier]} ${TIER_NAMES[item.tier]}<br>${item.name}</small>`;
+        batch.appendChild(card);
+      });
+      $('pack-result').textContent='10 recompensas añadidas al inventario.';
+      const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
+      lootTimer=setTimeout(()=>{lootTimer=null;renderPacks()},reduced?50:1500);
+      renderPacks();
+    };
+    const actions=document.createElement('div');actions.className='pack-actions';actions.appendChild(button);actions.appendChild(batchButton);
+    card.appendChild(actions);box.appendChild(card);
   }
-  if(focused) box.querySelector(`[data-pack="${focused}"]:not(:disabled)`)?.focus({preventScroll:true});
+  if(focused) box.querySelector(`[data-pack="${focused}"][data-pack-count="${focusedCount}"]:not(:disabled)`)?.focus({preventScroll:true});
 }
 function renderAttributes(){
   const box=$('attributes');box.innerHTML='';
@@ -3229,7 +3271,7 @@ $('import-file').onchange=async event=>{
 $('reset').onclick=()=>{
   const b=$('reset');
   if(b.dataset.armed){clearTimeout(resetTimer);delete b.dataset.armed;b.textContent='Reiniciar partida';
-    clearTimeout(lootTimer);lootTimer=null;S=fresh();dismantleConfirm=null;inventoryPage=0;$('inventory-type').value='all';$('pack-result').textContent='';$('pack-stage').classList.remove('spinning','reveal');$('pack-reel').replaceChildren();$('pack-reel').style.transform='translateX(-64px)';$('mission-status').textContent='';$('torment-status').textContent='';save();render();return}
+    clearTimeout(lootTimer);lootTimer=null;S=fresh();dismantleConfirm=null;inventoryPage=0;$('inventory-type').value='all';$('pack-result').textContent='';$('pack-stage').hidden=false;$('pack-stage').classList.remove('spinning','reveal');$('pack-reel').replaceChildren();$('pack-reel').style.transform='translateX(-64px)';$('pack-batch-results').replaceChildren();$('pack-batch-results').hidden=true;$('mission-status').textContent='';$('torment-status').textContent='';save();render();return}
   b.dataset.armed=1;b.textContent='¿Seguro? Pulsa otra vez para borrar';
   resetTimer=setTimeout(()=>{delete b.dataset.armed;b.textContent='Reiniciar partida'},4000);
 };

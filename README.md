@@ -245,7 +245,11 @@ confirmación. Se aceptan las copias exportadas por esta versión.
   rareza está desbloqueada. La pantalla muestra el contador y las
   probabilidades efectivas, incluidas las de la garantía.
   Cada objeto de una rareza tiene igual probabilidad. Cada premio se añade al
-  inventario, incluso si es repetido, sin devolución de monedas. La compra se
+  inventario, incluso si es repetido, sin devolución de monedas. También se
+  pueden abrir diez sobres del mismo tipo por diez veces su precio: cada
+  tirada se realiza por separado, actualiza la garantía antes de la siguiente y
+  muestra sus diez premios en tarjetas animadas. Se necesita el importe
+  completo antes de empezar. La compra se
   guarda inmediatamente, antes de mostrar el carrusel animado, cuyo recorrido
   y punto de parada cambian en cada apertura, y su destello de
   revelación según la rareza. El carrusel añade objetos de relleno a ambos lados

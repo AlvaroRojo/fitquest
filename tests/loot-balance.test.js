@@ -91,6 +91,67 @@ test('naturally finding a high rarity resets the global counter', () => {
   })()`), true);
 });
 
+test('opening ten packs requires the full price and leaves failed attempts unchanged', () => {
+  const g=game();
+  assert.equal(g.run(`(() => {
+    ACHIEVEMENTS.length=0;S=fresh();S.level=10;S.coins=999;S.packMisses=19;
+    let rolls=0;Math.random=()=>{rolls++;return 0};
+    const before=JSON.stringify(S);
+    if(drawTenPacks('basic')!==null||drawTenPacks('silver')!==null||drawTenPacks('missing')!==null||
+       JSON.stringify(S)!==before||rolls!==0) return false;
+    S.coins=1000;const results=drawTenPacks('basic');
+    if(results.length!==10||S.coins!==0||S.packsOpened!==10||S.owned.length!==10||
+       new Set(results.map(result=>result.item.id)).size!==10||rolls!==20) return false;
+    save();return true;
+  })()`),true);
+  const restored=game(g.saved());
+  assert.equal(restored.run(`S.coins===0&&S.packsOpened===10&&S.owned.length===10&&S.packMisses===20`),true);
+});
+
+test('ten independent draws apply the global guarantee in sequence and match single draws', () => {
+  const batch=game(),individual=game();
+  const setup=`ACHIEVEMENTS.length=0;S=fresh();S.level=20;S.coins=1000;S.packMisses=18;
+    let rolls=0;Math.random=()=>{rolls++;return 0};`;
+  batch.run(setup);individual.run(setup);
+  const batched=JSON.parse(batch.run(`JSON.stringify(drawTenPacks('basic').map(r=>[r.tier,r.item.id]))`));
+  const singles=JSON.parse(individual.run(`JSON.stringify(Array.from({length:10},()=>drawPack('basic')).map(r=>[r.tier,r.item.id]))`));
+  assert.deepEqual(batched,singles);
+  assert.deepEqual(batched.map(result=>result[0]),[0,0,3,0,0,0,0,0,0,0]);
+  assert.equal(batch.run('S.packMisses'),7);
+  assert.equal(batch.run('S.coins'),0);
+  assert.equal(batch.run('S.packsOpened'),10);
+  assert.equal(batch.run('rolls'),20);
+});
+
+test('opening ten packs grants pack achievements and survives a reload', () => {
+  const g=game();
+  assert.equal(g.run(`(() => {
+    S=fresh();S.level=10;S.coins=1000;S.battleUpdated=1000;
+    S.achievements=ACHIEVEMENTS.map(a=>a.id).filter(id=>id!=='pack10');
+    Math.random=()=>0;
+    const rewards=drawTenPacks('basic');
+    if(rewards.length!==10||!S.achievements.includes('pack10')||
+       !validateBackup({format:'fitquest-save',version:1,state:S})) return false;
+    save();return true;
+  })()`),true);
+  const restored=game(g.saved());
+  assert.equal(restored.run(`S.packsOpened===10&&S.achievements.includes('pack10')&&S.owned.length===10`),true);
+});
+
+test('batch pack draws keep each randomly selected reward', () => {
+  const g=game();
+  assert.equal(g.run(`(() => {
+    ACHIEVEMENTS.length=0;S=fresh();S.level=40;S.coins=18000;
+    const rolls=[0,.1,.3,.2,.6,.3,.8,.4,.9,.5,.95,.6,.98,.7,.99,.8,.999,.9,.9999,.99];
+    let i=0;Math.random=()=>rolls[i++];
+    const results=drawTenPacks('arcane');
+    if(results!==null) return false;
+    S.level=60;const drawn=drawTenPacks('arcane');
+    return drawn.length===10&&i===20&&new Set(drawn.map(r=>r.tier)).size>1&&
+      drawn.every(r=>S.owned.includes(r.item.id))&&S.coins===0;
+  })()`),true);
+});
+
 test('pack and store probabilities match the agreed values at normal and torment XII', () => {
   const g=game();
   assert.equal(g.run(`(() => {
