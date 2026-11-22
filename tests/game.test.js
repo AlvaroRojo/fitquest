@@ -1313,31 +1313,63 @@ test('switching subclass settles pending combat with the previous bonuses and pe
   assert.equal(game(g.saved()).run(`S.subclass==='oracle'&&passiveSpent()===20`),true);
 });
 
-test('prestige resets level and equipment while preserving progression and difficulty damage', () => {
+test('prestige resets all but achievements, streak, activity, challenges and prestige', () => {
   const g=game();
   assert.equal(g.run(`(() => {
     ACHIEVEMENTS.length=0;S=fresh();S.level=49;S.battleUpdated=1000;
     if(performPrestige(1000)) return false;
     S.level=55;S.streak=30;S.coins=500;S.materials=200;S.achievements=['mission1'];
+    S.lastActive=today();S.lastActivityDay=today();S.completedToday=2;
     S.attributes.dmg=7;S.forgeRanks.dmg=2;S.battleUpgrades.damage=3;S.activeDays=30;
+    S.totalMissions=50;S.packsOpened=12;S.packMisses=5;S.challengeClears=19;
+    S.weeklyRewards=10;S.missionScale=50;S.exerciseEnabled=S.exerciseEnabled.slice(0,6);
+    S.prestige={count:1,points:5,nodes:['dmg-1']};
     S.tower.floor=12;S.tower.keys=4;S.weeklyBoss.index=2;S.weeklyBoss.hp=10;
     S.skills.might=4;S.passives.war1=5;S.skillStyle='berserker';
     addItem('sword_0_0');addItem('shield_0_0');autoEquipItem('sword_0_0');S.upgrades.sword_0_0=3;
     S.shopStock={day:today(),level:55,torment:0,offers:['sword_0_0'],sold:['sword_0_0']};
     selectTorment(5,1000);S.done[S.active[0]]=5;
     if(!performPrestige(1000)||S.level!==1||S.xp!==0||S.torment!==0||S.autoTorment!==0||
-       S.prestige.points!==5||S.prestige.count!==1||S.owned.length||Object.keys(S.eq).length||
+       S.prestige.points!==10||S.prestige.count!==2||S.prestige.nodes[0]!=='dmg-1'||
+       S.owned.length||Object.keys(S.eq).length||
        Object.keys(S.upgrades).length||Object.keys(S.skills).length||Object.keys(S.passives).length||
        S.skillStyle!==null||S.subclass!==null) return false;
-    if(S.streak!==30||S.coins!==500||S.materials!==200||S.attributes.dmg!==7||
-       S.forgeRanks.dmg!==2||S.battleUpgrades.damage!==3||S.tower.floor!==12||S.tower.keys!==4||
-       S.weeklyBoss.index!==2||S.activeDays!==30||S.done[S.active[0]]!==5||
-       S.targets[S.active[0]]<5||S.shopStock.level!==1||S.shopStock.soldSlots[0]!=='sword_0_0') return false;
-    ensureShopStock();if(S.shopStock.sold.length!==1||S.shopStock.offers[0]!=='sword_0_0') return false;
+    if(S.streak!==30||S.coins!==0||S.materials!==0||S.attributes.dmg!==0||
+       S.forgeRanks.dmg!==0||S.battleUpgrades.damage!==0||S.tower.floor!==12||S.tower.keys!==4||
+       S.weeklyBoss.index!==2||S.activeDays!==30||S.lastActive!==today()||S.lastActivityDay!==today()||
+       S.challengeClears!==19||S.achievements.join()!=='mission1'||S.totalMissions!==0||
+       S.packsOpened!==0||S.packMisses!==0||S.completedToday!==0||Object.keys(S.done).length||
+       S.shopStock!==null||S.missionScale!==100||S.exerciseEnabled.length!==EXERCISES.length||
+       S.weeklyRewards!==0||S.journeyStartDays!==30||S.battleUpdated!==1000) return false;
+    claimJourneyRewards();if(S.weeklyRewards!==0||S.coins!==0) return false;
     if(!validateBackup({format:'fitquest-save',version:1,state:S})) return false;
     save();return true;
   })()`),true);
-  assert.equal(game(g.saved()).run(`S.level===1&&S.streak===30&&S.prestige.points===5&&S.owned.length===0`),true);
+  const restored=game(g.saved());
+  assert.equal(restored.run(`S.level===1&&S.streak===30&&S.prestige.points===10&&S.owned.length===0&&S.journeyStartDays===30`),true);
+  assert.equal(restored.run(`(() => {
+    ACHIEVEMENTS.length=0;S.battleUpdated=Date.now();completeMission(byId(S.active[0]));
+    return S.streak===30&&S.activeDays===30&&S.tower.keys===4&&S.weeklyRewards===0;
+  })()`),true);
+});
+
+test('prestige preserves challenge progress and attack limits when returning to normal', () => {
+  const g=game();
+  assert.equal(g.run(`(() => {
+    ACHIEVEMENTS.length=0;S=fresh();S.level=80;S.battleUpdated=1000;
+    S.tower={floor:20,round:0,hp:towerMaxHp(20)*.4,keys:3,lastAttack:today(),torment:0,rewardTorment:0};
+    S.weeklyBoss={index:1,hp:bossBaseHp(1)*.6,lastAttackDay:today(),lastAttackWeek:weekStart(today()),
+      weekAttacks:2,hits:2,torment:0,rewardTorment:0};
+    selectTorment(5,1000);
+    if(!performPrestige(1000)||Math.abs(S.tower.hp/towerMaxHp(20)-.4)>1e-8||
+       Math.abs(S.weeklyBoss.hp/bossBaseHp(1)-.6)>1e-8||
+       S.tower.torment!==0||S.weeklyBoss.torment!==0||S.tower.rewardTorment!==0||
+       S.weeklyBoss.rewardTorment!==0||S.tower.keys!==3||S.weeklyBoss.hits!==2||
+       attackTower(today())||attackWeeklyBoss(today())) return false;
+    save();return validateBackup({format:'fitquest-save',version:1,state:S});
+  })()`),true);
+  assert.equal(game(g.saved()).run(`S.tower.floor===20&&S.tower.keys===3&&
+    S.weeklyBoss.index===1&&S.weeklyBoss.weekAttacks===2`),true);
 });
 
 test('prestige nodes require connected paths and multiply bonuses and rewards', () => {

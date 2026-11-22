@@ -140,14 +140,16 @@ confirmación. Se aceptan las copias exportadas por esta versión.
   ancestrales y prestigio. Desde el nivel 50 se puede prestigiar: se obtiene
   un punto por cada diez niveles completos alcanzados, acumulable entre
   prestigios. Antes del reinicio se aplica la autobatalla pendiente.
-  Se reinician el nivel, XP, habilidades, pasivas, subclase, tormento y todo
-  el equipo, equipado o no, incluidas sus mejoras. Los objetivos activos se
-  ajustan al nivel 1 sin perder progreso ya registrado; se conserva el
-  porcentaje de vida de los enemigos y desafíos al pasar a Normal. Se conservan
-  la racha, recursos, logros, atributos, forja, mejoras de arena, misiones
-  completadas, travesía y progreso de desafíos. Las compras de tienda del día
-  siguen contando; sus nuevas ofertas usan el nivel 1. Es recomendable
-  exportar una copia antes de prestigiar.
+  Se reinicia todo salvo los logros, la racha, los días de actividad, el
+  progreso de torre y bosses (incluidas las llaves y límites de ataque) y el
+  árbol y puntos de prestigio. Se pierden monedas, fragmentos, equipo y sus
+  mejoras, nivel, habilidades, pasivas, atributos, forja, arena, tormento,
+  progreso y preferencias de misiones, tienda, contador de sobres y travesía.
+  Los desafíos pasan a Normal conservando el porcentaje de vida y la dificultad
+  mínima utilizada para sus recompensas. La travesía empieza de nuevo desde
+  los días de actividad actuales, sin repetir recompensas automáticamente.
+  No se vuelve a contar la actividad del día ni se entrega otra llave diaria
+  por prestigiar. Es recomendable exportar una copia antes de prestigiar.
   El mapa tiene 300 nodos pequeños y 30 mejoras mayores en diez ramas: daño,
   XP, monedas, fragmentos, una rama universal, probabilidad y daño crítico,
   daño y botín de autobatalla y tiempo sin conexión. Los nodos se agrupan

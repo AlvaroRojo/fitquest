@@ -813,7 +813,7 @@
     <h2>🌟 Árbol de prestigio</h2>
     <p>Desde el nivel 50, prestigiar concede 1 punto por cada 10 niveles. Pasa el ratón o enfoca un nodo para ver sus efectos; pulsa para desbloquearlo. Arrastra el mapa y usa la rueda para acercar o alejar.</p>
     <p>✨ Explora 10 constelaciones de ascensión: sus nodos azules combinan dos poderes y culminan en un legado. Las líneas punteadas llevan a los ecos; al señalar un nodo se ilumina su conexión.</p>
-    <p>Se reinician nivel, XP, habilidades, pasivas, subclase, tormento y todo el equipo, incluidas sus mejoras. Se conservan racha, recursos, logros, atributos, forja, arena y desafíos.</p>
+    <p>Se reinicia todo, incluidos monedas, fragmentos, equipo, misiones, travesía, habilidades, atributos, forja y arena. Se conservan logros, racha, días de actividad, progreso de torre y bosses, y el árbol y puntos de prestigio. Los desafíos pasan a Normal conservando su porcentaje de vida.</p>
     <div class="prestige-summary"><strong id="prestige-points"></strong><button id="prestige-start" type="button"></button><button id="prestige-reset" type="button">↺ Redistribuir prestigio</button></div>
     <p id="prestige-multipliers"></p>
     <div class="prestige-zoom" aria-label="Controles de zoom del árbol">
@@ -1660,21 +1660,16 @@ function resetPrestigeTree(now=Date.now()){
 }
 function performPrestige(now=Date.now()){
   if(S.level<50) return false;
-  selectTorment(0,now);
+  settleBattle(now);
   const level=S.level,points=Math.floor(level/10);
   if(!Number.isSafeInteger(S.prestige.points+points)||!Number.isSafeInteger(S.prestige.count+1)) return false;
+  selectTorment(0,now);
+  const {achievements,streak,lastActive,activeDays,lastActivityDay,tower,weeklyBoss,challengeClears,prestige}=S;
+  if(S.day===today()&&S.completedToday>0) tower.keyGrantedDay=today();
+  S=fresh();
+  Object.assign(S,{achievements,streak,lastActive,activeDays,lastActivityDay,tower,weeklyBoss,challengeClears,prestige,
+    journeyStartDays:activeDays,battleUpdated:now});
   S.prestige.points+=points;S.prestige.count++;
-  S.level=1;S.xp=0;S.skills={};S.skillStyle=null;S.passives={};S.subclass=null;
-  S.owned=[];S.eq={};S.upgrades={};
-  for(const id of S.active){
-    const ex=byId(id),base=Math.max(1,target(ex,1)*DIFFICULTIES[missionDifficulty(ex)].target*S.missionScale/100);
-    S.targets[id]=Math.max(S.done[id]||0,Math.ceil(base));
-    S.missionTargetReferences[id]={target:base,torment:0,scale:S.missionScale};
-  }
-  if(S.shopStock&&S.shopStock.day===today()){
-    S.shopStock.soldSlots ??= Object.fromEntries(S.shopStock.offers.flatMap((id,i)=>S.shopStock.sold.includes(id)?[[i,id]]:[]));
-    S.shopStock.level=1;S.shopStock.offers=[];S.shopStock.variants={};
-  }else S.shopStock=null;
   log(`🌟 Prestigio ${S.prestige.count}: nivel ${level}, +${points} puntos.`);
   return true;
 }
@@ -2154,8 +2149,9 @@ function completeMission(ex,onCritical){
   log(`✅ Misión completada: ${ex.name} (+bonus)`);
   S.completedToday++;
   S.totalMissions++;
-  if(S.completedToday===1){
+  if(S.completedToday===1&&S.tower.keyGrantedDay!==today()){
     if(S.tower.floor<=TOWER_FLOORS){S.tower.keys++;log('🔷 ¡Has encontrado una llave de la torre!')}
+    S.tower.keyGrantedDay=today();
   }
   if(S.lastActivityDay!==today()){S.activeDays++;S.lastActivityDay=today()}
   claimJourneyRewards(torment);
@@ -2231,6 +2227,7 @@ function validateBackup(data){
      (s.journeyRound!=null&&(s.weeklyRewards<s.journeyRound*JOURNEY_CHAPTERS||s.weeklyRewards>(s.journeyRound+1)*JOURNEY_CHAPTERS)) ||
      (s.weeklyBoss.weekAttacks!=null&&(!Number.isInteger(s.weeklyBoss.weekAttacks)||s.weeklyBoss.weekAttacks<0||s.weeklyBoss.weekAttacks>BOSS_WEEKLY_LIMIT)) ||
      (s.weeklyBoss.lastAttackDay!=null&&!validDay(s.weeklyBoss.lastAttackDay)) ||
+     (s.tower.keyGrantedDay!=null&&!validDay(s.tower.keyGrantedDay)) ||
      (s.restWeek!=null&&!validDay(s.restWeek)) ||
      (s.restDays!=null&&(!Array.isArray(s.restDays)||s.restDays.length>REST_WEEKLY_LIMIT||new Set(s.restDays).size!==s.restDays.length||s.restDays.some(day=>!validDay(day)||weekStart(day)!==s.restWeek)))) return false;
   if([s.encounter.rewardTorment,s.autoRewardTorment,s.tower.rewardTorment,s.weeklyBoss.rewardTorment].some(value=>value!=null&&!validTorment(value))) return false;
@@ -2745,7 +2742,7 @@ window.addEventListener('pointercancel',()=>{prestigeDrag=null;prestigeScroll.cl
 prestigeScroll.addEventListener('click',event=>{if(suppressPrestigeClick){event.preventDefault();event.stopPropagation();suppressPrestigeClick=false}},true);
 $('prestige-start').onclick=()=>{
   if(S.level<50){$('prestige-status').textContent='Necesitas el nivel 50 para prestigiar.';return}
-  if(!confirm(`Prestigiar reiniciará nivel, XP, habilidades, pasivas, subclase, tormento y eliminará TODO el equipo y sus mejoras. La racha, recursos, logros y desafíos se conservan. Obtendrás al menos ${Math.floor(S.level/10)} puntos. Exporta una copia si deseas conservar tu equipo. ¿Continuar?`)) return;
+  if(!confirm(`Prestigiar reiniciará TODO: monedas, fragmentos, equipo, misiones, travesía, habilidades, atributos, forja y arena. Solo se conservan logros, racha, días de actividad, torre, bosses y el árbol y puntos de prestigio. Los desafíos pasan a Normal manteniendo el porcentaje de vida. Obtendrás al menos ${Math.floor(S.level/10)} puntos. Exporta una copia antes si deseas conservar tu partida. ¿Continuar?`)) return;
   if(performPrestige()){save();render();$('prestige-status').textContent='Prestigio completado.'}
   else $('prestige-status').textContent='No se puede realizar el prestigio.';
 };
