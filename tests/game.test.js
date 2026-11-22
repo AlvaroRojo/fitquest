@@ -25,6 +25,18 @@ function game(saved) {
   };
 }
 
+test('missions include an accessible in-game guide beside save controls', () => {
+  const footer=html.slice(html.indexOf('<div class="reset-footer">'),html.indexOf('</section>',html.indexOf('<div class="reset-footer">')));
+  assert.match(footer,/id="import-save"[\s\S]*id="open-game-guide"[\s\S]*id="reset"/);
+  assert.match(footer,/<dialog id="game-guide"[^>]*aria-labelledby="game-guide-title"/);
+  for(const heading of ['Misiones y encuentros','Travesía y días de actividad','Sobres de botín',
+    'Parangón: habilidades y pasivas','Prestigio','Autobatalla','Desafíos: torre y bosses',
+    'Tormento global','Logros y estadísticas','Guardado, exportación y reinicio'])
+    assert.ok(footer.includes(heading),heading);
+  assert.match(script,/\$\('open-game-guide'\)\.onclick=\(\)=>\$\('game-guide'\)\.showModal\(\)/);
+  assert.match(script,/\$\('close-game-guide'\)\.onclick=\(\)=>\$\('game-guide'\)\.close\(\)/);
+});
+
 test('navigation starts in adventure and selects one accessible tab', () => {
   const sections = ['adventure', 'character', 'statistics', 'paragon', 'store', 'achievements', 'packs', 'battle', 'dungeons', 'torment'];
   assert.deepEqual([...html.matchAll(/data-section="([^"]+)"/g)].map(match => match[1]), sections);

@@ -186,6 +186,16 @@
   #passive-status:empty{display:none}
   .backup-controls{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
   .reset-footer .backup-controls{align-items:center;margin-top:0}
+  .game-guide{width:min(900px,calc(100% - 24px));max-width:900px;max-height:min(85vh,900px);padding:0;border:1px solid #c9a367;border-radius:16px;background:linear-gradient(145deg,#322a3c,#111827);color:#e9ecff;box-shadow:0 20px 70px #000d}
+  .game-guide::backdrop{background:#050612cc}
+  .game-guide-header{position:sticky;top:0;z-index:1;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 18px;border-bottom:1px solid #806346;background:#211e2c}
+  .game-guide-header h2{margin:0}.game-guide-header button{margin:0}
+  .game-guide-content{padding:16px 18px 22px}
+  .game-guide-content>p{color:#d8c6a9}
+  .game-guide details{margin:8px 0;border:1px solid #806346;border-radius:10px;background:#171c2bd9}
+  .game-guide summary{padding:12px;cursor:pointer;color:#ffe0a2;font-weight:700}
+  .game-guide details>div{padding:0 14px 12px;line-height:1.55}
+  .game-guide details p{margin:8px 0}.game-guide details ul{padding-left:22px}
   .reset-footer #reset{margin-left:auto}
   #backup-status:empty{display:none}
   .hero-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin-top:10px}
@@ -726,7 +736,73 @@
   <h2>🗺️ Travesía del héroe</h2>
   <div id="weekly-progress"></div>
 </div>
-<div class="reset-footer"><div class="backup-controls"><button id="export-save" type="button">💾 Exportar partida</button><button id="import-save" type="button">📂 Importar partida</button><input id="import-file" type="file" accept=".json,application/json" hidden><button id="reset" type="button">Reiniciar partida</button></div><p id="backup-status" role="status" aria-live="polite"></p></div>
+<div class="reset-footer"><div class="backup-controls"><button id="export-save" type="button">💾 Exportar partida</button><button id="import-save" type="button">📂 Importar partida</button><input id="import-file" type="file" accept=".json,application/json" hidden><button id="open-game-guide" type="button">📖 Información del juego</button><button id="reset" type="button">Reiniciar partida</button></div><p id="backup-status" role="status" aria-live="polite"></p></div>
+<dialog id="game-guide" class="game-guide" aria-labelledby="game-guide-title">
+  <div class="game-guide-header"><h2 id="game-guide-title">📖 Guía de FitQuest</h2><button id="close-game-guide" type="button" aria-label="Cerrar guía">✕ Cerrar</button></div>
+  <div class="game-guide-content">
+    <p>Descubre cómo entrenar, conseguir equipo y avanzar a largo plazo. Pulsa cada apartado para desplegar sus detalles.</p>
+    <details open><summary>🌱 Primeros pasos y bienestar</summary><div>
+      <p>FitQuest combina misiones de ejercicio con un juego incremental. Completa encargos para conseguir experiencia, monedas y daño; después mejora tu personaje, equipa objetos y explora los demás menús.</p>
+      <p><strong>Tu salud va primero:</strong> los objetivos son mecánicas de juego, no recomendaciones médicas. Adapta el ejercicio a tu capacidad, descansa cuando lo necesites y no fuerces movimientos por obtener recompensas.</p>
+      <p>La racha no se pierde por dejar de jugar y aumenta como máximo una vez por cada día distinto de actividad. Un día cuenta cuando completas al menos una misión.</p>
+    </div></details>
+    <details><summary>📜 Misiones y encuentros</summary><div>
+      <p>Hay seis encargos activos: dos suaves, dos intermedios y dos intensos. La cantidad de ejercicio y las recompensas dependen de la categoría; intermedia e intensa usan ×1,25 y ×1,5 respecto a suave. Completa el ejercicio antes de pulsar <strong>Completado</strong>; aparece otro encargo de la misma categoría.</p>
+      <p>Puedes completar todas las misiones que quieras: las primeras seis del día dan recompensa completa y las siguientes un 25 % de la XP, monedas y daño de misión. El botín de monstruos no se reduce. La primera misión diaria concede una llave de torre si esta no está completada.</p>
+      <p>El objetivo se fija al comenzar la misión y <strong>no aumenta con el tormento</strong>. El daño golpea al monstruo de misiones; los élites aparecen cada cinco victorias y los jefes cada diez. También pueden aparecer goblins de la suerte y criaturas astrales con recompensas especiales.</p>
+    </div></details>
+    <details><summary>🗺️ Travesía y días de actividad</summary><div>
+      <p>Cada tres días distintos de actividad completas un capítulo de la primera vuelta y recibes monedas y fragmentos. Los días no tienen que ser consecutivos. Hay 52 capítulos; al terminarlos puedes iniciar otra vuelta opcional.</p>
+      <p>Cada vuelta adicional exige un día más por capítulo y aumenta las recompensas base un 25 %. Desde la segunda vuelta, los capítulos 13, 26, 39 y 52 también dan fragmentos y un escudo exclusivo. Los días anteriores a una vuelta no se cobran de nuevo.</p>
+    </div></details>
+    <details><summary>🛡️ Personaje, equipo y fragmentos</summary><div>
+      <p>En Personaje puedes equipar objetos del inventario, pulsar un hueco equipado para vaciarlo y, en ordenador, arrastrar equipo a un hueco concreto. Las copias repetidas son independientes. El poder y las evoluciones del héroe son indicadores visuales, no un bono adicional.</p>
+      <p>Los objetos sin equipar pueden mejorarse con fragmentos o desmantelarse pulsando dos veces. Mejorar añade un 1 % a su estadística por rango; desmantelar destruye esa copia y sus mejoras. La rareza determina cuántos fragmentos devuelve.</p>
+      <p>El entrenamiento compra rangos de daño, XP y monedas. Las estadísticas muestran sus efectos junto a los de equipo, logros, habilidades y prestigio.</p>
+    </div></details>
+    <details><summary>🛒 Tienda, forja y fabricación</summary><div>
+      <p>La tienda ofrece diez objetos diarios comprados con monedas del juego. Las ofertas dependen del nivel y tormento; cada oferta comprada queda vendida ese día. Los objetos van al inventario sin equiparse.</p>
+      <p>La forja permite hasta diez compras semanales entre sus tres mejoras de daño, XP y monedas. Sus rangos se suman al bono del equipo correspondiente solo mientras llevas al menos un objeto de esa estadística.</p>
+      <p>La fabricación gasta fragmentos para crear un objeto aleatorio del tipo y rareza elegidos. Las rarezas común a divina requieren respectivamente los niveles 1, 10, 20, 40, 40, 60 y 60 y cuestan 10, 30, 70, 400, 1200, 3000 y 8000 fragmentos.</p>
+    </div></details>
+    <details><summary>🎁 Sobres de botín</summary><div>
+      <p>Los sobres aventurero, plata, dorado y arcano se desbloquean en los niveles 10, 20, 40 y 60 y cuestan 100, 300, 800 y 1800 monedas respectivamente. Los más caros favorecen las rarezas altas; solo salen objetos desbloqueados por tu nivel.</p>
+      <p>Tras 20 sobres seguidos sin legendario o superior, el siguiente garantiza uno cuando esa rareza está desbloqueada desde el nivel 15. La garantía es global, se guarda y se actualiza tras cada apertura. Las probabilidades actuales aparecen en cada sobre.</p>
+      <p><strong>Abrir ×10</strong> cuesta diez veces el precio y entrega diez tiradas separadas, aplicando la garantía entre ellas. Todos los premios, incluso repetidos, se guardan en el inventario antes de la animación.</p>
+    </div></details>
+    <details><summary>✨ Parangón: habilidades y pasivas</summary><div>
+      <p>Las habilidades dan un punto por nivel y otro adicional en los niveles múltiplos de diez. Sus ramas mejoran daño, crítico, XP, monedas y fragmentos; los nodos normales admiten 20 rangos y necesitan cinco en el nodo anterior. Puedes redistribuirlos gratis.</p>
+      <p>Los estilos Berserker, Cazador y Buscatesoros aportan ventajas y penalizaciones; puedes cambiar entre los desbloqueados o volver al estilo neutral. Los críticos causan inicialmente el 150 % del daño y su probabilidad tiene un máximo del 75 %.</p>
+      <p>Las pasivas ancestrales se desbloquean en el nivel 50 y dan un punto por nivel desde entonces. Cada nodo tiene hasta cinco rangos y necesita tres en el anterior. Con 20 puntos invertidos eliges Campeón, Asesino u Oráculo y puedes cambiar de subclase sin redistribuir. Completar la última pasiva de una rama desbloquea su maestría.</p>
+    </div></details>
+    <details><summary>🌟 Prestigio</summary><div>
+      <p>Desde el nivel 50 puedes prestigiar y ganar un punto por cada diez niveles completos. Los puntos se acumulan entre prestigios; cada mejora del mapa cuesta uno. Sus ramas potencian daño, XP, monedas, fragmentos, crítico, arena y tiempo sin conexión; las constelaciones de ascensión combinan dos efectos.</p>
+      <p>Pasa el ratón o enfoca un nodo para ver sus requisitos y efectos; haz clic para adquirirlo. Arrastra el mapa, usa la rueda o los botones para ajustar el zoom y redistribuye los puntos gratis cuando quieras.</p>
+      <p><strong>El prestigio reinicia todo</strong>, incluidas monedas, equipo, habilidades, atributos, arena, misiones y travesía. Conservas logros, racha, días de actividad, progreso de torre y bosses, y puntos y mejoras de prestigio. Los desafíos pasan a Normal conservando el porcentaje de vida. Exporta una copia antes si deseas conservar la partida anterior.</p>
+    </div></details>
+    <details><summary>⚔️ Autobatalla</summary><div>
+      <p>La arena combate automáticamente incluso cuando no estás jugando, hasta un límite inicial de ocho horas sin conexión. Puedes aumentar el daño, reducir el intervalo entre golpes y mejorar las monedas y XP obtenidas con las mejoras de arena.</p>
+      <p>Los enemigos de arena y los de misiones tienen progresos independientes. El tormento afecta a su vida y botín. La maestría de Sabiduría y ciertas mejoras de prestigio amplían el tiempo sin conexión.</p>
+    </div></details>
+    <details><summary>🗼 Desafíos: torre y bosses</summary><div>
+      <p>En la torre hay 100 plantas. Cada ataque consume una llave y solo puedes atacar una vez al día; la vida restante se conserva. Al derrotar una planta ganas monedas, XP y fragmentos. Los ataques no letales también dan una parte proporcional del botín.</p>
+      <p>Tras la planta 100 puedes comenzar otra vuelta con más vida y recompensas. Desde la segunda vuelta hay guardianes especiales en las plantas 25, 50, 75 y 100, que entregan una espada exclusiva y fragmentos.</p>
+      <p>Los doce bosses se enfrentan en orden. Hay hasta tres ataques por semana, como máximo uno al día, y la vida se conserva entre semanas. Sus resistencias varían; al vencerlos obtienes recompensas y avanzas al siguiente. Al terminar la lista comienza una vuelta más difícil.</p>
+    </div></details>
+    <details><summary>🔥 Tormento global</summary><div>
+      <p>Elige Normal o uno de doce tormentos, desbloqueados cada diez niveles desde el 10 hasta el 120. Los rangos superiores aumentan la vida enemiga y las recompensas y favorecen rarezas altas en tienda y sobres, pero no aumentan el ejercicio requerido.</p>
+      <p>Cambiar de tormento conserva el porcentaje de vida de los enemigos y desafíos. El botín de un enemigo usa el tormento más bajo en el que recibió daño, para que cambiarlo antes de vencer no aumente la recompensa indebidamente.</p>
+    </div></details>
+    <details><summary>🏆 Logros y estadísticas</summary><div>
+      <p>Los logros se desbloquean al alcanzar hitos de nivel, misiones, días activos, monstruos, equipo, sobres y desafíos. Otorgan bonificaciones y algunos también dan recursos, llaves u objetos. Los logros ya obtenidos se conservan al prestigiar.</p>
+      <p>La pestaña Estadísticas reúne datos de aventura, combate, héroe, equipo y economía para seguir tu progreso. Tras prestigiar se reinician los contadores que no estén entre las excepciones indicadas en la sección de prestigio.</p>
+    </div></details>
+    <details><summary>💾 Guardado, exportación y reinicio</summary><div>
+      <p>El juego guarda la partida en el navegador; no se sincroniza entre dispositivos ni ubicaciones del archivo. Borrar los datos del navegador puede eliminarla.</p>
+      <p>Usa <strong>Exportar partida</strong> para descargar una copia JSON y <strong>Importar partida</strong> para restaurarla. Importar sustituye la partida actual tras pedir confirmación. <strong>Reiniciar partida</strong> borra el progreso después de confirmarlo; no es lo mismo que prestigiar.</p>
+    </div></details>
+  </div>
+</dialog>
 </section>
 
 <section id="character" role="tabpanel" aria-labelledby="tab-character" hidden>
@@ -3246,6 +3322,8 @@ function changeInventoryPage(direction){
 }
 $('inventory-prev').onclick=()=>changeInventoryPage(-1);
 $('inventory-next').onclick=()=>changeInventoryPage(1);
+$('open-game-guide').onclick=()=>$('game-guide').showModal();
+$('close-game-guide').onclick=()=>$('game-guide').close();
 $('export-save').onclick=()=>{
   settleBattle();save();
   const blob=new Blob([JSON.stringify({format:'fitquest-save',version:1,state:S},null,2)],{type:'application/json'});

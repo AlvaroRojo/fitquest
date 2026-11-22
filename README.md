@@ -6,7 +6,9 @@ almacenamiento local del navegador y no se sincroniza entre dispositivos,
 navegadores o ubicaciones del archivo. Borrar los datos del navegador puede
 eliminarla. Usa **Exportar partida** para guardar una copia JSON y **Importar
 partida** para restaurarla; importar reemplaza la partida actual tras pedir
-confirmación. Se aceptan las copias exportadas por esta versión.
+confirmación. Se aceptan las copias exportadas por esta versión. Al final de
+**Misiones**, el botón **Información del juego** abre una guía de los sistemas,
+controles y reglas de prestigio; se cierra con su botón o con Escape.
 
 ## Cómo jugar
 
